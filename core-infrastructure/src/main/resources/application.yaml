@@ -1,0 +1,15 @@
+spring:
+  r2dbc:
+    url: ${SPRING_R2DBC_URL}
+    username: ${SPRING_R2DBC_USERNAME}
+    password: ${SPRING_R2DBC_PASSWORD}
+
+jwt:
+  access-token-active-time: ${JWT_ACCESS_TOKEN_ACTIVE_TIME}
+  refresh-token-active-time: ${JWT_REFRESH_TOKEN_ACTIVE_TIME}
+  header: ${JWT_HEADER}
+  prefix: ${JWT_PREFIX}
+  secret-key: ${JWT_SECRET_KEY}
+
+snowflake:
+  worker-id: ${SNOWFLAKE_WORKER_ID}
