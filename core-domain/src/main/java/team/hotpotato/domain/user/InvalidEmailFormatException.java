@@ -1,4 +1,4 @@
-package team.hotpotato.domain.user.exception;
+package team.hotpotato.domain.user;
 
 import team.hotpotato.common.exception.BusinessBaseException;
 import team.hotpotato.common.exception.ErrorCode;

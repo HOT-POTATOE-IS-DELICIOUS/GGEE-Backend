@@ -1,7 +1,5 @@
 package team.hotpotato.domain.user;
 
-import team.hotpotato.domain.user.exception.InvalidEmailFormatException;
-
 public record User(
         Long userId,
         String email,
