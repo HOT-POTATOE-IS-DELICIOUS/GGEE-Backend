@@ -1,4 +1,4 @@
-package team.hotpotato.infrastructure.adapter.jwt.exception;
+package team.hotpotato.infrastructure.adapter.jwt;
 
 import team.hotpotato.common.exception.BusinessBaseException;
 import team.hotpotato.common.exception.ErrorCode;

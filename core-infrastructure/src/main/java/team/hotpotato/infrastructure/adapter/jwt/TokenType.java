@@ -1,4 +1,4 @@
-package team.hotpotato.infrastructure.adapter.jwt.enums;
+package team.hotpotato.infrastructure.adapter.jwt;
 
 public enum TokenType {
     ACCESS_TOKEN,

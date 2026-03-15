@@ -8,12 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import team.hotpotato.application.dto.model.AuthPrincipal;
-import team.hotpotato.application.exception.ExpiredTokenException;
-import team.hotpotato.infrastructure.adapter.jwt.enums.TokenType;
-import team.hotpotato.infrastructure.adapter.jwt.exception.InvalidTokenException;
-import team.hotpotato.infrastructure.adapter.jwt.exception.InvalidTokenTypeException;
-import team.hotpotato.infrastructure.properties.TokenProperties;
 import team.hotpotato.application.port.input.TokenResolver;
+import team.hotpotato.infrastructure.properties.TokenProperties;
 
 import javax.crypto.SecretKey;
 

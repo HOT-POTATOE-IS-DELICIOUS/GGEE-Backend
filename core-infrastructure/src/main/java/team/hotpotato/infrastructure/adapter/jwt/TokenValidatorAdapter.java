@@ -2,9 +2,6 @@ package team.hotpotato.infrastructure.adapter.jwt;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import team.hotpotato.infrastructure.adapter.jwt.enums.TokenType;
-import team.hotpotato.infrastructure.adapter.jwt.exception.InvalidTokenException;
-import team.hotpotato.infrastructure.adapter.jwt.exception.InvalidTokenTypeException;
 import team.hotpotato.infrastructure.properties.TokenProperties;
 
 @Service

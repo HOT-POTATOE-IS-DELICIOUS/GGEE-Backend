@@ -4,9 +4,8 @@ import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import team.hotpotato.application.dto.model.AuthPrincipal;
-import team.hotpotato.infrastructure.adapter.jwt.enums.TokenType;
-import team.hotpotato.infrastructure.properties.TokenProperties;
 import team.hotpotato.application.port.output.TokenGenerator;
+import team.hotpotato.infrastructure.properties.TokenProperties;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
