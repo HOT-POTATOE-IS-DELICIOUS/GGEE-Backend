@@ -1,8 +1,1 @@
 rootProject.name = 'GGEE-Backend'
-
-include 'core-api'
-include 'core-application'
-include 'core-common'
-include 'core-domain'
-include 'core-infrastructure'
-include 'core-bootstrap'

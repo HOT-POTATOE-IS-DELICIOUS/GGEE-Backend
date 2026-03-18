@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: test-ggee-backend
+  r2dbc:
+    url: r2dbc:mysql://localhost:3306/test
+    username: test
+    password: test
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 0
+
+cors:
+  path-pattern: /**
+  allowed-origins: http://localhost:3000
+  allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+  allowed-headers: '*'
+  allow-credentials: true
+  max-age: 3600
+
+jwt:
+  access-token-active-time: 3600000
+  refresh-token-active-time: 1209600000
+  header: Authorization
+  prefix: "Bearer "
+  secret-key: ZmFrZS1mYWtlLWZha2UtZmFrZS1mYWtlLWZha2UtZmFrZS1mYWtlLWZha2U=
+
+snowflake:
+  worker-id: 1
+
+event:
+  user:
+    registered-topic: user.registered
