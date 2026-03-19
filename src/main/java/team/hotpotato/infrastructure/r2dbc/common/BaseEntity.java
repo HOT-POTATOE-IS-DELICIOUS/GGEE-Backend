@@ -1,6 +1,6 @@
 package team.hotpotato.infrastructure.r2dbc.common;
 
-import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 import lombok.Getter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
@@ -8,7 +8,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import java.time.LocalDateTime;
 
 @Getter
-@Builder
+@SuperBuilder
 public class BaseEntity {
     @Id
     @Column("id")

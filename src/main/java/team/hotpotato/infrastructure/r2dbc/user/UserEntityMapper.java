@@ -8,8 +8,8 @@ import team.hotpotato.domain.member.domain.User;
 public final class UserEntityMapper {
 
     public static UserEntity toEntity(User user) {
-        return new UserEntity
-                .UserEntityBuilder()
+        return UserEntity.builder()
+                .id(user.id())
                 .email(user.email())
                 .password(user.password())
                 .role(user.role().toString())
