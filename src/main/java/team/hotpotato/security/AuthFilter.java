@@ -10,7 +10,9 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import team.hotpotato.common.exception.BusinessBaseException;
 import team.hotpotato.domain.member.application.auth.TokenResolver;
+import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
 
 import java.util.List;
 
@@ -18,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AuthFilter implements WebFilter {
     private final TokenResolver tokenResolver;
+    private final ErrorCodeHttpStatusMapper errorCodeHttpStatusMapper;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -38,6 +41,10 @@ public class AuthFilter implements WebFilter {
                                         List.of(new SimpleGrantedAuthority(principal.role()))
                                 )
                         ))
-                );
+                )
+                .onErrorResume(BusinessBaseException.class, e -> {
+                    exchange.getResponse().setStatusCode(errorCodeHttpStatusMapper.toHttpStatus(e.errorCode));
+                    return exchange.getResponse().setComplete();
+                });
     }
 }
