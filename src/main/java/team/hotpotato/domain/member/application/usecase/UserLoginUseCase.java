@@ -25,7 +25,7 @@ public class UserLoginUseCase implements UserLogin {
                 .switchIfEmpty(Mono.error(InvalidEmailOrPasswordException.EXCEPTION))
                 .map(user -> {
                     AuthPrincipal authPrincipal = new AuthPrincipal(
-                            user.userId(),
+                            user.id(),
                             user.role().name()
                     );
 

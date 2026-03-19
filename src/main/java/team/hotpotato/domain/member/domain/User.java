@@ -1,13 +1,13 @@
 package team.hotpotato.domain.member.domain;
 
 public record User(
-        Long userId,
+        Long id,
         String email,
         String password,
         Role role
 ) {
-    public User(Long userId, String email, String password, Role role) {
-        this.userId = userId;
+    public User(Long id, String email, String password, Role role) {
+        this.id = id;
         validateEmail(email);
         this.email = email;
         this.password = password;

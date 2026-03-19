@@ -15,7 +15,7 @@ public class KafkaUserRegisteredEventPublisher {
 
     public Mono<Void> publish(User user) {
         UserRegisteredEvent event = new UserRegisteredEvent(
-                user.userId(),
+                user.id(),
                 user.email(),
                 user.role().name(),
                 Instant.now()
@@ -24,7 +24,7 @@ public class KafkaUserRegisteredEventPublisher {
         return Mono.fromFuture(
                         kafkaTemplate.send(
 //                                userEventProperties.registeredTopic(),
-                                user.userId().toString(),
+                                user.id().toString(),
                                 event
                         )
                 )
