@@ -27,7 +27,7 @@ public class TokenResolverAdapter implements TokenResolver {
     private Mono<String> stripBearerScheme(String headerValue) {
         return Mono.fromCallable(() -> {
             tokenValidatorAdapter.validateAuthorizationHeader(headerValue);
-            return headerValue.trim().substring(tokenProperties.prefix().length());
+            return headerValue.substring(tokenProperties.prefix().length()).trim();
         });
     }
 
