@@ -2,19 +2,19 @@ spring:
   config:
     import: "optional:file:.env[.properties]"
   application:
-    name: ${SPRING_APPLICATION_NAME:GGEE-Backend}
+    name: GGEE-Backend
   r2dbc:
-    url: ${SPRING_R2DBC_URL:r2dbc:mysql://localhost:3306/ggee}
-    username: ${SPRING_R2DBC_USERNAME:root}
-    password: ${SPRING_R2DBC_PASSWORD:password}
+    url: ${SPRING_R2DBC_URL}
+    username: ${SPRING_R2DBC_USERNAME}
+    password: ${SPRING_R2DBC_PASSWORD}
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SERVER_PORT}
 
 management:
   endpoints:
@@ -27,23 +27,23 @@ management:
         enabled: true
 
 cors:
-  path-pattern: ${CORS_PATH_PATTERN:/**}
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
-  allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,PATCH,DELETE,OPTIONS}
-  allowed-headers: ${CORS_ALLOWED_HEADERS:*}
-  allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
-  max-age: ${CORS_MAX_AGE:3600}
+  path-pattern: ${CORS_PATH_PATTERN}
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  allowed-methods: ${CORS_ALLOWED_METHODS}
+  allowed-headers: ${CORS_ALLOWED_HEADERS}
+  allow-credentials: ${CORS_ALLOW_CREDENTIALS}
+  max-age: ${CORS_MAX_AGE}
 
 jwt:
-  access-token-active-time: ${JWT_ACCESS_TOKEN_ACTIVE_TIME:3600000}
-  refresh-token-active-time: ${JWT_REFRESH_TOKEN_ACTIVE_TIME:1209600000}
-  header: ${JWT_HEADER:Authorization}
-  prefix: ${JWT_PREFIX:Bearer }
-  secret-key: ${JWT_SECRET_KEY:ZmFrZS1mYWtlLWZha2UtZmFrZS1mYWtlLWZha2UtZmFrZS1mYWtlLWZha2U=}
+  access-token-active-time: ${JWT_ACCESS_TOKEN_ACTIVE_TIME}
+  refresh-token-active-time: ${JWT_REFRESH_TOKEN_ACTIVE_TIME}
+  header: ${JWT_HEADER}
+  prefix: ${JWT_PREFIX}
+  secret-key: ${JWT_SECRET_KEY}
 
 snowflake:
-  worker-id: ${SNOWFLAKE_WORKER_ID:1}
+  worker-id: ${SNOWFLAKE_WORKER_ID}
 
 event:
   user:
-    registered-topic: ${USER_REGISTERED_TOPIC:user.registered}
+    registered-topic: ${USER_REGISTERED_TOPIC}
