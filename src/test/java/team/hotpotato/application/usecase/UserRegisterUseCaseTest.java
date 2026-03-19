@@ -38,6 +38,7 @@ class UserRegisterUseCaseTest {
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
+        userRegisterUseCase = new UserRegisterUseCase(userAppender, idGenerator, passwordEncoder);
     }
 
     @Test
@@ -55,7 +56,7 @@ class UserRegisterUseCaseTest {
         verifyNoMoreInteractions(idGenerator, userAppender);
 
         User savedUser = userCaptor.getValue();
-        assertEquals(100L, savedUser.userId());
+        assertEquals(100L, savedUser.id());
         assertEquals("user@test.com", savedUser.email());
         assertEquals(Role.USER, savedUser.role());
         assertNotEquals("plainPassword", savedUser.password());
@@ -68,24 +69,6 @@ class UserRegisterUseCaseTest {
         RuntimeException expected = new RuntimeException("append failed");
         when(idGenerator.generateId()).thenReturn(1L);
         when(userAppender.save(any(User.class))).thenReturn(Mono.error(expected));
-
-        StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword")))
-                .expectErrorMatches(error -> error == expected)
-                .verify();
-
-        verify(idGenerator).generateId();
-        verify(userAppender).save(any(User.class));
-        verifyNoMoreInteractions(idGenerator, userAppender);
-    }
-
-    @Test
-    @DisplayName("이벤트 발행 중 오류가 발생하면 예외를 그대로 전파한다")
-    void registerPropagatesPublisherError() {
-        RuntimeException expected = new RuntimeException("publish failed");
-        User savedUser = new User(3L, "user@test.com", passwordEncoder.encode("plainPassword"), Role.USER);
-
-        when(idGenerator.generateId()).thenReturn(3L);
-        when(userAppender.save(any(User.class))).thenReturn(Mono.just(savedUser));
 
         StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword")))
                 .expectErrorMatches(error -> error == expected)
