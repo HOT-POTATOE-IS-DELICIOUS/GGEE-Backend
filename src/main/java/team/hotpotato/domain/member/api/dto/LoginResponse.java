@@ -1,4 +1,4 @@
-package team.hotpotato.domain.member.api;
+package team.hotpotato.domain.member.api.dto;
 
 public record LoginResponse(
         String accessToken,

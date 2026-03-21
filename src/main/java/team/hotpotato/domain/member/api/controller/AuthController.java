@@ -1,10 +1,13 @@
-package team.hotpotato.domain.member.api;
+package team.hotpotato.domain.member.api.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+import team.hotpotato.domain.member.api.dto.LoginRequest;
+import team.hotpotato.domain.member.api.dto.LoginResponse;
+import team.hotpotato.domain.member.api.dto.RegisterRequest;
 import team.hotpotato.domain.member.application.dto.LoginCommand;
 import team.hotpotato.domain.member.application.dto.RegisterCommand;
 import team.hotpotato.domain.member.application.usecase.UserLogin;
