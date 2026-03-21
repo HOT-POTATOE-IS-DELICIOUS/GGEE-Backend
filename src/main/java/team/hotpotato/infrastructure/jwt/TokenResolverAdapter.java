@@ -9,19 +9,21 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import team.hotpotato.domain.member.application.auth.AuthPrincipal;
 import team.hotpotato.domain.member.application.auth.TokenResolver;
+import team.hotpotato.domain.member.domain.Role;
 
 import javax.crypto.SecretKey;
 
 @Service
 @RequiredArgsConstructor
 public class TokenResolverAdapter implements TokenResolver {
+    private static final String ROLE_PREFIX = "ROLE_";
     private final TokenValidatorAdapter tokenValidatorAdapter;
     private final TokenProperties tokenProperties;
     private final SecretKey secretKey;
 
     @Override
     public Mono<AuthPrincipal> resolve(String authorizationHeader) {
-        return stripBearerScheme(authorizationHeader).flatMap(this::getPrincipal);
+        return stripBearerScheme(authorizationHeader).flatMap(this::parsePrincipal);
     }
 
     private Mono<String> stripBearerScheme(String headerValue) {
@@ -31,16 +33,7 @@ public class TokenResolverAdapter implements TokenResolver {
         });
     }
 
-    private Mono<AuthPrincipal> getPrincipal(String token) {
-        return getTokenBody(token)
-                .map(claims -> {
-                    Long userId = Long.parseLong(claims.getSubject());
-                    String role = claims.get("role", String.class);
-                    return new AuthPrincipal(userId, role);
-                });
-    }
-
-    private Mono<Claims> getTokenBody(String token) {
+    private Mono<AuthPrincipal> parsePrincipal(String token) {
         return Mono.fromCallable(() -> {
             try {
                 Claims claims = Jwts.parser()
@@ -53,14 +46,24 @@ public class TokenResolverAdapter implements TokenResolver {
                 TokenType tokenType = TokenType.valueOf(tokenTypeValue);
                 tokenValidatorAdapter.validateTokenType(tokenType, TokenType.ACCESS_TOKEN);
 
-                return claims;
+                Long userId = Long.parseLong(claims.getSubject());
+                Role role = Role.valueOf(normalizeRole(claims.get("role", String.class)));
+
+                return new AuthPrincipal(userId, role);
             } catch (InvalidTokenTypeException e) {
                 throw InvalidTokenTypeException.EXCEPTION;
             } catch (ExpiredJwtException e) {
                 throw ExpiredTokenException.EXCEPTION;
-            } catch (JwtException e) {
+            } catch (JwtException | IllegalArgumentException | NullPointerException e) {
                 throw InvalidTokenException.EXCEPTION;
             }
         });
+    }
+
+    private String normalizeRole(String roleClaim) {
+        if (roleClaim.startsWith(ROLE_PREFIX)) {
+            return roleClaim.substring(ROLE_PREFIX.length());
+        }
+        return roleClaim;
     }
 }

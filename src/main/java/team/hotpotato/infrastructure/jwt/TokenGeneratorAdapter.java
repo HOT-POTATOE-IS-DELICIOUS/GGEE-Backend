@@ -12,7 +12,6 @@ import java.util.Date;
 @Service
 @RequiredArgsConstructor
 public class TokenGeneratorAdapter implements TokenGenerator {
-    private static final String ROLE_PREFIX = "ROLE_";
     private final SecretKey secretKey;
     private final TokenProperties tokenProperties;
 
@@ -21,7 +20,7 @@ public class TokenGeneratorAdapter implements TokenGenerator {
         return buildToken(
                 TokenType.ACCESS_TOKEN,
                 authPrincipal.userId(),
-                authPrincipal.role(),
+                authPrincipal.role().name(),
                 tokenProperties.accessTokenActiveTime()
         );
     }
@@ -31,7 +30,7 @@ public class TokenGeneratorAdapter implements TokenGenerator {
         return buildToken(
                 TokenType.REFRESH_TOKEN,
                 authPrincipal.userId(),
-                authPrincipal.role(),
+                authPrincipal.role().name(),
                 tokenProperties.refreshTokenActiveTime()
         );
     }
@@ -44,7 +43,7 @@ public class TokenGeneratorAdapter implements TokenGenerator {
                 .type("jwt")
                 .and()
                 .subject(userId.toString())
-                .claim("role", ROLE_PREFIX + role)
+                .claim("role", role)
                 .claim("tokenType", tokenType.name())
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + tokenActiveTime))

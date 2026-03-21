@@ -17,6 +17,7 @@ import team.hotpotato.domain.member.application.dto.LoginResult;
 import team.hotpotato.domain.member.application.dto.RegisterCommand;
 import team.hotpotato.domain.member.application.usecase.UserLogin;
 import team.hotpotato.domain.member.application.usecase.UserRegister;
+import team.hotpotato.infrastructure.jwt.InvalidTokenException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -111,5 +112,29 @@ class AuthControllerTest {
                         """)
                 .exchange()
                 .expectStatus().isBadRequest();
+    }
+
+    @Test
+    @DisplayName("공개 경로는 잘못된 Authorization 헤더가 있어도 요청을 통과시킨다")
+    void publicRouteIgnoresInvalidAuthorizationHeader() {
+        when(tokenResolver.resolve(any())).thenReturn(Mono.error(InvalidTokenException.EXCEPTION));
+        when(userLogin.login(any(LoginCommand.class)))
+                .thenReturn(Mono.just(new LoginResult("access-token", "refresh-token")));
+
+        webTestClient.post()
+                .uri("/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer invalid.token.value")
+                .bodyValue("""
+                        {
+                          "email": "user@test.com",
+                          "password": "plainPassword"
+                        }
+                        """)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.accessToken").isEqualTo("access-token")
+                .jsonPath("$.refreshToken").isEqualTo("refresh-token");
     }
 }

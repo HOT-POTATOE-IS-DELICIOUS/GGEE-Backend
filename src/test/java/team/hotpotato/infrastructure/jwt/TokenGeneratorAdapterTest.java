@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import team.hotpotato.domain.member.application.auth.AuthPrincipal;
+import team.hotpotato.domain.member.domain.Role;
 
 import javax.crypto.SecretKey;
 import java.util.Base64;
@@ -28,7 +29,7 @@ class TokenGeneratorAdapterTest {
     void setUp() {
         secretKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(TEST_SECRET_KEY));
         TokenProperties tokenProperties = new TokenProperties(
-                ACCESS_TOKEN_ACTIVE_TIME, REFRESH_TOKEN_ACTIVE_TIME, "Bearer", "Authorization", TEST_SECRET_KEY
+                ACCESS_TOKEN_ACTIVE_TIME, REFRESH_TOKEN_ACTIVE_TIME, "Bearer ", "Authorization", TEST_SECRET_KEY
         );
         tokenGeneratorAdapter = new TokenGeneratorAdapter(secretKey, tokenProperties);
     }
@@ -44,26 +45,26 @@ class TokenGeneratorAdapterTest {
     @Test
     @DisplayName("액세스 토큰은 id, ROLE_ 접두사 role, ACCESS_TOKEN 타입 클레임을 포함한다")
     void accessTokenContainsCorrectClaims() {
-        AuthPrincipal principal = new AuthPrincipal(42L, "USER");
+        AuthPrincipal principal = new AuthPrincipal(42L, Role.USER);
 
         String token = tokenGeneratorAdapter.generateAccessToken(principal);
 
         Claims claims = parseClaims(token);
         assertThat(claims.getSubject()).isEqualTo("42");
-        assertThat(claims.get("role", String.class)).isEqualTo("ROLE_USER");
+        assertThat(claims.get("role", String.class)).isEqualTo("USER");
         assertThat(claims.get("tokenType", String.class)).isEqualTo(TokenType.ACCESS_TOKEN.name());
     }
 
     @Test
     @DisplayName("리프레시 토큰은 REFRESH_TOKEN 타입 클레임을 포함한다")
     void refreshTokenContainsCorrectClaims() {
-        AuthPrincipal principal = new AuthPrincipal(42L, "USER");
+        AuthPrincipal principal = new AuthPrincipal(42L, Role.USER);
 
         String token = tokenGeneratorAdapter.generateRefreshToken(principal);
 
         Claims claims = parseClaims(token);
         assertThat(claims.getSubject()).isEqualTo("42");
-        assertThat(claims.get("role", String.class)).isEqualTo("ROLE_USER");
+        assertThat(claims.get("role", String.class)).isEqualTo("USER");
         assertThat(claims.get("tokenType", String.class)).isEqualTo(TokenType.REFRESH_TOKEN.name());
     }
 
@@ -71,7 +72,7 @@ class TokenGeneratorAdapterTest {
     @DisplayName("액세스 토큰 만료 시각은 발급 시각으로부터 accessTokenActiveTime 이내다")
     void accessTokenExpirationIsWithinActiveTime() {
         Date before = new Date();
-        String token = tokenGeneratorAdapter.generateAccessToken(new AuthPrincipal(1L, "USER"));
+        String token = tokenGeneratorAdapter.generateAccessToken(new AuthPrincipal(1L, Role.USER));
         Date after = new Date();
 
         Claims claims = parseClaims(token);
@@ -83,7 +84,7 @@ class TokenGeneratorAdapterTest {
     @Test
     @DisplayName("리프레시 토큰 만료 시각은 액세스 토큰보다 길다")
     void refreshTokenExpiresLaterThanAccessToken() {
-        AuthPrincipal principal = new AuthPrincipal(1L, "USER");
+        AuthPrincipal principal = new AuthPrincipal(1L, Role.USER);
 
         Date accessExpiry = parseClaims(tokenGeneratorAdapter.generateAccessToken(principal)).getExpiration();
         Date refreshExpiry = parseClaims(tokenGeneratorAdapter.generateRefreshToken(principal)).getExpiration();

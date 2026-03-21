@@ -30,7 +30,7 @@ public class SecurityConfig {
         http
                 .authorizeExchange(authorize -> {
                     authorize
-                            .pathMatchers("/auth/**", "/actuator/health", "/actuator/info").permitAll()
+                            .pathMatchers(SecurityPaths.PUBLIC_PATHS).permitAll()
                             .anyExchange().authenticated();
                 });
 

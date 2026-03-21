@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -61,6 +62,23 @@ class UserLoginUseCaseTest {
         verify(tokenGenerator).generateAccessToken(any(AuthPrincipal.class));
         verify(tokenGenerator).generateRefreshToken(any(AuthPrincipal.class));
         verifyNoMoreInteractions(userReader, tokenGenerator);
+    }
+
+    @Test
+    @DisplayName("토큰 생성에는 도메인 Role이 전달된다")
+    void loginBuildsAuthPrincipalWithDomainRole() {
+        User user = new User(9L, "role@test.com", passwordEncoder.encode("password123"), Role.ADMIN);
+        ArgumentCaptor<AuthPrincipal> principalCaptor = ArgumentCaptor.forClass(AuthPrincipal.class);
+
+        when(userReader.findByEmail("role@test.com")).thenReturn(Mono.just(user));
+        when(tokenGenerator.generateAccessToken(principalCaptor.capture())).thenReturn("access");
+        when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("refresh");
+
+        StepVerifier.create(userLoginUseCase.login(new LoginCommand("role@test.com", "password123")))
+                .expectNextCount(1)
+                .verifyComplete();
+
+        assertEquals(Role.ADMIN, principalCaptor.getValue().role());
     }
 
     @Test

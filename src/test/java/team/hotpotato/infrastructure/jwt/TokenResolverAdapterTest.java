@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 import team.hotpotato.domain.member.application.auth.AuthPrincipal;
+import team.hotpotato.domain.member.domain.Role;
 
 import javax.crypto.SecretKey;
 import java.util.Base64;
@@ -27,7 +28,7 @@ class TokenResolverAdapterTest {
     void setUp() {
         secretKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(TEST_SECRET_KEY));
         TokenProperties tokenProperties = new TokenProperties(
-                3_600_000L, 1_209_600_000L, "Bearer", "Authorization", TEST_SECRET_KEY
+                3_600_000L, 1_209_600_000L, "Bearer ", "Authorization", TEST_SECRET_KEY
         );
         tokenGeneratorAdapter = new TokenGeneratorAdapter(secretKey, tokenProperties);
         TokenValidatorAdapter tokenValidatorAdapter = new TokenValidatorAdapter(tokenProperties);
@@ -37,12 +38,12 @@ class TokenResolverAdapterTest {
     @Test
     @DisplayName("유효한 액세스 토큰은 올바른 AuthPrincipal을 반환한다")
     void resolveReturnsCorrectPrincipalForValidAccessToken() {
-        String token = tokenGeneratorAdapter.generateAccessToken(new AuthPrincipal(42L, "USER"));
+        String token = tokenGeneratorAdapter.generateAccessToken(new AuthPrincipal(42L, Role.USER));
 
         StepVerifier.create(tokenResolverAdapter.resolve("Bearer " + token))
                 .assertNext(principal -> {
                     assertThat(principal.userId()).isEqualTo(42L);
-                    assertThat(principal.role()).isEqualTo("ROLE_USER");
+                    assertThat(principal.role()).isEqualTo(Role.USER);
                 })
                 .verifyComplete();
     }
@@ -50,7 +51,7 @@ class TokenResolverAdapterTest {
     @Test
     @DisplayName("리프레시 토큰은 InvalidTokenTypeException을 반환한다")
     void resolveThrowsInvalidTokenTypeForRefreshToken() {
-        String token = tokenGeneratorAdapter.generateRefreshToken(new AuthPrincipal(42L, "USER"));
+        String token = tokenGeneratorAdapter.generateRefreshToken(new AuthPrincipal(42L, Role.USER));
 
         StepVerifier.create(tokenResolverAdapter.resolve("Bearer " + token))
                 .expectError(InvalidTokenTypeException.class)
@@ -68,11 +69,31 @@ class TokenResolverAdapterTest {
     @Test
     @DisplayName("Bearer 접두사가 없는 헤더는 InvalidTokenException을 반환한다")
     void resolveThrowsInvalidTokenWhenPrefixIsMissing() {
-        String token = tokenGeneratorAdapter.generateAccessToken(new AuthPrincipal(1L, "USER"));
+        String token = tokenGeneratorAdapter.generateAccessToken(new AuthPrincipal(1L, Role.USER));
 
         StepVerifier.create(tokenResolverAdapter.resolve(token))
                 .expectError(InvalidTokenException.class)
                 .verify();
+    }
+
+    @Test
+    @DisplayName("이전 ROLE_ 접두사 토큰도 도메인 Role로 정규화한다")
+    void resolveNormalizesLegacyRoleClaim() {
+        String legacyToken = Jwts.builder()
+                .signWith(secretKey)
+                .subject("7")
+                .claim("role", "ROLE_ADMIN")
+                .claim("tokenType", TokenType.ACCESS_TOKEN.name())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 10_000))
+                .compact();
+
+        StepVerifier.create(tokenResolverAdapter.resolve("Bearer " + legacyToken))
+                .assertNext(principal -> {
+                    assertThat(principal.userId()).isEqualTo(7L);
+                    assertThat(principal.role()).isEqualTo(Role.ADMIN);
+                })
+                .verifyComplete();
     }
 
     @Test

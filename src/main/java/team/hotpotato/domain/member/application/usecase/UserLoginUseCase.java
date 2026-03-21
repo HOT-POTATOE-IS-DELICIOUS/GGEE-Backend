@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import team.hotpotato.domain.member.application.auth.AuthPrincipal;
 import team.hotpotato.domain.member.application.auth.TokenGenerator;
 import team.hotpotato.domain.member.application.dto.LoginCommand;
@@ -21,12 +22,15 @@ public class UserLoginUseCase implements UserLogin {
     public Mono<LoginResult> login(LoginCommand loginCommand) {
         return userReader.findByEmail(loginCommand.email())
                 .switchIfEmpty(Mono.error(InvalidEmailOrPasswordException.EXCEPTION))
-                .filter(user -> passwordEncoder.matches(loginCommand.password(), user.password()))
-                .switchIfEmpty(Mono.error(InvalidEmailOrPasswordException.EXCEPTION))
+                .flatMap(user -> isPasswordMatched(loginCommand.password(), user.password())
+                        .filter(Boolean.TRUE::equals)
+                        .switchIfEmpty(Mono.error(InvalidEmailOrPasswordException.EXCEPTION))
+                        .thenReturn(user)
+                )
                 .map(user -> {
                     AuthPrincipal authPrincipal = new AuthPrincipal(
                             user.id(),
-                            user.role().name()
+                            user.role()
                     );
 
                     return new LoginResult(
@@ -34,5 +38,10 @@ public class UserLoginUseCase implements UserLogin {
                             tokenGenerator.generateRefreshToken(authPrincipal)
                     );
                 });
+    }
+
+    private Mono<Boolean> isPasswordMatched(String rawPassword, String encodedPassword) {
+        return Mono.fromCallable(() -> passwordEncoder.matches(rawPassword, encodedPassword))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }
