@@ -37,8 +37,8 @@ dependencies {
     implementation 'org.apache.kafka:kafka-streams'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-    runtimeOnly 'com.mysql:mysql-connector-j'
-    runtimeOnly 'io.asyncer:r2dbc-mysql'
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'org.postgresql:r2dbc-postgresql'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 

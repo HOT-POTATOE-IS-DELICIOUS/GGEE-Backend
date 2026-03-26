@@ -2,7 +2,7 @@ spring:
   application:
     name: test-ggee-backend
   r2dbc:
-    url: r2dbc:mysql://localhost:3306/test
+    url: r2dbc:postgresql://localhost:5432/test
     username: test
     password: test
 
