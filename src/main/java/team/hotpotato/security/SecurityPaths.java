@@ -4,7 +4,8 @@ public final class SecurityPaths {
     public static final String[] PUBLIC_PATHS = {
             "/auth/**",
             "/actuator/health",
-            "/actuator/info"
+            "/actuator/info",
+            "/perf/**"
     };
 
     private SecurityPaths() {
