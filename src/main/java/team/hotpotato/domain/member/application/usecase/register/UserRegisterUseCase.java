@@ -1,13 +1,14 @@
-package team.hotpotato.domain.member.application.usecase;
+package team.hotpotato.domain.member.application.usecase.register;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import team.hotpotato.common.identity.IdGenerator;
-import team.hotpotato.domain.member.application.dto.RegisterCommand;
-import team.hotpotato.domain.member.application.persistence.UserAppender;
+import team.hotpotato.domain.member.application.output.UserAppender;
+import team.hotpotato.domain.member.application.input.UserRegister;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.User;
 
@@ -28,6 +29,19 @@ public class UserRegisterUseCase implements UserRegister {
                 ))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(userAppender::save)
+				.onErrorMap(e -> {
+					if (isDuplicateEmailError(e)) {
+						return EmailAlreadyExistsException.EXCEPTION;
+					}
+					return e;
+				})
                 .then();
     }
+
+	private boolean isDuplicateEmailError(Throwable e) {
+		if (e instanceof DataIntegrityViolationException) {
+			return e.getMessage().contains("email");
+		}
+		return false;
+	}
 }

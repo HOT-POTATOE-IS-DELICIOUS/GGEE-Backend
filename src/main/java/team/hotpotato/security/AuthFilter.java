@@ -12,7 +12,7 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import team.hotpotato.common.exception.BusinessBaseException;
-import team.hotpotato.domain.member.application.auth.TokenResolver;
+import team.hotpotato.domain.member.application.input.TokenResolver;
 import team.hotpotato.infrastructure.jwt.TokenProperties;
 import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
 

@@ -11,12 +11,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-import team.hotpotato.domain.member.application.auth.AuthPrincipal;
-import team.hotpotato.domain.member.application.auth.TokenGenerator;
-import team.hotpotato.domain.member.application.dto.LoginCommand;
-import team.hotpotato.domain.member.application.persistence.UserReader;
-import team.hotpotato.domain.member.application.usecase.InvalidEmailOrPasswordException;
-import team.hotpotato.domain.member.application.usecase.UserLoginUseCase;
+import team.hotpotato.domain.member.application.model.AuthPrincipal;
+import team.hotpotato.domain.member.application.output.TokenGenerator;
+import team.hotpotato.domain.member.application.usecase.login.LoginCommand;
+import team.hotpotato.domain.member.application.output.UserReader;
+import team.hotpotato.domain.member.application.usecase.login.InvalidEmailOrPasswordException;
+import team.hotpotato.domain.member.application.usecase.login.UserLoginUseCase;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.User;
 

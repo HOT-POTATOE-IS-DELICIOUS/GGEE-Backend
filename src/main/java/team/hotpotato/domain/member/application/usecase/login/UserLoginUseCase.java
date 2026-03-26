@@ -1,15 +1,14 @@
-package team.hotpotato.domain.member.application.usecase;
+package team.hotpotato.domain.member.application.usecase.login;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import team.hotpotato.domain.member.application.auth.AuthPrincipal;
-import team.hotpotato.domain.member.application.auth.TokenGenerator;
-import team.hotpotato.domain.member.application.dto.LoginCommand;
-import team.hotpotato.domain.member.application.dto.LoginResult;
-import team.hotpotato.domain.member.application.persistence.UserReader;
+import team.hotpotato.domain.member.application.model.AuthPrincipal;
+import team.hotpotato.domain.member.application.output.TokenGenerator;
+import team.hotpotato.domain.member.application.input.UserLogin;
+import team.hotpotato.domain.member.application.output.UserReader;
 
 @Service
 @RequiredArgsConstructor

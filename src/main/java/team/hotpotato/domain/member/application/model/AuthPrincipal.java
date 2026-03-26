@@ -1,4 +1,4 @@
-package team.hotpotato.domain.member.application.auth;
+package team.hotpotato.domain.member.application.model;
 
 import team.hotpotato.domain.member.domain.Role;
 

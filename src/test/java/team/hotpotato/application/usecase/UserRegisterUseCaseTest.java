@@ -12,9 +12,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import team.hotpotato.common.identity.IdGenerator;
-import team.hotpotato.domain.member.application.dto.RegisterCommand;
-import team.hotpotato.domain.member.application.persistence.UserAppender;
-import team.hotpotato.domain.member.application.usecase.UserRegisterUseCase;
+import team.hotpotato.domain.member.application.usecase.register.RegisterCommand;
+import team.hotpotato.domain.member.application.output.UserAppender;
+import team.hotpotato.domain.member.application.usecase.register.UserRegisterUseCase;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.User;
 

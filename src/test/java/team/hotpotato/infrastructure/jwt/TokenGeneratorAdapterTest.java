@@ -6,7 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import team.hotpotato.domain.member.application.auth.AuthPrincipal;
+import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.domain.Role;
 
 import javax.crypto.SecretKey;

@@ -5,8 +5,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
-import team.hotpotato.domain.member.application.persistence.UserAppender;
-import team.hotpotato.domain.member.application.usecase.EmailAlreadyExistsException;
+import team.hotpotato.domain.member.application.output.UserAppender;
+import team.hotpotato.domain.member.application.usecase.register.EmailAlreadyExistsException;
 import team.hotpotato.domain.member.domain.User;
 
 @Repository

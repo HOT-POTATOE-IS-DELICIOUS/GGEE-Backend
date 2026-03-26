@@ -3,8 +3,8 @@ package team.hotpotato.infrastructure.jwt;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import team.hotpotato.domain.member.application.auth.AuthPrincipal;
-import team.hotpotato.domain.member.application.auth.TokenGenerator;
+import team.hotpotato.domain.member.application.model.AuthPrincipal;
+import team.hotpotato.domain.member.application.output.TokenGenerator;
 
 import javax.crypto.SecretKey;
 import java.util.Date;

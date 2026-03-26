@@ -7,8 +7,8 @@ import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import team.hotpotato.domain.member.application.auth.AuthPrincipal;
-import team.hotpotato.domain.member.application.auth.TokenResolver;
+import team.hotpotato.domain.member.application.model.AuthPrincipal;
+import team.hotpotato.domain.member.application.input.TokenResolver;
 import team.hotpotato.domain.member.domain.Role;
 
 import javax.crypto.SecretKey;

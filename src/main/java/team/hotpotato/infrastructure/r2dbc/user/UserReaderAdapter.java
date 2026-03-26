@@ -6,7 +6,7 @@ import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
-import team.hotpotato.domain.member.application.persistence.UserReader;
+import team.hotpotato.domain.member.application.output.UserReader;
 import team.hotpotato.domain.member.domain.User;
 
 @Repository

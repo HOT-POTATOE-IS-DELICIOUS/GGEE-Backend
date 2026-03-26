@@ -11,12 +11,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 import team.hotpotato.GgeeBackendApplication;
-import team.hotpotato.domain.member.application.auth.TokenResolver;
-import team.hotpotato.domain.member.application.dto.LoginCommand;
-import team.hotpotato.domain.member.application.dto.LoginResult;
-import team.hotpotato.domain.member.application.dto.RegisterCommand;
-import team.hotpotato.domain.member.application.usecase.UserLogin;
-import team.hotpotato.domain.member.application.usecase.UserRegister;
+import team.hotpotato.domain.member.application.input.TokenResolver;
+import team.hotpotato.domain.member.application.usecase.login.LoginCommand;
+import team.hotpotato.domain.member.application.usecase.login.LoginResult;
+import team.hotpotato.domain.member.application.usecase.register.RegisterCommand;
+import team.hotpotato.domain.member.application.input.UserLogin;
+import team.hotpotato.domain.member.application.input.UserRegister;
 import team.hotpotato.infrastructure.jwt.InvalidTokenException;
 
 import static org.assertj.core.api.Assertions.assertThat;

@@ -1,4 +1,4 @@
-package team.hotpotato.domain.member.application.usecase;
+package team.hotpotato.domain.member.application.usecase.register;
 
 import team.hotpotato.common.exception.BusinessBaseException;
 import team.hotpotato.common.exception.ErrorCode;
