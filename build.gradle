@@ -33,6 +33,9 @@ dependencies {
     implementation 'org.springframework.security:spring-security-crypto'
     implementation 'io.projectreactor:reactor-core'
     implementation 'io.jsonwebtoken:jjwt:0.13.0'
+    implementation 'org.springframework.boot:spring-boot-starter-kafka'
+    implementation 'org.apache.kafka:kafka-streams'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     runtimeOnly 'com.mysql:mysql-connector-j'
     runtimeOnly 'io.asyncer:r2dbc-mysql'
@@ -46,6 +49,9 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'org.mockito:mockito-junit-jupiter'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+    testImplementation 'org.apache.kafka:kafka-streams-test-utils'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

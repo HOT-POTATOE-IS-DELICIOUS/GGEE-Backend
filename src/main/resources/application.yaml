@@ -8,6 +8,16 @@ spring:
     username: ${SPRING_R2DBC_USERNAME}
     password: ${SPRING_R2DBC_PASSWORD}
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    streams:
+      application-id: ${KAFKA_STREAMS_APPLICATION_ID}
+      auto-startup: ${KAFKA_STREAMS_AUTO_STARTUP}
+      properties:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        processing.guarantee: at_least_once
+        default.deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
+
 server:
   port: ${SERVER_PORT}
 
@@ -38,3 +48,11 @@ jwt:
 
 snowflake:
   worker-id: ${SNOWFLAKE_WORKER_ID}
+
+ggee:
+  crawler:
+    input-topic: ${GGEE_CRAWLER_INPUT_TOPIC}
+    output-topic: ${GGEE_CRAWLER_OUTPUT_TOPIC}
+    dedup-store-name: ${GGEE_CRAWLER_DEDUP_STORE_NAME}
+    dedup-ttl: ${GGEE_CRAWLER_DEDUP_TTL}
+    cleanup-interval: ${GGEE_CRAWLER_DEDUP_CLEANUP_INTERVAL}
