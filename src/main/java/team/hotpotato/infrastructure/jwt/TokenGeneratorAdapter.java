@@ -21,6 +21,7 @@ public class TokenGeneratorAdapter implements TokenGenerator {
                 TokenType.ACCESS_TOKEN,
                 authPrincipal.userId(),
                 authPrincipal.role().name(),
+                authPrincipal.sessionId(),
                 tokenProperties.accessTokenActiveTime()
         );
     }
@@ -31,11 +32,12 @@ public class TokenGeneratorAdapter implements TokenGenerator {
                 TokenType.REFRESH_TOKEN,
                 authPrincipal.userId(),
                 authPrincipal.role().name(),
+                authPrincipal.sessionId(),
                 tokenProperties.refreshTokenActiveTime()
         );
     }
 
-    private String buildToken(TokenType tokenType, Long userId, String role, long tokenActiveTime) {
+    private String buildToken(TokenType tokenType, Long userId, String role, String sessionId, long tokenActiveTime) {
         Date now = new Date();
         return Jwts.builder()
                 .signWith(secretKey)
@@ -45,6 +47,7 @@ public class TokenGeneratorAdapter implements TokenGenerator {
                 .subject(userId.toString())
                 .claim("role", role)
                 .claim("tokenType", tokenType.name())
+                .claim("sessionId", sessionId)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + tokenActiveTime))
                 .compact();

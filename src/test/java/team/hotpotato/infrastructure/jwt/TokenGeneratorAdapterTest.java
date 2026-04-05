@@ -21,6 +21,7 @@ class TokenGeneratorAdapterTest {
     private static final String TEST_SECRET_KEY = "dGVzdC1zZWNyZXQta2V5LWZvci11bml0LXRlc3RpbmctMTIz";
     private static final long ACCESS_TOKEN_ACTIVE_TIME = 3_600_000L;
     private static final long REFRESH_TOKEN_ACTIVE_TIME = 1_209_600_000L;
+    private static final String TEST_SESSION_ID = "test-session-123";
 
     private TokenGeneratorAdapter tokenGeneratorAdapter;
     private SecretKey secretKey;
@@ -43,9 +44,9 @@ class TokenGeneratorAdapterTest {
     }
 
     @Test
-    @DisplayName("액세스 토큰은 id, ROLE_ 접두사 role, ACCESS_TOKEN 타입 클레임을 포함한다")
+    @DisplayName("액세스 토큰은 id, ROLE_ 접두사 role, ACCESS_TOKEN 타입, sessionId 클레임을 포함한다")
     void accessTokenContainsCorrectClaims() {
-        AuthPrincipal principal = new AuthPrincipal(42L, Role.USER);
+        AuthPrincipal principal = new AuthPrincipal(42L, Role.USER, TEST_SESSION_ID);
 
         String token = tokenGeneratorAdapter.generateAccessToken(principal);
 
@@ -53,12 +54,13 @@ class TokenGeneratorAdapterTest {
         assertThat(claims.getSubject()).isEqualTo("42");
         assertThat(claims.get("role", String.class)).isEqualTo("USER");
         assertThat(claims.get("tokenType", String.class)).isEqualTo(TokenType.ACCESS_TOKEN.name());
+        assertThat(claims.get("sessionId", String.class)).isEqualTo(TEST_SESSION_ID);
     }
 
     @Test
     @DisplayName("리프레시 토큰은 REFRESH_TOKEN 타입 클레임을 포함한다")
     void refreshTokenContainsCorrectClaims() {
-        AuthPrincipal principal = new AuthPrincipal(42L, Role.USER);
+        AuthPrincipal principal = new AuthPrincipal(42L, Role.USER, TEST_SESSION_ID);
 
         String token = tokenGeneratorAdapter.generateRefreshToken(principal);
 
@@ -66,13 +68,14 @@ class TokenGeneratorAdapterTest {
         assertThat(claims.getSubject()).isEqualTo("42");
         assertThat(claims.get("role", String.class)).isEqualTo("USER");
         assertThat(claims.get("tokenType", String.class)).isEqualTo(TokenType.REFRESH_TOKEN.name());
+        assertThat(claims.get("sessionId", String.class)).isEqualTo(TEST_SESSION_ID);
     }
 
     @Test
     @DisplayName("액세스 토큰 만료 시각은 발급 시각으로부터 accessTokenActiveTime 이내다")
     void accessTokenExpirationIsWithinActiveTime() {
         Date before = new Date();
-        String token = tokenGeneratorAdapter.generateAccessToken(new AuthPrincipal(1L, Role.USER));
+        String token = tokenGeneratorAdapter.generateAccessToken(new AuthPrincipal(1L, Role.USER, TEST_SESSION_ID));
         Date after = new Date();
 
         Claims claims = parseClaims(token);
@@ -84,7 +87,7 @@ class TokenGeneratorAdapterTest {
     @Test
     @DisplayName("리프레시 토큰 만료 시각은 액세스 토큰보다 길다")
     void refreshTokenExpiresLaterThanAccessToken() {
-        AuthPrincipal principal = new AuthPrincipal(1L, Role.USER);
+        AuthPrincipal principal = new AuthPrincipal(1L, Role.USER, TEST_SESSION_ID);
 
         Date accessExpiry = parseClaims(tokenGeneratorAdapter.generateAccessToken(principal)).getExpiration();
         Date refreshExpiry = parseClaims(tokenGeneratorAdapter.generateRefreshToken(principal)).getExpiration();

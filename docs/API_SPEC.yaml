@@ -1,0 +1,166 @@
+openapi: 3.0.3
+info:
+  title: GGEE Backend API
+  description: |
+    브랜드 평판 방화벽 플랫폼 백엔드 API
+
+    ## 인증
+    - `/auth/**`, `/actuator/health`, `/actuator/info` 경로는 인증 없이 접근 가능
+    - 그 외 모든 경로는 `Authorization: Bearer <accessToken>` 필요
+    - 한 계정당 하나의 기기에서만 로그인 가능. 새 기기에서 로그인하면 이전 기기 세션이 무효화됨
+
+    ## 토큰 만료
+    - Access Token: 1시간
+    - Refresh Token: 14일
+  version: 0.0.1
+
+servers:
+  - url: http://localhost:8080
+    description: Local
+
+tags:
+  - name: Auth
+    description: 회원가입 및 로그인
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      operationId: register
+      summary: 회원가입
+      description: 새로운 사용자 계정을 생성합니다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              email: "user@example.com"
+              password: "password123"
+      responses:
+        "201":
+          description: 회원가입 성공
+        "400":
+          description: 요청 본문 검증 실패
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                blank_email:
+                  value: "이메일이 입력되지 않았습니다."
+                invalid_email:
+                  value: "잘못된 이메일 형식입니다."
+                blank_password:
+                  value: "비밀번호가 입력되지 않았습니다."
+                short_password:
+                  value: "비밀번호는 최소 8자 이상 20자 이하여야 합니다."
+        "409":
+          description: 이미 존재하는 이메일
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "이미 존재하는 이메일입니다."
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      summary: 로그인
+      description: |
+        이메일과 비밀번호로 로그인하여 JWT 토큰을 발급받습니다.
+        로그인 시 기존 활성 세션이 모두 무효화됩니다. 이전 기기의 토큰은 더 이상 유효하지 않습니다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: "user@example.com"
+              password: "password123"
+      responses:
+        "201":
+          description: 로그인 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                accessToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDc1MTkyNDMyMzAwMDMyIiwicm9sZSI6IlVTRVIiLCJ0b2tlblR5cGUiOiJBQ0NFU1NfVE9LRU4iLCJzZXNzaW9uSWQiOiJjYmQyZGU5ZC1mMmExLTQ2Y2EtOWJhZS0zZjIzNjk2YzY3ZGEiLCJpYXQiOjE3NzU0Mjg2ODksImV4cCI6MTc3NTQzMjI4OX0.xxxxx"
+                refreshToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDc1MTkyNDMyMzAwMDMyIiwicm9sZSI6IlVTRVIiLCJ0b2tlblR5cGUiOiJSRUZSRVNIX1RPS0VOIiwic2Vzc2lvbklkIjoiY2JkMmRlOWQtZjJhMS00NmNhLTliYWUtM2YyMzY5NmM2N2RhIiwiaWF0IjoxNzc1NDI4Njg5LCJleHAiOjE3NzY2MzgyODl9.xxxxx"
+        "400":
+          description: 요청 본문 검증 실패
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                blank_email:
+                  value: "이메일이 입력되지 않았습니다."
+                invalid_email:
+                  value: "잘못된 이메일 형식입니다."
+                blank_password:
+                  value: "비밀번호가 입력되지 않았습니다."
+                short_password:
+                  value: "비밀번호는 최소 8자 이상 20자 이하여야 합니다."
+        "401":
+          description: 이메일 또는 비밀번호 불일치
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "이메일 또는 비밀번호가 올바르지 않습니다."
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Authorization: Bearer <accessToken>"
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          description: 사용자 이메일
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 8
+          maxLength: 20
+          description: 비밀번호 (8~20자)
+          example: "password123"
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          description: 사용자 이메일
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 8
+          maxLength: 20
+          description: 비밀번호 (8~20자)
+          example: "password123"
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: "JWT 액세스 토큰 (1시간 유효). Claims: sub(userId), role, tokenType, sessionId, iat, exp"
+        refreshToken:
+          type: string
+          description: "JWT 리프레시 토큰 (14일 유효). Claims: sub(userId), role, tokenType, sessionId, iat, exp"

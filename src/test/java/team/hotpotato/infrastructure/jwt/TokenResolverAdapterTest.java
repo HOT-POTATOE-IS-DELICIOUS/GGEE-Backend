@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TokenResolverAdapterTest {
 
     private static final String TEST_SECRET_KEY = "dGVzdC1zZWNyZXQta2V5LWZvci11bml0LXRlc3RpbmctMTIz";
+    private static final String TEST_SESSION_ID = "test-session-456";
 
     private TokenGeneratorAdapter tokenGeneratorAdapter;
     private TokenResolverAdapter tokenResolverAdapter;
@@ -38,12 +39,13 @@ class TokenResolverAdapterTest {
     @Test
     @DisplayName("유효한 액세스 토큰은 올바른 AuthPrincipal을 반환한다")
     void resolveReturnsCorrectPrincipalForValidAccessToken() {
-        String token = tokenGeneratorAdapter.generateAccessToken(new AuthPrincipal(42L, Role.USER));
+        String token = tokenGeneratorAdapter.generateAccessToken(new AuthPrincipal(42L, Role.USER, TEST_SESSION_ID));
 
         StepVerifier.create(tokenResolverAdapter.resolve("Bearer " + token))
                 .assertNext(principal -> {
                     assertThat(principal.userId()).isEqualTo(42L);
                     assertThat(principal.role()).isEqualTo(Role.USER);
+                    assertThat(principal.sessionId()).isEqualTo(TEST_SESSION_ID);
                 })
                 .verifyComplete();
     }
@@ -51,7 +53,7 @@ class TokenResolverAdapterTest {
     @Test
     @DisplayName("리프레시 토큰은 InvalidTokenTypeException을 반환한다")
     void resolveThrowsInvalidTokenTypeForRefreshToken() {
-        String token = tokenGeneratorAdapter.generateRefreshToken(new AuthPrincipal(42L, Role.USER));
+        String token = tokenGeneratorAdapter.generateRefreshToken(new AuthPrincipal(42L, Role.USER, TEST_SESSION_ID));
 
         StepVerifier.create(tokenResolverAdapter.resolve("Bearer " + token))
                 .expectError(InvalidTokenTypeException.class)
@@ -69,7 +71,7 @@ class TokenResolverAdapterTest {
     @Test
     @DisplayName("Bearer 접두사가 없는 헤더는 InvalidTokenException을 반환한다")
     void resolveThrowsInvalidTokenWhenPrefixIsMissing() {
-        String token = tokenGeneratorAdapter.generateAccessToken(new AuthPrincipal(1L, Role.USER));
+        String token = tokenGeneratorAdapter.generateAccessToken(new AuthPrincipal(1L, Role.USER, TEST_SESSION_ID));
 
         StepVerifier.create(tokenResolverAdapter.resolve(token))
                 .expectError(InvalidTokenException.class)
@@ -84,6 +86,7 @@ class TokenResolverAdapterTest {
                 .subject("7")
                 .claim("role", "ROLE_ADMIN")
                 .claim("tokenType", TokenType.ACCESS_TOKEN.name())
+                .claim("sessionId", "legacy-session")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 10_000))
                 .compact();
@@ -92,6 +95,7 @@ class TokenResolverAdapterTest {
                 .assertNext(principal -> {
                     assertThat(principal.userId()).isEqualTo(7L);
                     assertThat(principal.role()).isEqualTo(Role.ADMIN);
+                    assertThat(principal.sessionId()).isEqualTo("legacy-session");
                 })
                 .verifyComplete();
     }
@@ -104,6 +108,7 @@ class TokenResolverAdapterTest {
                 .subject("99")
                 .claim("role", "ROLE_USER")
                 .claim("tokenType", TokenType.ACCESS_TOKEN.name())
+                .claim("sessionId", "expired-session")
                 .issuedAt(new Date(System.currentTimeMillis() - 10_000))
                 .expiration(new Date(System.currentTimeMillis() - 5_000))
                 .compact();

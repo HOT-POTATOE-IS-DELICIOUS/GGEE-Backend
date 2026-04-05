@@ -9,8 +9,8 @@ public class ErrorCodeHttpStatusMapper {
 
     public HttpStatus toHttpStatus(ErrorCode errorCode) {
         return switch (errorCode) {
-            case EXPIRED_TOKEN, EXPIRED_REFRESH_TOKEN, INVALID_EMAIL_OR_PASSWORD -> HttpStatus.UNAUTHORIZED;
-            case INVALID_TOKEN, INVALID_TOKEN_TYPE, INVALID_EMAIL_FORMAT -> HttpStatus.BAD_REQUEST;
+            case EXPIRED_TOKEN, EXPIRED_REFRESH_TOKEN, INVALID_EMAIL_OR_PASSWORD, SESSION_EXPIRED -> HttpStatus.UNAUTHORIZED;
+            case INVALID_TOKEN, INVALID_TOKEN_TYPE, INVALID_EMAIL_FORMAT, INVALID_SESSION -> HttpStatus.BAD_REQUEST;
             case EMAIL_ALREADY_EXISTS -> HttpStatus.CONFLICT;
             case USER_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case METHOD_NOT_ALLOWED -> HttpStatus.METHOD_NOT_ALLOWED;

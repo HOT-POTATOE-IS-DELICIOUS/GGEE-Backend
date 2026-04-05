@@ -13,6 +13,8 @@ public enum ErrorCode {
     INVALID_EMAIL_FORMAT("올바르지 않은 이메일 형식입니다."),
     USER_NOT_FOUND("사용자를 찾을 수 없습니다."),
     INVALID_EMAIL_OR_PASSWORD("이메일 또는 비밀번호가 올바르지 않습니다."),
+    SESSION_EXPIRED("다른 기기에서 로그인되어 세션이 만료되었습니다."),
+    INVALID_SESSION("유효하지 않은 세션입니다."),
 
     METHOD_NOT_ALLOWED("잘못된 HTTP 메서드를 호출했습니다."),
     INTERNAL_SERVER_ERROR("서버 에러가 발생했습니다."),
