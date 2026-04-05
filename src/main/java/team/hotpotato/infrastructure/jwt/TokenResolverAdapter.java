@@ -48,8 +48,9 @@ public class TokenResolverAdapter implements TokenResolver {
 
                 Long userId = Long.parseLong(claims.getSubject());
                 Role role = Role.valueOf(normalizeRole(claims.get("role", String.class)));
+                String sessionId = claims.get("sessionId", String.class);
 
-                return new AuthPrincipal(userId, role);
+                return new AuthPrincipal(userId, role, sessionId);
             } catch (InvalidTokenTypeException e) {
                 throw InvalidTokenTypeException.EXCEPTION;
             } catch (ExpiredJwtException e) {
