@@ -9,15 +9,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import team.hotpotato.common.identity.IdGenerator;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
+import team.hotpotato.domain.member.application.output.SessionAppender;
 import team.hotpotato.domain.member.application.output.TokenGenerator;
 import team.hotpotato.domain.member.application.usecase.login.LoginCommand;
 import team.hotpotato.domain.member.application.output.UserReader;
 import team.hotpotato.domain.member.application.usecase.login.InvalidEmailOrPasswordException;
 import team.hotpotato.domain.member.application.usecase.login.UserLoginUseCase;
 import team.hotpotato.domain.member.domain.Role;
+import team.hotpotato.domain.member.domain.Session;
 import team.hotpotato.domain.member.domain.User;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,13 +38,25 @@ class UserLoginUseCaseTest {
     @Mock
     private TokenGenerator tokenGenerator;
 
+    @Mock
+    private SessionAppender sessionAppender;
+
+    @Mock
+    private IdGenerator idGenerator;
+
+    @Mock
+    private TransactionalOperator transactionalOperator;
+
     private PasswordEncoder passwordEncoder;
     private UserLoginUseCase userLoginUseCase;
 
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
-        userLoginUseCase = new UserLoginUseCase(userReader, tokenGenerator, passwordEncoder);
+        userLoginUseCase = new UserLoginUseCase(userReader, tokenGenerator, passwordEncoder, sessionAppender, idGenerator, transactionalOperator);
+
+        // Make the transactional operator just execute the callback without transaction
+        lenient().when(transactionalOperator.transactional(any(Mono.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
@@ -50,6 +66,10 @@ class UserLoginUseCaseTest {
         when(userReader.findByEmail("login@test.com")).thenReturn(Mono.just(user));
         when(tokenGenerator.generateAccessToken(any(AuthPrincipal.class))).thenReturn("access-7-USER");
         when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("refresh-7-USER");
+        when(sessionAppender.invalidateByUserId(7L)).thenReturn(Mono.empty());
+        when(sessionAppender.save(any(Session.class))).thenReturn(Mono.just(
+                new Session(1L, 7L, "session-id", "refresh-7-USER", null)
+        ));
 
         StepVerifier.create(userLoginUseCase.login(new LoginCommand("login@test.com", "password123")))
                 .assertNext(result -> {
@@ -61,7 +81,8 @@ class UserLoginUseCaseTest {
         verify(userReader).findByEmail("login@test.com");
         verify(tokenGenerator).generateAccessToken(any(AuthPrincipal.class));
         verify(tokenGenerator).generateRefreshToken(any(AuthPrincipal.class));
-        verifyNoMoreInteractions(userReader, tokenGenerator);
+        verify(sessionAppender).invalidateByUserId(7L);
+        verify(sessionAppender).save(any(Session.class));
     }
 
     @Test
@@ -73,6 +94,10 @@ class UserLoginUseCaseTest {
         when(userReader.findByEmail("role@test.com")).thenReturn(Mono.just(user));
         when(tokenGenerator.generateAccessToken(principalCaptor.capture())).thenReturn("access");
         when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("refresh");
+        when(sessionAppender.invalidateByUserId(9L)).thenReturn(Mono.empty());
+        when(sessionAppender.save(any(Session.class))).thenReturn(Mono.just(
+                new Session(1L, 9L, "session-id", "refresh", null)
+        ));
 
         StepVerifier.create(userLoginUseCase.login(new LoginCommand("role@test.com", "password123")))
                 .expectNextCount(1)

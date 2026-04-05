@@ -12,11 +12,14 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.application.input.TokenResolver;
+import team.hotpotato.domain.member.application.output.SessionReader;
 import team.hotpotato.domain.member.domain.Role;
+import team.hotpotato.domain.member.domain.Session;
 import team.hotpotato.infrastructure.jwt.InvalidTokenException;
 import team.hotpotato.infrastructure.jwt.TokenProperties;
 import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -26,16 +29,31 @@ import static org.mockito.Mockito.*;
 @DisplayName("인증 필터 단위 테스트")
 class AuthFilterTest {
 
+    private static final TokenProperties TOKEN_PROPERTIES = new TokenProperties(
+            3600L, 7200L, "Bearer ", "Authorization", "ignored"
+    );
+
+    private SessionReader mockSessionReaderWithActiveSession(Long userId, String sessionId) {
+        SessionReader sessionReader = mock(SessionReader.class);
+        when(sessionReader.findActiveByUserId(userId)).thenReturn(Mono.just(
+                new Session(1L, userId, sessionId, "refresh-token", LocalDateTime.now().plusHours(1))
+        ));
+        return sessionReader;
+    }
+
     @Test
     @DisplayName("공개 경로는 잘못된 토큰 헤더가 있어도 요청을 통과시킨다")
     void invalidTokenOnPublicPathIsIgnored() {
         TokenResolver tokenResolver = mock(TokenResolver.class);
         when(tokenResolver.resolve("Bearer invalid")).thenReturn(Mono.error(InvalidTokenException.EXCEPTION));
 
+        SessionReader sessionReader = mock(SessionReader.class);
+
         AuthFilter authFilter = new AuthFilter(
                 tokenResolver,
+                sessionReader,
                 new ErrorCodeHttpStatusMapper(),
-                new TokenProperties(3600L, 7200L, "Bearer ", "Authorization", "ignored")
+                TOKEN_PROPERTIES
         );
 
         MockServerWebExchange exchange = MockServerWebExchange.from(
@@ -62,10 +80,13 @@ class AuthFilterTest {
         TokenResolver tokenResolver = mock(TokenResolver.class);
         when(tokenResolver.resolve("Bearer invalid")).thenReturn(Mono.error(InvalidTokenException.EXCEPTION));
 
+        SessionReader sessionReader = mock(SessionReader.class);
+
         AuthFilter authFilter = new AuthFilter(
                 tokenResolver,
+                sessionReader,
                 new ErrorCodeHttpStatusMapper(),
-                new TokenProperties(3600L, 7200L, "Bearer ", "Authorization", "ignored")
+                TOKEN_PROPERTIES
         );
 
         MockServerWebExchange exchange = MockServerWebExchange.from(
@@ -89,13 +110,19 @@ class AuthFilterTest {
     @Test
     @DisplayName("설정된 헤더 이름으로만 토큰을 읽고 SecurityContext에는 ROLE_ 권한을 넣는다")
     void filterUsesConfiguredHeaderAndWritesSecurityContext() {
+        String sessionId = "test-session-id";
         TokenResolver tokenResolver = mock(TokenResolver.class);
-        when(tokenResolver.resolve("token-value")).thenReturn(Mono.just(new AuthPrincipal(7L, Role.USER)));
+        when(tokenResolver.resolve("token-value")).thenReturn(Mono.just(new AuthPrincipal(7L, Role.USER, sessionId)));
+
+        SessionReader sessionReader = mockSessionReaderWithActiveSession(7L, sessionId);
+
+        TokenProperties customProps = new TokenProperties(3600L, 7200L, "Bearer ", "X-AUTH", "ignored");
 
         AuthFilter authFilter = new AuthFilter(
                 tokenResolver,
+                sessionReader,
                 new ErrorCodeHttpStatusMapper(),
-                new TokenProperties(3600L, 7200L, "Bearer ", "X-AUTH", "ignored")
+                customProps
         );
 
         MockServerWebExchange ignoredExchange = MockServerWebExchange.from(
