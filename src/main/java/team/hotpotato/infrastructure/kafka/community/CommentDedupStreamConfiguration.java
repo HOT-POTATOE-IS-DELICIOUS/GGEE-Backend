@@ -29,7 +29,7 @@ public class CommentDedupStreamConfiguration {
         streamsBuilder.addStateStore(dedupStoreBuilder(properties));
 
         KStream<String, DeduplicatedCommentMessage> stream = streamsBuilder
-                .stream(properties.inputTopic(), Consumed.with(Serdes.String(), serdeFactory.serde(CrawlResultMessage.class)))
+                .stream(properties.resultEventTopic(), Consumed.with(Serdes.String(), serdeFactory.serde(CrawlResultMessage.class)))
                 .filter((jobId, payload) -> payload != null && COMPLETED.equalsIgnoreCase(payload.status()))
                 .flatMapValues(CrawlResultFlattener::flattenComments)
                 .selectKey((jobId, comment) -> comment.id())
@@ -42,7 +42,7 @@ public class CommentDedupStreamConfiguration {
                         properties.dedupStoreName()
                 );
 
-        stream.to(properties.outputTopic(), Produced.with(Serdes.String(), serdeFactory.serde(DeduplicatedCommentMessage.class)));
+        stream.to(properties.deduplicatedCommentTopic(), Produced.with(Serdes.String(), serdeFactory.serde(DeduplicatedCommentMessage.class)));
 
         return stream;
     }
