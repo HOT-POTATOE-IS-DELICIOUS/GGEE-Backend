@@ -10,6 +10,9 @@ spring:
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
     streams:
       application-id: ${KAFKA_STREAMS_APPLICATION_ID}
       auto-startup: ${KAFKA_STREAMS_AUTO_STARTUP}
@@ -51,8 +54,10 @@ snowflake:
 
 ggee:
   crawler:
-    input-topic: ${GGEE_CRAWLER_INPUT_TOPIC}
-    output-topic: ${GGEE_CRAWLER_OUTPUT_TOPIC}
+    result-event-topic: ${GGEE_CRAWLER_RESULT_EVENT_TOPIC}
+    deduplicated-comment-topic: ${GGEE_CRAWLER_DEDUPLICATED_COMMENT_TOPIC}
     dedup-store-name: ${GGEE_CRAWLER_DEDUP_STORE_NAME}
     dedup-ttl: ${GGEE_CRAWLER_DEDUP_TTL}
     cleanup-interval: ${GGEE_CRAWLER_DEDUP_CLEANUP_INTERVAL}
+    job:
+      create-topic: ${GGEE_CRAWLER_JOB_CREATE_TOPIC}

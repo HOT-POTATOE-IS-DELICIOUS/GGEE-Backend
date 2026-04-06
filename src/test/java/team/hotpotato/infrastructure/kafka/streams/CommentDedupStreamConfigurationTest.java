@@ -66,7 +66,7 @@ class CommentDedupStreamConfigurationTest {
 
     private TopologyTestDriver createDriver() {
         CrawlerStreamsProperties properties = new CrawlerStreamsProperties(
-                "crawl.result",
+                "crawl.result.control-plane",
                 "crawl.comment.deduped",
                 "crawler-comment-dedup-store",
                 Duration.ofDays(1),
@@ -87,7 +87,7 @@ class CommentDedupStreamConfigurationTest {
 
     private TestInputTopic<String, CrawlResultMessage> inputTopic(TopologyTestDriver driver) {
         return driver.createInputTopic(
-                "crawl.result",
+                "crawl.result.control-plane",
                 new StringSerializer(),
                 SERDE_FACTORY.serde(CrawlResultMessage.class).serializer()
         );
