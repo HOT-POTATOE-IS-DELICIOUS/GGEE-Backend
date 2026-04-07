@@ -82,7 +82,7 @@ spec:
                             'JWT_REFRESH_TOKEN_ACTIVE_TIME=1209600000',
                             'JWT_HEADER=Authorization',
                             'JWT_PREFIX=Bearer',
-                            'JWT_SECRET_KEY=test-secret-key-for-ci',
+                            'JWT_SECRET_KEY=ZmFrZS1mYWtlLWZha2UtZmFrZS1mYWtlLWZha2UtZmFrZS1mYWtlLWZha2U=',
                             'SNOWFLAKE_WORKER_ID=1',
                             'GGEE_CRAWLER_RESULT_EVENT_TOPIC=crawl.result.control-plane',
                             'GGEE_CRAWLER_DEDUPLICATED_COMMENT_TOPIC=crawl.comment.deduped',
@@ -156,6 +156,7 @@ EOF
                                 mkdir -p ~/.ssh
                                 ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
                                 git clone ${env.GITOPS_REPO} ${manifestDir}
+                                chmod -R a+rwX ${manifestDir}
                             """
 
                             def valuesPath = "${manifestDir}/${env.VALUES_FILE}"
