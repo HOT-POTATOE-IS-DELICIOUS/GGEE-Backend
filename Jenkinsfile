@@ -28,6 +28,7 @@ spec:
     options {
         timestamps()
         timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
     }
 
     environment {
@@ -182,7 +183,13 @@ EOF
 
     post {
         always {
-            cleanWs()
+            script {
+                try {
+                    cleanWs(deleteDirs: true, disableDeferredWipeout: true, notFailBuild: true)
+                } catch (err) {
+                    echo "skip cleanWs: ${err.getClass().getSimpleName()}"
+                }
+            }
         }
     }
 }
