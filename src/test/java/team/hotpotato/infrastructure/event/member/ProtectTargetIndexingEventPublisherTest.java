@@ -10,7 +10,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import team.hotpotato.domain.member.application.event.ProtectTargetIndexingMessage;
 
