@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import team.hotpotato.common.identity.IdGenerator;
+import team.hotpotato.domain.member.application.event.ProtectTargetIndexingMessage;
+import team.hotpotato.domain.member.application.output.ProtectTargetIndexingPublisher;
 import team.hotpotato.domain.member.application.usecase.register.RegisterCommand;
 import team.hotpotato.domain.member.application.output.UserAppender;
 import team.hotpotato.domain.member.application.usecase.register.UserRegisterUseCase;
@@ -30,6 +32,9 @@ class UserRegisterUseCaseTest {
     private UserAppender userAppender;
 
     @Mock
+    private ProtectTargetIndexingPublisher protectTargetIndexingPublisher;
+
+    @Mock
     private IdGenerator idGenerator;
 
     private PasswordEncoder passwordEncoder;
@@ -38,7 +43,7 @@ class UserRegisterUseCaseTest {
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
-        userRegisterUseCase = new UserRegisterUseCase(userAppender, idGenerator, passwordEncoder);
+        userRegisterUseCase = new UserRegisterUseCase(userAppender, protectTargetIndexingPublisher, idGenerator, passwordEncoder);
     }
 
     @Test
@@ -46,14 +51,17 @@ class UserRegisterUseCaseTest {
     void registerCompletesAndStoresEncodedUser() {
         when(idGenerator.generateId()).thenReturn(100L);
         when(userAppender.save(any(User.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        when(protectTargetIndexingPublisher.publish(any(ProtectTargetIndexingMessage.class))).thenReturn(Mono.empty());
 
         StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword", "brand")))
                 .verifyComplete();
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<ProtectTargetIndexingMessage> messageCaptor = ArgumentCaptor.forClass(ProtectTargetIndexingMessage.class);
         verify(idGenerator).generateId();
         verify(userAppender).save(userCaptor.capture());
-        verifyNoMoreInteractions(idGenerator, userAppender);
+        verify(protectTargetIndexingPublisher).publish(messageCaptor.capture());
+        verifyNoMoreInteractions(idGenerator, userAppender, protectTargetIndexingPublisher);
 
         User savedUser = userCaptor.getValue();
         assertEquals(100L, savedUser.id());
@@ -62,6 +70,7 @@ class UserRegisterUseCaseTest {
         assertEquals("brand", savedUser.protectTarget());
         assertNotEquals("plainPassword", savedUser.password());
         assertTrue(passwordEncoder.matches("plainPassword", savedUser.password()));
+        assertEquals(new ProtectTargetIndexingMessage("brand"), messageCaptor.getValue());
     }
 
     @Test
@@ -77,6 +86,24 @@ class UserRegisterUseCaseTest {
 
         verify(idGenerator).generateId();
         verify(userAppender).save(any(User.class));
+        verifyNoInteractions(protectTargetIndexingPublisher);
         verifyNoMoreInteractions(idGenerator, userAppender);
+    }
+
+    @Test
+    @DisplayName("인덱싱 이벤트 발행이 실패해도 회원가입은 완료된다")
+    void registerCompletesWhenPublishFails() {
+        when(idGenerator.generateId()).thenReturn(100L);
+        when(userAppender.save(any(User.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        when(protectTargetIndexingPublisher.publish(any(ProtectTargetIndexingMessage.class)))
+                .thenReturn(Mono.error(new RuntimeException("publish failed")));
+
+        StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword", "brand")))
+                .verifyComplete();
+
+        verify(idGenerator).generateId();
+        verify(userAppender).save(any(User.class));
+        verify(protectTargetIndexingPublisher).publish(new ProtectTargetIndexingMessage("brand"));
+        verifyNoMoreInteractions(idGenerator, userAppender, protectTargetIndexingPublisher);
     }
 }

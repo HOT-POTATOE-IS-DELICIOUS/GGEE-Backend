@@ -53,6 +53,8 @@ snowflake:
   worker-id: ${SNOWFLAKE_WORKER_ID}
 
 ggee:
+  member:
+    protect-target-indexing-topic: ${GGEE_MEMBER_PROTECT_TARGET_INDEXING_TOPIC}
   crawler:
     result-event-topic: ${GGEE_CRAWLER_RESULT_EVENT_TOPIC}
     deduplicated-comment-topic: ${GGEE_CRAWLER_DEDUPLICATED_COMMENT_TOPIC}

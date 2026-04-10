@@ -32,6 +32,8 @@ snowflake:
   worker-id: 1
 
 ggee:
+  member:
+    protect-target-indexing-topic: test-protect-target-indexing
   crawler:
     result-event-topic: test-crawler-result
     deduplicated-comment-topic: test-deduplicated-comment
