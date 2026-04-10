@@ -47,7 +47,7 @@ class UserRegisterUseCaseTest {
         when(idGenerator.generateId()).thenReturn(100L);
         when(userAppender.save(any(User.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
-        StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword")))
+        StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword", "brand")))
                 .verifyComplete();
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
@@ -59,6 +59,7 @@ class UserRegisterUseCaseTest {
         assertEquals(100L, savedUser.id());
         assertEquals("user@test.com", savedUser.email());
         assertEquals(Role.USER, savedUser.role());
+        assertEquals("brand", savedUser.protectTarget());
         assertNotEquals("plainPassword", savedUser.password());
         assertTrue(passwordEncoder.matches("plainPassword", savedUser.password()));
     }
@@ -70,7 +71,7 @@ class UserRegisterUseCaseTest {
         when(idGenerator.generateId()).thenReturn(1L);
         when(userAppender.save(any(User.class))).thenReturn(Mono.error(expected));
 
-        StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword")))
+        StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword", "brand")))
                 .expectErrorMatches(error -> error == expected)
                 .verify();
 

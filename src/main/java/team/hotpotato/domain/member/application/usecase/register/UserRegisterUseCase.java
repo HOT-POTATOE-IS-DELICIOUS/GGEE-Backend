@@ -25,7 +25,8 @@ public class UserRegisterUseCase implements UserRegister {
                         idGenerator.generateId(),
                         registerCommand.email(),
                         passwordEncoder.encode(registerCommand.password()),
-                        Role.USER
+                        Role.USER,
+                        registerCommand.protectTarget()
                 ))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(userAppender::save)

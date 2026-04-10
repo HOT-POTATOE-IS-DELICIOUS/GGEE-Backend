@@ -26,7 +26,8 @@ public class AuthController {
         return userRegister.register(
                         new RegisterCommand(
                                 registerRequest.email(),
-                                registerRequest.password()
+                                registerRequest.password(),
+                                registerRequest.protectTarget()
                         )
                 )
                 .then();

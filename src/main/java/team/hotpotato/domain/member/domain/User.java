@@ -4,14 +4,20 @@ public record User(
         Long id,
         String email,
         String password,
-        Role role
+        Role role,
+        String protectTarget
 ) {
     public User(Long id, String email, String password, Role role) {
+        this(id, email, password, role, null);
+    }
+
+    public User(Long id, String email, String password, Role role, String protectTarget) {
         this.id = id;
         validateEmail(email);
         this.email = email;
         this.password = password;
         this.role = role;
+        this.protectTarget = protectTarget;
     }
 
     private void validateEmail(String email) {

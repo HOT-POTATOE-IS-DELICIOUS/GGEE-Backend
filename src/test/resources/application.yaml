@@ -5,6 +5,10 @@ spring:
     url: r2dbc:postgresql://localhost:5432/test
     username: test
     password: test
+  kafka:
+    bootstrap-servers: localhost:9092
+    streams:
+      auto-startup: false
 
 server:
   port: 0
@@ -26,3 +30,13 @@ jwt:
 
 snowflake:
   worker-id: 1
+
+ggee:
+  crawler:
+    result-event-topic: test-crawler-result
+    deduplicated-comment-topic: test-deduplicated-comment
+    dedup-store-name: test-comment-dedup-store
+    dedup-ttl: 10m
+    cleanup-interval: 1m
+    job:
+      create-topic: test-crawler-job-create
