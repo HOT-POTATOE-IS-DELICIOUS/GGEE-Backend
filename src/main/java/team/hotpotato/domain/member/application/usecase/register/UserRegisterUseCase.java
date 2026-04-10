@@ -1,31 +1,47 @@
 package team.hotpotato.domain.member.application.usecase.register;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import team.hotpotato.domain.member.application.event.ProtectTargetIndexingMessage;
 import team.hotpotato.common.identity.IdGenerator;
-import team.hotpotato.domain.member.application.output.ProtectTargetIndexingPublisher;
+import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxAppender;
 import team.hotpotato.domain.member.application.output.UserAppender;
 import team.hotpotato.domain.member.application.input.UserRegister;
+import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutbox;
+import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutboxStatus;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.User;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserRegisterUseCase implements UserRegister {
     private final UserAppender userAppender;
-    private final ProtectTargetIndexingPublisher protectTargetIndexingPublisher;
+    private final ProtectTargetIndexingOutboxAppender outboxAppender;
     private final IdGenerator idGenerator;
     private final PasswordEncoder passwordEncoder;
+    private final TransactionalOperator transactionalOperator;
 
     @Override
     public Mono<Void> register(RegisterCommand registerCommand) {
+        return createUser(registerCommand)
+                .flatMap(user -> userAppender.save(user)
+                        .flatMap(this::saveOutbox)
+                )
+                .as(transactionalOperator::transactional)
+                .onErrorMap(e -> {
+                    if (isDuplicateEmailError(e)) {
+                        return EmailAlreadyExistsException.EXCEPTION;
+                    }
+                    return e;
+                })
+                .then();
+    }
+
+    private Mono<User> createUser(RegisterCommand registerCommand) {
         return Mono.fromCallable(() -> new User(
                         idGenerator.generateId(),
                         registerCommand.email(),
@@ -34,30 +50,22 @@ public class UserRegisterUseCase implements UserRegister {
                         registerCommand.protectTarget()
                 ))
                 .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(userAppender::save)
-                .flatMap(savedUser -> protectTargetIndexingPublisher.publish(
-                                new ProtectTargetIndexingMessage(savedUser.protectTarget())
-                        )
-                        .doOnError(error -> log.error(
-                                "보호 대상 인덱싱 이벤트 발행에 실패했습니다. protectTarget={}",
-                                savedUser.protectTarget(),
-                                error
-                        ))
-                        .onErrorResume(error -> Mono.empty())
-                )
-				.onErrorMap(e -> {
-					if (isDuplicateEmailError(e)) {
-						return EmailAlreadyExistsException.EXCEPTION;
-					}
-					return e;
-				})
-                .then();
+                .cast(User.class);
     }
 
-	private boolean isDuplicateEmailError(Throwable e) {
-		if (e instanceof DataIntegrityViolationException) {
-			return e.getMessage().contains("email");
-		}
-		return false;
-	}
+    private Mono<ProtectTargetIndexingOutbox> saveOutbox(User savedUser) {
+        return outboxAppender.save(new ProtectTargetIndexingOutbox(
+                idGenerator.generateId(),
+                savedUser.protectTarget(),
+                ProtectTargetIndexingOutboxStatus.PENDING,
+                null
+        ));
+    }
+
+    private boolean isDuplicateEmailError(Throwable e) {
+        if (e instanceof DataIntegrityViolationException) {
+            return e.getMessage().contains("email");
+        }
+        return false;
+    }
 }
