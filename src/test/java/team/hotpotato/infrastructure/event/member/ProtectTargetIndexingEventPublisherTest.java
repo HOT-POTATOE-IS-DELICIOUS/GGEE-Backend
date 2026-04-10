@@ -31,7 +31,7 @@ class ProtectTargetIndexingEventPublisherTest {
     @Test
     @DisplayName("보호 대상 인덱싱 이벤트를 지정한 토픽으로 발행한다")
     void publishSendsMessageToKafka() throws Exception {
-        MemberEventProperties properties = new MemberEventProperties("member.protect-target-indexing");
+        MemberEventProperties properties = new MemberEventProperties("member.protect-target-indexing", 5000L);
         ProtectTargetIndexingEventPublisher publisher =
                 new ProtectTargetIndexingEventPublisher(kafkaTemplate, objectMapper, properties);
         ProtectTargetIndexingMessage message = new ProtectTargetIndexingMessage("brand");
@@ -56,7 +56,7 @@ class ProtectTargetIndexingEventPublisherTest {
     @Test
     @DisplayName("직렬화에 실패하면 예외를 반환한다")
     void publishFailsWhenSerializationFails() throws Exception {
-        MemberEventProperties properties = new MemberEventProperties("member.protect-target-indexing");
+        MemberEventProperties properties = new MemberEventProperties("member.protect-target-indexing", 5000L);
         ProtectTargetIndexingEventPublisher publisher =
                 new ProtectTargetIndexingEventPublisher(kafkaTemplate, objectMapper, properties);
         ProtectTargetIndexingMessage message = new ProtectTargetIndexingMessage("brand");

@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "ggee.member")
 public record MemberEventProperties(
-        String protectTargetIndexingTopic
+        String protectTargetIndexingTopic,
+        long protectTargetIndexingDispatchDelay
 ) {
 }
