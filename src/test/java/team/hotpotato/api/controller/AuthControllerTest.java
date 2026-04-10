@@ -64,7 +64,8 @@ class AuthControllerTest {
                 .bodyValue("""
                         {
                           "email": "user@test.com",
-                          "password": "plainPassword"
+                          "password": "plainPassword",
+                          "protectTarget": "brand"
                         }
                         """)
                 .exchange()
@@ -73,7 +74,7 @@ class AuthControllerTest {
 
         ArgumentCaptor<RegisterCommand> commandCaptor = ArgumentCaptor.forClass(RegisterCommand.class);
         verify(userRegister).register(commandCaptor.capture());
-        assertThat(commandCaptor.getValue()).isEqualTo(new RegisterCommand("user@test.com", "plainPassword"));
+        assertThat(commandCaptor.getValue()).isEqualTo(new RegisterCommand("user@test.com", "plainPassword", "brand"));
     }
 
     @Test
@@ -111,7 +112,8 @@ class AuthControllerTest {
                 .bodyValue("""
                         {
                           "email": "invalid-email",
-                          "password": "short"
+                          "password": "short",
+                          "protectTarget": ""
                         }
                         """)
                 .exchange()

@@ -21,4 +21,7 @@ public class UserEntity extends BaseEntity {
 
     @Column("password")
     private String password;
+
+    @Column("protect_target")
+    private String protectTarget;
 }

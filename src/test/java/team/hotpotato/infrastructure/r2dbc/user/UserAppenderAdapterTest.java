@@ -29,12 +29,13 @@ class UserAppenderAdapterTest {
     @DisplayName("저장 성공 시 엔티티를 도메인으로 매핑해 반환한다")
     void saveReturnsMappedDomainUser() {
         UserAppenderAdapter adapter = new UserAppenderAdapter(template);
-        User user = new User(1L, "user@test.com", "encoded", Role.USER);
+        User user = new User(1L, "user@test.com", "encoded", Role.USER, "brand");
         UserEntity savedEntity = UserEntity.builder()
                 .id(1L)
                 .email("user@test.com")
                 .password("encoded")
                 .role("USER")
+                .protectTarget("brand")
                 .build();
 
         when(template.insert(UserEntity.class).using(any(UserEntity.class))).thenReturn(Mono.just(savedEntity));
@@ -44,6 +45,7 @@ class UserAppenderAdapterTest {
                     assertThat(savedUser.id()).isEqualTo(1L);
                     assertThat(savedUser.email()).isEqualTo("user@test.com");
                     assertThat(savedUser.role()).isEqualTo(Role.USER);
+                    assertThat(savedUser.protectTarget()).isEqualTo("brand");
                 })
                 .verifyComplete();
     }
@@ -52,7 +54,7 @@ class UserAppenderAdapterTest {
     @DisplayName("중복 이메일 제약조건 오류는 EmailAlreadyExistsException으로 변환한다")
     void saveMapsDuplicateEmailError() {
         UserAppenderAdapter adapter = new UserAppenderAdapter(template);
-        User user = new User(1L, "user@test.com", "encoded", Role.USER);
+        User user = new User(1L, "user@test.com", "encoded", Role.USER, "brand");
 
         when(template.insert(UserEntity.class).using(any(UserEntity.class)))
                 .thenReturn(Mono.error(new DataIntegrityViolationException("Duplicate entry")));

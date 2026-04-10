@@ -11,6 +11,9 @@ public record RegisterRequest(
 
         @Size(min = 8, max = 20, message = "비밀번호는 최소 8자 이상 20자 이하여야 합니다.")
         @NotBlank(message = "비밀번호가 입력되지 않았습니다.")
-        String password
+        String password,
+
+        @NotBlank(message = "보호 대상을 입력해주세요.")
+        String protectTarget
 ) {
 }
