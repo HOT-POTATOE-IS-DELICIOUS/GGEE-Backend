@@ -5,15 +5,19 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
+import org.springframework.data.relational.core.query.Update;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
-import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxReader;
+import reactor.core.publisher.Mono;
+import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxRepository;
 import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutbox;
 import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutboxStatus;
 
+import java.time.LocalDateTime;
+
 @Repository
 @RequiredArgsConstructor
-public class ProtectTargetIndexingOutboxReaderAdapter implements ProtectTargetIndexingOutboxReader {
+public class ProtectTargetIndexingOutboxRepositoryAdapter implements ProtectTargetIndexingOutboxRepository {
     private final R2dbcEntityTemplate template;
 
     @Override
@@ -27,5 +31,23 @@ public class ProtectTargetIndexingOutboxReaderAdapter implements ProtectTargetIn
                         ProtectTargetIndexingOutboxEntity.class
                 )
                 .map(ProtectTargetIndexingOutboxEntityMapper::toDomain);
+    }
+
+    @Override
+    public Mono<ProtectTargetIndexingOutbox> save(ProtectTargetIndexingOutbox outbox) {
+        return template.insert(ProtectTargetIndexingOutboxEntity.class)
+                .using(ProtectTargetIndexingOutboxEntityMapper.toEntity(outbox))
+                .map(ProtectTargetIndexingOutboxEntityMapper::toDomain);
+    }
+
+    @Override
+    public Mono<Void> markPublished(Long outboxId) {
+        return template.update(
+                        Query.query(Criteria.where("id").is(outboxId).and("deleted").is(false)),
+                        Update.update("status", ProtectTargetIndexingOutboxStatus.PUBLISHED.name())
+                                .set("published_at", LocalDateTime.now()),
+                        ProtectTargetIndexingOutboxEntity.class
+                )
+                .then();
     }
 }

@@ -12,7 +12,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 import team.hotpotato.GgeeBackendApplication;
 import team.hotpotato.domain.member.application.input.TokenResolver;
-import team.hotpotato.domain.member.application.output.SessionReader;
+import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.usecase.login.LoginCommand;
 import team.hotpotato.domain.member.application.usecase.login.LoginResult;
 import team.hotpotato.domain.member.application.usecase.register.RegisterCommand;
@@ -44,7 +44,7 @@ class AuthControllerTest {
     private TokenResolver tokenResolver;
 
     @MockitoBean
-    private SessionReader sessionReader;
+    private SessionRepository sessionRepository;
 
     @BeforeEach
     void setUp() {

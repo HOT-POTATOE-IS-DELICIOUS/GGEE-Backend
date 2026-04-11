@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.application.input.TokenResolver;
-import team.hotpotato.domain.member.application.output.SessionReader;
+import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.Session;
 import team.hotpotato.infrastructure.jwt.InvalidTokenException;
@@ -33,12 +33,12 @@ class AuthFilterTest {
             3600L, 7200L, "Bearer ", "Authorization", "ignored"
     );
 
-    private SessionReader mockSessionReaderWithActiveSession(Long userId, String sessionId) {
-        SessionReader sessionReader = mock(SessionReader.class);
-        when(sessionReader.findActiveByUserId(userId)).thenReturn(Mono.just(
+    private SessionRepository mockSessionRepositoryWithActiveSession(Long userId, String sessionId) {
+        SessionRepository sessionRepository = mock(SessionRepository.class);
+        when(sessionRepository.findActiveByUserId(userId)).thenReturn(Mono.just(
                 new Session(1L, userId, sessionId, "refresh-token", LocalDateTime.now().plusHours(1))
         ));
-        return sessionReader;
+        return sessionRepository;
     }
 
     @Test
@@ -47,11 +47,11 @@ class AuthFilterTest {
         TokenResolver tokenResolver = mock(TokenResolver.class);
         when(tokenResolver.resolve("Bearer invalid")).thenReturn(Mono.error(InvalidTokenException.EXCEPTION));
 
-        SessionReader sessionReader = mock(SessionReader.class);
+        SessionRepository sessionRepository = mock(SessionRepository.class);
 
         AuthFilter authFilter = new AuthFilter(
                 tokenResolver,
-                sessionReader,
+                sessionRepository,
                 new ErrorCodeHttpStatusMapper(),
                 TOKEN_PROPERTIES
         );
@@ -80,11 +80,11 @@ class AuthFilterTest {
         TokenResolver tokenResolver = mock(TokenResolver.class);
         when(tokenResolver.resolve("Bearer invalid")).thenReturn(Mono.error(InvalidTokenException.EXCEPTION));
 
-        SessionReader sessionReader = mock(SessionReader.class);
+        SessionRepository sessionRepository = mock(SessionRepository.class);
 
         AuthFilter authFilter = new AuthFilter(
                 tokenResolver,
-                sessionReader,
+                sessionRepository,
                 new ErrorCodeHttpStatusMapper(),
                 TOKEN_PROPERTIES
         );
@@ -114,13 +114,13 @@ class AuthFilterTest {
         TokenResolver tokenResolver = mock(TokenResolver.class);
         when(tokenResolver.resolve("token-value")).thenReturn(Mono.just(new AuthPrincipal(7L, Role.USER, sessionId)));
 
-        SessionReader sessionReader = mockSessionReaderWithActiveSession(7L, sessionId);
+        SessionRepository sessionRepository = mockSessionRepositoryWithActiveSession(7L, sessionId);
 
         TokenProperties customProps = new TokenProperties(3600L, 7200L, "Bearer ", "X-AUTH", "ignored");
 
         AuthFilter authFilter = new AuthFilter(
                 tokenResolver,
-                sessionReader,
+                sessionRepository,
                 new ErrorCodeHttpStatusMapper(),
                 customProps
         );

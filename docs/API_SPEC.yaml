@@ -10,8 +10,7 @@ info:
     - 한 계정당 하나의 기기에서만 로그인 가능. 새 기기에서 로그인하면 이전 기기 세션이 무효화됨
 
     ## 토큰 만료
-    - Access Token: 1시간
-    - Refresh Token: 14일
+    - Access Token / Refresh Token 만료 시간은 환경 설정에 따라 달라질 수 있음
   version: 0.0.1
 
 servers:
@@ -38,6 +37,7 @@ paths:
             example:
               email: "user@example.com"
               password: "password123"
+              protectTarget: "brand"
       responses:
         "201":
           description: 회원가입 성공
@@ -56,6 +56,8 @@ paths:
                   value: "비밀번호가 입력되지 않았습니다."
                 short_password:
                   value: "비밀번호는 최소 8자 이상 20자 이하여야 합니다."
+                blank_protect_target:
+                  value: "보호 대상을 입력해주세요."
         "409":
           description: 이미 존재하는 이메일
           content:
@@ -125,7 +127,7 @@ components:
   schemas:
     RegisterRequest:
       type: object
-      required: [email, password]
+      required: [email, password, protectTarget]
       properties:
         email:
           type: string
@@ -138,6 +140,10 @@ components:
           maxLength: 20
           description: 비밀번호 (8~20자)
           example: "password123"
+        protectTarget:
+          type: string
+          description: 보호 대상 브랜드 또는 키워드
+          example: "brand"
 
     LoginRequest:
       type: object
@@ -160,7 +166,7 @@ components:
       properties:
         accessToken:
           type: string
-          description: "JWT 액세스 토큰 (1시간 유효). Claims: sub(userId), role, tokenType, sessionId, iat, exp"
+          description: "JWT 액세스 토큰. 만료 시간은 환경 설정에 따름. Claims: sub(userId), role, tokenType, sessionId, iat, exp"
         refreshToken:
           type: string
-          description: "JWT 리프레시 토큰 (14일 유효). Claims: sub(userId), role, tokenType, sessionId, iat, exp"
+          description: "JWT 리프레시 토큰. 만료 시간은 환경 설정에 따름. Claims: sub(userId), role, tokenType, sessionId, iat, exp"

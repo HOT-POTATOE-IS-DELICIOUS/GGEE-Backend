@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 import team.hotpotato.common.exception.BusinessBaseException;
 import team.hotpotato.domain.member.application.input.TokenResolver;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
-import team.hotpotato.domain.member.application.output.SessionReader;
+import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.usecase.login.SessionExpiredException;
 import team.hotpotato.infrastructure.jwt.TokenProperties;
 import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
@@ -26,7 +26,7 @@ import java.util.List;
 public class AuthFilter implements WebFilter {
     private static final String ROLE_PREFIX = "ROLE_";
     private final TokenResolver tokenResolver;
-    private final SessionReader sessionReader;
+    private final SessionRepository sessionRepository;
     private final ErrorCodeHttpStatusMapper errorCodeHttpStatusMapper;
     private final TokenProperties tokenProperties;
     private final ServerWebExchangeMatcher publicPathMatcher =
@@ -66,7 +66,7 @@ public class AuthFilter implements WebFilter {
     }
 
     private Mono<Void> validateSession(AuthPrincipal principal) {
-        return sessionReader.findActiveByUserId(principal.userId())
+        return sessionRepository.findActiveByUserId(principal.userId())
                 .switchIfEmpty(Mono.error(SessionExpiredException.EXCEPTION))
                 .flatMap(activeSession -> {
                     if (!activeSession.sessionId().equals(principal.sessionId())) {

@@ -14,10 +14,10 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import team.hotpotato.common.identity.IdGenerator;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
-import team.hotpotato.domain.member.application.output.SessionAppender;
+import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.output.TokenGenerator;
 import team.hotpotato.domain.member.application.usecase.login.LoginCommand;
-import team.hotpotato.domain.member.application.output.UserReader;
+import team.hotpotato.domain.member.application.output.UserRepository;
 import team.hotpotato.domain.member.application.usecase.login.InvalidEmailOrPasswordException;
 import team.hotpotato.domain.member.application.usecase.login.UserLoginUseCase;
 import team.hotpotato.domain.member.domain.Role;
@@ -33,13 +33,13 @@ import static org.mockito.Mockito.*;
 class UserLoginUseCaseTest {
 
     @Mock
-    private UserReader userReader;
+    private UserRepository userRepository;
 
     @Mock
     private TokenGenerator tokenGenerator;
 
     @Mock
-    private SessionAppender sessionAppender;
+    private SessionRepository sessionRepository;
 
     @Mock
     private IdGenerator idGenerator;
@@ -53,7 +53,7 @@ class UserLoginUseCaseTest {
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
-        userLoginUseCase = new UserLoginUseCase(userReader, tokenGenerator, passwordEncoder, sessionAppender, idGenerator, transactionalOperator);
+        userLoginUseCase = new UserLoginUseCase(userRepository, tokenGenerator, passwordEncoder, sessionRepository, idGenerator, transactionalOperator);
 
         // Make the transactional operator just execute the callback without transaction
         lenient().when(transactionalOperator.transactional(any(Mono.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -63,11 +63,11 @@ class UserLoginUseCaseTest {
     @DisplayName("이메일/비밀번호가 일치하면 액세스/리프레시 토큰을 반환한다")
     void loginReturnsTokenPairWhenCredentialsMatch() {
         User user = new User(7L, "login@test.com", passwordEncoder.encode("password123"), Role.USER);
-        when(userReader.findByEmail("login@test.com")).thenReturn(Mono.just(user));
+        when(userRepository.findByEmail("login@test.com")).thenReturn(Mono.just(user));
         when(tokenGenerator.generateAccessToken(any(AuthPrincipal.class))).thenReturn("access-7-USER");
         when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("refresh-7-USER");
-        when(sessionAppender.invalidateByUserId(7L)).thenReturn(Mono.empty());
-        when(sessionAppender.save(any(Session.class))).thenReturn(Mono.just(
+        when(sessionRepository.invalidateByUserId(7L)).thenReturn(Mono.empty());
+        when(sessionRepository.save(any(Session.class))).thenReturn(Mono.just(
                 new Session(1L, 7L, "session-id", "refresh-7-USER", null)
         ));
 
@@ -78,11 +78,11 @@ class UserLoginUseCaseTest {
                 })
                 .verifyComplete();
 
-        verify(userReader).findByEmail("login@test.com");
+        verify(userRepository).findByEmail("login@test.com");
         verify(tokenGenerator).generateAccessToken(any(AuthPrincipal.class));
         verify(tokenGenerator).generateRefreshToken(any(AuthPrincipal.class));
-        verify(sessionAppender).invalidateByUserId(7L);
-        verify(sessionAppender).save(any(Session.class));
+        verify(sessionRepository).invalidateByUserId(7L);
+        verify(sessionRepository).save(any(Session.class));
     }
 
     @Test
@@ -91,11 +91,11 @@ class UserLoginUseCaseTest {
         User user = new User(9L, "role@test.com", passwordEncoder.encode("password123"), Role.ADMIN);
         ArgumentCaptor<AuthPrincipal> principalCaptor = ArgumentCaptor.forClass(AuthPrincipal.class);
 
-        when(userReader.findByEmail("role@test.com")).thenReturn(Mono.just(user));
+        when(userRepository.findByEmail("role@test.com")).thenReturn(Mono.just(user));
         when(tokenGenerator.generateAccessToken(principalCaptor.capture())).thenReturn("access");
         when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("refresh");
-        when(sessionAppender.invalidateByUserId(9L)).thenReturn(Mono.empty());
-        when(sessionAppender.save(any(Session.class))).thenReturn(Mono.just(
+        when(sessionRepository.invalidateByUserId(9L)).thenReturn(Mono.empty());
+        when(sessionRepository.save(any(Session.class))).thenReturn(Mono.just(
                 new Session(1L, 9L, "session-id", "refresh", null)
         ));
 
@@ -109,13 +109,13 @@ class UserLoginUseCaseTest {
     @Test
     @DisplayName("가입되지 않은 이메일이면 InvalidEmailOrPasswordException이 발생한다")
     void loginFailsWhenEmailDoesNotExist() {
-        when(userReader.findByEmail("missing@test.com")).thenReturn(Mono.empty());
+        when(userRepository.findByEmail("missing@test.com")).thenReturn(Mono.empty());
 
         StepVerifier.create(userLoginUseCase.login(new LoginCommand("missing@test.com", "password123")))
                 .expectError(InvalidEmailOrPasswordException.class)
                 .verify();
 
-        verify(userReader).findByEmail("missing@test.com");
+        verify(userRepository).findByEmail("missing@test.com");
         verifyNoInteractions(tokenGenerator);
     }
 
@@ -123,13 +123,13 @@ class UserLoginUseCaseTest {
     @DisplayName("비밀번호가 일치하지 않으면 InvalidEmailOrPasswordException이 발생한다")
     void loginFailsWhenPasswordDoesNotMatch() {
         User user = new User(7L, "login@test.com", passwordEncoder.encode("password123"), Role.USER);
-        when(userReader.findByEmail("login@test.com")).thenReturn(Mono.just(user));
+        when(userRepository.findByEmail("login@test.com")).thenReturn(Mono.just(user));
 
         StepVerifier.create(userLoginUseCase.login(new LoginCommand("login@test.com", "wrongPassword")))
                 .expectError(InvalidEmailOrPasswordException.class)
                 .verify();
 
-        verify(userReader).findByEmail("login@test.com");
+        verify(userRepository).findByEmail("login@test.com");
         verifyNoInteractions(tokenGenerator);
     }
 }
