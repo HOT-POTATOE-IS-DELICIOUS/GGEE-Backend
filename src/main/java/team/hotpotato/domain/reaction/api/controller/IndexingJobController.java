@@ -17,7 +17,7 @@ public class IndexingJobController {
 
     private final IndexingJobCompletionWaiter completionWaiter;
 
-    @GetMapping(value = "/{jobId}/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/{jobId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> streamJobCompletion(@PathVariable String jobId) {
         return completionWaiter.waitForCompletion(jobId)
                 .thenReturn(ServerSentEvent.<String>builder()
