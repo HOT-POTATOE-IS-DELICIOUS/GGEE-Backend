@@ -8,9 +8,9 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import team.hotpotato.common.identity.IdGenerator;
-import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxAppender;
-import team.hotpotato.domain.member.application.output.UserAppender;
 import team.hotpotato.domain.member.application.input.UserRegister;
+import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxRepository;
+import team.hotpotato.domain.member.application.output.UserRepository;
 import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutbox;
 import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutboxStatus;
 import team.hotpotato.domain.member.domain.Role;
@@ -19,8 +19,8 @@ import team.hotpotato.domain.member.domain.User;
 @Service
 @RequiredArgsConstructor
 public class UserRegisterUseCase implements UserRegister {
-    private final UserAppender userAppender;
-    private final ProtectTargetIndexingOutboxAppender outboxAppender;
+    private final UserRepository userRepository;
+    private final ProtectTargetIndexingOutboxRepository outboxRepository;
     private final IdGenerator idGenerator;
     private final PasswordEncoder passwordEncoder;
     private final TransactionalOperator transactionalOperator;
@@ -28,7 +28,7 @@ public class UserRegisterUseCase implements UserRegister {
     @Override
     public Mono<Void> register(RegisterCommand registerCommand) {
         return createUser(registerCommand)
-                .flatMap(user -> userAppender.save(user)
+                .flatMap(user -> userRepository.save(user)
                         .flatMap(this::saveOutbox)
                 )
                 .as(transactionalOperator::transactional)
@@ -54,7 +54,7 @@ public class UserRegisterUseCase implements UserRegister {
     }
 
     private Mono<ProtectTargetIndexingOutbox> saveOutbox(User savedUser) {
-        return outboxAppender.save(new ProtectTargetIndexingOutbox(
+        return outboxRepository.save(new ProtectTargetIndexingOutbox(
                 idGenerator.generateId(),
                 savedUser.protectTarget(),
                 ProtectTargetIndexingOutboxStatus.PENDING,

@@ -6,12 +6,12 @@ import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
-import team.hotpotato.domain.member.application.output.UserReader;
+import team.hotpotato.domain.member.application.output.UserRepository;
 import team.hotpotato.domain.member.domain.User;
 
 @Repository
 @RequiredArgsConstructor
-public class UserReaderAdapter implements UserReader {
+public class UserRepositoryAdapter implements UserRepository {
     private final R2dbcEntityTemplate template;
 
     @Override
@@ -21,5 +21,13 @@ public class UserReaderAdapter implements UserReader {
                         UserEntity.class
                 )
                 .map(UserEntityMapper::toDomain);
+    }
+
+    @Override
+    public Mono<User> save(User user) {
+        return template.insert(UserEntity.class)
+                .using(UserEntityMapper.toEntity(user))
+                .map(UserEntityMapper::toDomain)
+                .onErrorMap(UserRepositoryExceptionMapper::mapToDomainExceptionIfNeeded);
     }
 }
