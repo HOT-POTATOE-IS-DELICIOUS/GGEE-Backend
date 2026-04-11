@@ -49,6 +49,8 @@ paths:
                 $ref: '#/components/schemas/RegisterResponse'
               example:
                 indexing_job_id: "107519243230003200"
+                accessToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
+                refreshToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
         "400":
           description: 요청 본문 검증 실패
           content:
@@ -166,6 +168,9 @@ paths:
                 session_expired:
                   value: "다른 기기에서 로그인되어 세션이 만료되었습니다."
 
+security:
+  - BearerAuth: []
+
 components:
   securitySchemes:
     BearerAuth:
@@ -218,6 +223,12 @@ components:
           type: string
           description: "인덱싱 작업 ID. `/indexing/jobs/{jobId}` SSE 엔드포인트에서 완료 여부를 확인하는 데 사용"
           example: "107519243230003200"
+        accessToken:
+          type: string
+          description: "JWT 액세스 토큰. Claims: sub(userId), role, tokenType, sessionId, iat, exp"
+        refreshToken:
+          type: string
+          description: "JWT 리프레시 토큰. Claims: sub(userId), role, tokenType, sessionId, iat, exp"
 
     LoginResponse:
       type: object

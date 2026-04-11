@@ -31,7 +31,7 @@ public class AuthController {
                                 registerRequest.protectTarget()
                         )
                 )
-                .map(result -> new RegisterResponse(result.indexingJobId()));
+                .map(result -> new RegisterResponse(result.indexingJobId(), result.accessToken(), result.refreshToken()));
     }
 
     @ResponseStatus(HttpStatus.CREATED)
