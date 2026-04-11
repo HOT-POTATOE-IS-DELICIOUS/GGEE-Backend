@@ -8,6 +8,7 @@ import reactor.core.publisher.Mono;
 import team.hotpotato.domain.member.api.dto.LoginRequest;
 import team.hotpotato.domain.member.api.dto.LoginResponse;
 import team.hotpotato.domain.member.api.dto.RegisterRequest;
+import team.hotpotato.domain.member.api.dto.RegisterResponse;
 import team.hotpotato.domain.member.application.input.UserLogin;
 import team.hotpotato.domain.member.application.input.UserRegister;
 import team.hotpotato.domain.member.application.usecase.login.LoginCommand;
@@ -22,7 +23,7 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<Void> register(@Valid @RequestBody RegisterRequest registerRequest) {
+    public Mono<RegisterResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
         return userRegister.register(
                         new RegisterCommand(
                                 registerRequest.email(),
@@ -30,10 +31,10 @@ public class AuthController {
                                 registerRequest.protectTarget()
                         )
                 )
-                .then();
+                .map(result -> new RegisterResponse(result.indexingJobId()));
     }
 
-    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseStatus(HttpStatus.OK)
     @PostMapping("/login")
     public Mono<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         return userLogin.login(

@@ -15,6 +15,7 @@ import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutbox;
 import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutboxStatus;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.User;
+import team.hotpotato.domain.member.application.usecase.register.RegisterResult;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +27,7 @@ public class UserRegisterUseCase implements UserRegister {
     private final TransactionalOperator transactionalOperator;
 
     @Override
-    public Mono<Void> register(RegisterCommand registerCommand) {
+    public Mono<RegisterResult> register(RegisterCommand registerCommand) {
         return createUser(registerCommand)
                 .flatMap(user -> userRepository.save(user)
                         .flatMap(this::saveOutbox)
@@ -38,7 +39,7 @@ public class UserRegisterUseCase implements UserRegister {
                     }
                     return e;
                 })
-                .then();
+                .map(outbox -> new RegisterResult(String.valueOf(outbox.id())));
     }
 
     private Mono<User> createUser(RegisterCommand registerCommand) {
@@ -49,8 +50,7 @@ public class UserRegisterUseCase implements UserRegister {
                         Role.USER,
                         registerCommand.protectTarget()
                 ))
-                .subscribeOn(Schedulers.boundedElastic())
-                .cast(User.class);
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     private Mono<ProtectTargetIndexingOutbox> saveOutbox(User savedUser) {
@@ -64,7 +64,8 @@ public class UserRegisterUseCase implements UserRegister {
 
     private boolean isDuplicateEmailError(Throwable e) {
         if (e instanceof DataIntegrityViolationException) {
-            return e.getMessage().contains("email");
+            String message = e.getMessage();
+            return message != null && message.contains("email");
         }
         return false;
     }

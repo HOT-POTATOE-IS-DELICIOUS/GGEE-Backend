@@ -1,6 +1,7 @@
 package team.hotpotato.domain.member.application.usecase.login;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
@@ -27,6 +28,9 @@ public class UserLoginUseCase implements UserLogin {
     private final IdGenerator idGenerator;
     private final TransactionalOperator transactionalOperator;
 
+    @Value("${jwt.refresh-token-active-time}")
+    private long refreshTokenActiveTimeSeconds;
+
     @Override
     public Mono<LoginResult> login(LoginCommand loginCommand) {
         return userRepository.findByEmail(loginCommand.email())
@@ -52,7 +56,7 @@ public class UserLoginUseCase implements UserLogin {
                             user.id(),
                             sessionId,
                             refreshToken,
-                            LocalDateTime.now().plusSeconds(3600)
+                            LocalDateTime.now().plusSeconds(refreshTokenActiveTimeSeconds)
                     );
 
                     return sessionRepository.invalidateByUserId(user.id())
