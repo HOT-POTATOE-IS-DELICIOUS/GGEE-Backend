@@ -18,7 +18,10 @@ public class ProtectTargetIndexingOutboxDispatchUseCase {
     public Mono<Void> dispatchPending() {
         return outboxRepository.findPending()
                 .concatMap(outbox -> protectTargetIndexingPublisher.publish(
-                                        new ProtectTargetIndexingMessage(outbox.protectTarget())
+                                        new ProtectTargetIndexingMessage(
+                                                String.valueOf(outbox.id()),
+                                                outbox.protectTarget()
+                                        )
                                 )
                                 .then(Mono.defer(() -> outboxRepository.markPublished(outbox.id())))
                                 .doOnError(error -> log.error(

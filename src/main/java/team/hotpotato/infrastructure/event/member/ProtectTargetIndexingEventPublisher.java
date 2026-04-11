@@ -25,14 +25,15 @@ public class ProtectTargetIndexingEventPublisher implements ProtectTargetIndexin
                 .flatMap(payload -> Mono.fromFuture(
                         kafkaTemplate.send(
                                 memberEventProperties.protectTargetIndexingTopic(),
-                                message.protectTarget(),
+                                message.jobId(),
                                 payload
                         )
                 ))
                 .doOnSuccess(result -> log.info(
-                        "보호 대상 인덱싱 요청을 발행했습니다. topic={}, protectTarget={}",
+                        "보호 대상 인덱싱 요청을 발행했습니다. topic={}, jobId={}, keyword={}",
                         memberEventProperties.protectTargetIndexingTopic(),
-                        message.protectTarget()
+                        message.jobId(),
+                        message.keyword()
                 ))
                 .then();
     }

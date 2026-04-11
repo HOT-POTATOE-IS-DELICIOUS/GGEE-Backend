@@ -33,10 +33,9 @@ class ProtectTargetIndexingEventPublisherTest {
     void publishSendsMessageToKafka() throws Exception {
         MemberEventProperties properties = new MemberEventProperties("member.protect-target-indexing", 5000L);
         ProtectTargetIndexingEventPublisher publisher =
-                new ProtectTargetIndexingEventPublisher(kafkaTemplate, objectMapper, properties);
-        ProtectTargetIndexingMessage message = new ProtectTargetIndexingMessage("brand");
+                new ProtectTargetIndexingEventPublisher(kafkaTemplate, new ObjectMapper(), properties);
+        ProtectTargetIndexingMessage message = new ProtectTargetIndexingMessage("1", "brand");
 
-        when(objectMapper.writeValueAsString(message)).thenReturn("{\"protectTarget\":\"brand\"}");
         when(kafkaTemplate.send(anyString(), anyString(), anyString()))
                 .thenReturn(completedFuture());
 
@@ -49,8 +48,8 @@ class ProtectTargetIndexingEventPublisherTest {
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), payloadCaptor.capture());
 
         assertThat(topicCaptor.getValue()).isEqualTo("member.protect-target-indexing");
-        assertThat(keyCaptor.getValue()).isEqualTo("brand");
-        assertThat(payloadCaptor.getValue()).isEqualTo("{\"protectTarget\":\"brand\"}");
+        assertThat(keyCaptor.getValue()).isEqualTo("1");
+        assertThat(payloadCaptor.getValue()).isEqualTo("{\"job_id\":\"1\",\"keyword\":\"brand\"}");
     }
 
     @Test
@@ -59,7 +58,7 @@ class ProtectTargetIndexingEventPublisherTest {
         MemberEventProperties properties = new MemberEventProperties("member.protect-target-indexing", 5000L);
         ProtectTargetIndexingEventPublisher publisher =
                 new ProtectTargetIndexingEventPublisher(kafkaTemplate, objectMapper, properties);
-        ProtectTargetIndexingMessage message = new ProtectTargetIndexingMessage("brand");
+        ProtectTargetIndexingMessage message = new ProtectTargetIndexingMessage("1", "brand");
 
         when(objectMapper.writeValueAsString(message))
                 .thenThrow(new JsonProcessingException("serialization failed") {

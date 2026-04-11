@@ -3,11 +3,13 @@ package team.hotpotato.application.usecase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import team.hotpotato.domain.member.application.event.ProtectTargetIndexingMessage;
 import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxRepository;
 import team.hotpotato.domain.member.application.output.ProtectTargetIndexingPublisher;
 import team.hotpotato.domain.member.application.usecase.indexing.ProtectTargetIndexingOutboxDispatchUseCase;
@@ -45,9 +47,15 @@ class ProtectTargetIndexingOutboxDispatchUseCaseTest {
         StepVerifier.create(useCase.dispatchPending())
                 .verifyComplete();
 
+        ArgumentCaptor<ProtectTargetIndexingMessage> messageCaptor =
+                ArgumentCaptor.forClass(ProtectTargetIndexingMessage.class);
         verify(outboxRepository).findPending();
-        verify(publisher).publish(any());
+        verify(publisher).publish(messageCaptor.capture());
         verify(outboxRepository).markPublished(1L);
+        ProtectTargetIndexingMessage publishedMessage = messageCaptor.getValue();
+        verifyNoMoreInteractions(outboxRepository, publisher);
+        org.junit.jupiter.api.Assertions.assertEquals("1", publishedMessage.jobId());
+        org.junit.jupiter.api.Assertions.assertEquals("brand", publishedMessage.keyword());
     }
 
     @Test
@@ -68,9 +76,14 @@ class ProtectTargetIndexingOutboxDispatchUseCaseTest {
         StepVerifier.create(useCase.dispatchPending())
                 .verifyComplete();
 
+        ArgumentCaptor<ProtectTargetIndexingMessage> messageCaptor =
+                ArgumentCaptor.forClass(ProtectTargetIndexingMessage.class);
         verify(outboxRepository).findPending();
-        verify(publisher).publish(any());
+        verify(publisher).publish(messageCaptor.capture());
         verify(outboxRepository, never()).markPublished(anyLong());
+        ProtectTargetIndexingMessage publishedMessage = messageCaptor.getValue();
+        org.junit.jupiter.api.Assertions.assertEquals("1", publishedMessage.jobId());
+        org.junit.jupiter.api.Assertions.assertEquals("brand", publishedMessage.keyword());
     }
 
     @Test
