@@ -15,6 +15,7 @@ import reactor.test.StepVerifier;
 import team.hotpotato.common.identity.IdGenerator;
 import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxRepository;
 import team.hotpotato.domain.member.application.usecase.register.RegisterCommand;
+import team.hotpotato.domain.member.application.usecase.register.RegisterResult;
 import team.hotpotato.domain.member.application.output.UserRepository;
 import team.hotpotato.domain.member.application.usecase.register.UserRegisterUseCase;
 import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutbox;
@@ -60,6 +61,7 @@ class UserRegisterUseCaseTest {
         when(outboxRepository.save(any(ProtectTargetIndexingOutbox.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
         StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword", "brand")))
+                .expectNext(new RegisterResult("200"))
                 .verifyComplete();
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);

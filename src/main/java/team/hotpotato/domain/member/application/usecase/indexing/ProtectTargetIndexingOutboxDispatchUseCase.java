@@ -29,7 +29,6 @@ public class ProtectTargetIndexingOutboxDispatchUseCase {
                                         outbox.protectTarget(),
                                         error
                                 ))
-                                .onErrorResume(error -> Mono.empty())
                                 .then(Mono.defer(() -> outboxRepository.markPublished(outbox.id())))
                                 .doOnError(error -> log.error(
                                         "보호 대상 인덱싱 outbox markPublished 실패 (중복 발행 위험). outboxId={}",

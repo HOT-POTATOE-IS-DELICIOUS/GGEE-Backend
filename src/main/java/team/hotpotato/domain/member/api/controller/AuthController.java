@@ -34,7 +34,7 @@ public class AuthController {
                 .map(result -> new RegisterResponse(result.indexingJobId()));
     }
 
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/login")
     public Mono<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         return userLogin.login(
