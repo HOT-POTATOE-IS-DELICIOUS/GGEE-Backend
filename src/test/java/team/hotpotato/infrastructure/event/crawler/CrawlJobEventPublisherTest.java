@@ -40,14 +40,13 @@ class CrawlJobEventPublisherTest {
     void publishSendsMessageToConfiguredTopic() {
         CrawlJobCreateMessage message = new CrawlJobCreateMessage(
                 "req-1",
-                "clien",
                 "키워드",
                 3
         );
         when(kafkaTemplate.send(
                 eq("crawl.job.create"),
                 eq("req-1"),
-                eq("{\"client_request_id\":\"req-1\",\"site\":\"clien\",\"keyword\":\"키워드\",\"max_pages\":3}")
+                eq("{\"job_id\":\"req-1\",\"keyword\":\"키워드\",\"max_pages\":3}")
         )).thenReturn(CompletableFuture.completedFuture(null));
 
         StepVerifier.create(crawlJobEventPublisher.publish(message))
@@ -56,7 +55,7 @@ class CrawlJobEventPublisherTest {
         verify(kafkaTemplate).send(
                 "crawl.job.create",
                 "req-1",
-                "{\"client_request_id\":\"req-1\",\"site\":\"clien\",\"keyword\":\"키워드\",\"max_pages\":3}"
+                "{\"job_id\":\"req-1\",\"keyword\":\"키워드\",\"max_pages\":3}"
         );
     }
 }
