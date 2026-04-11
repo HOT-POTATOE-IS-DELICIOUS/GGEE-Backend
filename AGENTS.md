@@ -222,6 +222,8 @@ src/test/java/team/hotpotato/
     - Unit tests: `src/test/.../application/usecase/`
 7) 실행:
     - `./gradlew test` and `./gradlew check`
+8) API 문서 반영:
+    - API를 추가하거나 수정한 경우 `docs/API_SPEC.yaml`을 반드시 함께 수정한다.
 
 ## 보안 (AuthFilter)
 
