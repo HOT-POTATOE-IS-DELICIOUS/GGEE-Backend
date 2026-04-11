@@ -23,11 +23,17 @@ public class ProtectTargetIndexingOutboxDispatchUseCase {
                                                 outbox.protectTarget()
                                         )
                                 )
-                                .then(Mono.defer(() -> outboxRepository.markPublished(outbox.id())))
                                 .doOnError(error -> log.error(
-                                        "보호 대상 인덱싱 outbox 처리에 실패했습니다. outboxId={}, protectTarget={}",
+                                        "보호 대상 인덱싱 이벤트 발행 실패. outboxId={}, protectTarget={}",
                                         outbox.id(),
                                         outbox.protectTarget(),
+                                        error
+                                ))
+                                .onErrorResume(error -> Mono.empty())
+                                .then(Mono.defer(() -> outboxRepository.markPublished(outbox.id())))
+                                .doOnError(error -> log.error(
+                                        "보호 대상 인덱싱 outbox markPublished 실패 (중복 발행 위험). outboxId={}",
+                                        outbox.id(),
                                         error
                                 ))
                                 .onErrorResume(error -> Mono.empty())
