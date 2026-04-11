@@ -13,7 +13,10 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import team.hotpotato.common.identity.IdGenerator;
+import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxRepository;
+import team.hotpotato.domain.member.application.output.SessionRepository;
+import team.hotpotato.domain.member.application.output.TokenGenerator;
 import team.hotpotato.domain.member.application.usecase.register.RegisterCommand;
 import team.hotpotato.domain.member.application.usecase.register.RegisterResult;
 import team.hotpotato.domain.member.application.output.UserRepository;
@@ -21,6 +24,7 @@ import team.hotpotato.domain.member.application.usecase.register.UserRegisterUse
 import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutbox;
 import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutboxStatus;
 import team.hotpotato.domain.member.domain.Role;
+import team.hotpotato.domain.member.domain.Session;
 import team.hotpotato.domain.member.domain.User;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,6 +42,12 @@ class UserRegisterUseCaseTest {
     private ProtectTargetIndexingOutboxRepository outboxRepository;
 
     @Mock
+    private SessionRepository sessionRepository;
+
+    @Mock
+    private TokenGenerator tokenGenerator;
+
+    @Mock
     private IdGenerator idGenerator;
 
     @Mock
@@ -49,24 +59,27 @@ class UserRegisterUseCaseTest {
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
-        userRegisterUseCase = new UserRegisterUseCase(userRepository, outboxRepository, idGenerator, passwordEncoder, transactionalOperator);
+        userRegisterUseCase = new UserRegisterUseCase(userRepository, outboxRepository, sessionRepository, tokenGenerator, idGenerator, passwordEncoder, transactionalOperator);
         lenient().when(transactionalOperator.transactional(any(Mono.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
     @DisplayName("회원가입 성공 시 사용자 저장과 outbox 적재가 함께 수행된다")
     void registerCompletesAndStoresEncodedUser() {
-        when(idGenerator.generateId()).thenReturn(100L, 200L);
+        when(idGenerator.generateId()).thenReturn(100L, 200L, 300L);
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
         when(outboxRepository.save(any(ProtectTargetIndexingOutbox.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        when(tokenGenerator.generateAccessToken(any(AuthPrincipal.class))).thenReturn("access-token");
+        when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("refresh-token");
+        when(sessionRepository.save(any(Session.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
         StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword", "brand")))
-                .expectNext(new RegisterResult("200"))
+                .expectNext(new RegisterResult("200", "access-token", "refresh-token"))
                 .verifyComplete();
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         ArgumentCaptor<ProtectTargetIndexingOutbox> outboxCaptor = ArgumentCaptor.forClass(ProtectTargetIndexingOutbox.class);
-        verify(idGenerator, times(2)).generateId();
+        verify(idGenerator, times(3)).generateId();
         verify(userRepository).save(userCaptor.capture());
         verify(outboxRepository).save(outboxCaptor.capture());
         verifyNoMoreInteractions(idGenerator, userRepository, outboxRepository);
