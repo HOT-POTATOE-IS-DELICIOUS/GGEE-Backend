@@ -50,4 +50,14 @@ public class ProtectTargetIndexingOutboxRepositoryAdapter implements ProtectTarg
                 )
                 .then();
     }
+
+    @Override
+    public Mono<Void> markCompleted(Long outboxId) {
+        return template.update(
+                        Query.query(Criteria.where("id").is(outboxId).and("deleted").is(false)),
+                        Update.update("status", ProtectTargetIndexingOutboxStatus.COMPLETED.name()),
+                        ProtectTargetIndexingOutboxEntity.class
+                )
+                .then();
+    }
 }

@@ -10,4 +10,6 @@ public interface ProtectTargetIndexingOutboxRepository {
     Mono<ProtectTargetIndexingOutbox> save(ProtectTargetIndexingOutbox outbox);
 
     Mono<Void> markPublished(Long outboxId);
+
+    Mono<Void> markCompleted(Long outboxId);
 }
