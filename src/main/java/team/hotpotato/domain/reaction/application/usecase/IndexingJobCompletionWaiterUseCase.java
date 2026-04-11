@@ -5,16 +5,16 @@ import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import team.hotpotato.domain.reaction.application.input.CrawlJobCompletionWaiter;
-import team.hotpotato.domain.reaction.application.output.CrawlJobCompletionEvents;
+import team.hotpotato.domain.reaction.application.input.IndexingJobCompletionWaiter;
+import team.hotpotato.domain.reaction.application.output.IndexingJobCompletionEvents;
 
 @Service
 @RequiredArgsConstructor
-public class CrawlJobCompletionWaiterUseCase implements CrawlJobCompletionWaiter {
+public class IndexingJobCompletionWaiterUseCase implements IndexingJobCompletionWaiter {
 
     private static final Duration COMPLETION_TIMEOUT = Duration.ofMinutes(10);
 
-    private final CrawlJobCompletionEvents completionEvents;
+    private final IndexingJobCompletionEvents completionEvents;
 
     @Override
     public Mono<Void> waitForCompletion(String jobId) {

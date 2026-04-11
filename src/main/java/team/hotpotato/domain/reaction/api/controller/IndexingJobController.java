@@ -8,14 +8,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
-import team.hotpotato.domain.reaction.application.input.CrawlJobCompletionWaiter;
+import team.hotpotato.domain.reaction.application.input.IndexingJobCompletionWaiter;
 
 @RequiredArgsConstructor
-@RequestMapping("/crawl/jobs")
+@RequestMapping("/indexing/jobs")
 @RestController
-public class CrawlJobController {
+public class IndexingJobController {
 
-    private final CrawlJobCompletionWaiter completionWaiter;
+    private final IndexingJobCompletionWaiter completionWaiter;
 
     @GetMapping(value = "/{jobId}/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> streamJobCompletion(@PathVariable String jobId) {
