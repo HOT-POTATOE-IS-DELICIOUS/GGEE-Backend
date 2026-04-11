@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import org.springframework.web.server.ServerWebExchange;
@@ -21,7 +20,6 @@ import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
 
 import java.util.List;
 
-@Component
 @RequiredArgsConstructor
 public class AuthFilter implements WebFilter {
     private static final String ROLE_PREFIX = "ROLE_";
