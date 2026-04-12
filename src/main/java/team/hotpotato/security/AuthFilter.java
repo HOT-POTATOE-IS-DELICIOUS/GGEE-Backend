@@ -49,7 +49,7 @@ public class AuthFilter implements WebFilter {
                 .flatMap(principal -> chain.filter(exchange)
                         .contextWrite(ReactiveSecurityContextHolder.withAuthentication(
                                 new UsernamePasswordAuthenticationToken(
-                                        principal.userId(),
+                                        new CustomAuthPrincipal(principal.userId(), principal.role(), principal.sessionId()),
                                         null,
                                         List.of(new SimpleGrantedAuthority(toAuthority(principal.role().name())))
                                 )

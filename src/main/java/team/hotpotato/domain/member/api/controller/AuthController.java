@@ -3,7 +3,7 @@ package team.hotpotato.domain.member.api.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import team.hotpotato.domain.member.api.dto.LoginRequest;
@@ -20,6 +20,7 @@ import team.hotpotato.domain.member.application.usecase.login.LoginCommand;
 import team.hotpotato.domain.member.application.usecase.logout.LogoutCommand;
 import team.hotpotato.domain.member.application.usecase.refresh.RefreshCommand;
 import team.hotpotato.domain.member.application.usecase.register.RegisterCommand;
+import team.hotpotato.security.CustomAuthPrincipal;
 
 @RequiredArgsConstructor
 @RequestMapping("/auth")
@@ -67,8 +68,7 @@ public class AuthController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/logout")
-    public Mono<Void> logout(Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        return userLogout.logout(new LogoutCommand(userId));
+    public Mono<Void> logout(@AuthenticationPrincipal CustomAuthPrincipal authPrincipal) {
+        return userLogout.logout(new LogoutCommand(authPrincipal.userId()));
     }
 }
