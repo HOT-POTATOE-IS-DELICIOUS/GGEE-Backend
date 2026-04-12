@@ -126,6 +126,60 @@ paths:
                 type: string
               example: "이메일 또는 비밀번호가 올바르지 않습니다."
 
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      operationId: refresh
+      summary: 토큰 갱신
+      description: |
+        Refresh Token으로 새로운 Access Token과 Refresh Token을 발급받습니다. (토큰 로테이션)
+        Refresh Token이 만료된 경우 재로그인이 필요합니다.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+            example:
+              refreshToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
+      responses:
+        "200":
+          description: 토큰 갱신 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+              example:
+                accessToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
+                refreshToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
+        "400":
+          description: 요청 본문 검증 실패 또는 잘못된 토큰
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                blank_token:
+                  value: "refreshToken이 입력되지 않았습니다."
+                invalid_token:
+                  value: "올바르지 않은 JWT 토큰입니다."
+                invalid_token_type:
+                  value: "올바르지 않은 JWT 토큰 타입입니다."
+                invalid_session:
+                  value: "유효하지 않은 세션입니다."
+        "401":
+          description: 만료된 Refresh Token 또는 세션 만료
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                expired_refresh_token:
+                  value: "만료된 리프레시 토큰입니다."
+                session_expired:
+                  value: "다른 기기에서 로그인되어 세션이 만료되었습니다."
+
   /indexing/jobs/{jobId}:
     get:
       tags: [IndexingJob]
@@ -239,3 +293,21 @@ components:
         refreshToken:
           type: string
           description: "JWT 리프레시 토큰. 만료 시간은 환경 설정에 따름. Claims: sub(userId), role, tokenType, sessionId, iat, exp"
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+          description: 로그인 또는 이전 갱신 시 발급받은 Refresh Token
+
+    RefreshResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: "새로 발급된 JWT 액세스 토큰"
+        refreshToken:
+          type: string
+          description: "새로 발급된 JWT 리프레시 토큰 (토큰 로테이션)"
