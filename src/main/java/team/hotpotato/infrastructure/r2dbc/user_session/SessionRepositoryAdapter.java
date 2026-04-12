@@ -60,4 +60,16 @@ public class SessionRepositoryAdapter implements SessionRepository {
                 )
                 .then();
     }
+
+    @Override
+    public Mono<Void> updateRefreshToken(String sessionId, String newRefreshToken, LocalDateTime newExpiresAt) {
+        return template.update(
+                        Query.query(Criteria.where("session_id").is(sessionId)
+                                .and("deleted").is(false)),
+                        Update.update("refresh_token", newRefreshToken)
+                                .set("expires_at", newExpiresAt),
+                        UserSessionEntity.class
+                )
+                .then();
+    }
 }

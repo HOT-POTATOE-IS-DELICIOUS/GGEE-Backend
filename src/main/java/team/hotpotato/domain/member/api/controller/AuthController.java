@@ -7,11 +7,15 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import team.hotpotato.domain.member.api.dto.LoginRequest;
 import team.hotpotato.domain.member.api.dto.LoginResponse;
+import team.hotpotato.domain.member.api.dto.RefreshRequest;
+import team.hotpotato.domain.member.api.dto.RefreshResponse;
 import team.hotpotato.domain.member.api.dto.RegisterRequest;
 import team.hotpotato.domain.member.api.dto.RegisterResponse;
 import team.hotpotato.domain.member.application.input.UserLogin;
 import team.hotpotato.domain.member.application.input.UserRegister;
+import team.hotpotato.domain.member.application.input.UserTokenRefresh;
 import team.hotpotato.domain.member.application.usecase.login.LoginCommand;
+import team.hotpotato.domain.member.application.usecase.refresh.RefreshCommand;
 import team.hotpotato.domain.member.application.usecase.register.RegisterCommand;
 
 @RequiredArgsConstructor
@@ -20,6 +24,7 @@ import team.hotpotato.domain.member.application.usecase.register.RegisterCommand
 public class AuthController {
     private final UserRegister userRegister;
     private final UserLogin userLogin;
+    private final UserTokenRefresh userTokenRefresh;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -47,5 +52,12 @@ public class AuthController {
                                 response.accessToken(), response.refreshToken()
                         )
                 );
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/refresh")
+    public Mono<RefreshResponse> refresh(@Valid @RequestBody RefreshRequest refreshRequest) {
+        return userTokenRefresh.refresh(new RefreshCommand(refreshRequest.refreshToken()))
+                .map(result -> new RefreshResponse(result.accessToken(), result.refreshToken()));
     }
 }
