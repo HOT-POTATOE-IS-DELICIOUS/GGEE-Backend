@@ -184,7 +184,8 @@ class AuthFilterTest {
                 .verifyComplete();
 
         assertThat(authentication.get()).isNotNull();
-        assertThat(authentication.get().getPrincipal()).isEqualTo(7L);
+        assertThat(authentication.get().getPrincipal())
+                .isEqualTo(new CustomAuthPrincipal(7L, Role.USER, sessionId));
         assertThat(authentication.get().getAuthorities())
                 .extracting("authority")
                 .containsExactly("ROLE_USER");
