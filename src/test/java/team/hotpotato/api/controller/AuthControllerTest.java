@@ -13,18 +13,25 @@ import reactor.core.publisher.Mono;
 import team.hotpotato.GgeeBackendApplication;
 import team.hotpotato.domain.member.application.input.TokenResolver;
 import team.hotpotato.domain.member.application.input.UserTokenRefresh;
+import team.hotpotato.domain.member.application.input.UserLogout;
 import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.usecase.login.LoginCommand;
 import team.hotpotato.domain.member.application.usecase.login.LoginResult;
 import team.hotpotato.domain.member.application.usecase.login.InvalidSessionException;
+import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.application.usecase.register.RegisterCommand;
+import team.hotpotato.domain.member.application.usecase.logout.LogoutCommand;
 import team.hotpotato.domain.member.application.usecase.refresh.RefreshCommand;
 import team.hotpotato.domain.member.application.usecase.refresh.RefreshResult;
 import team.hotpotato.domain.member.application.input.UserLogin;
 import team.hotpotato.domain.member.application.input.UserRegister;
+import team.hotpotato.domain.member.domain.Role;
+import team.hotpotato.domain.member.domain.Session;
 import team.hotpotato.infrastructure.jwt.ExpiredRefreshTokenException;
 import team.hotpotato.infrastructure.jwt.InvalidTokenException;
 import team.hotpotato.infrastructure.jwt.InvalidTokenTypeException;
+
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,6 +55,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private UserTokenRefresh userTokenRefresh;
+
+    @MockitoBean
+    private UserLogout userLogout;
 
     @MockitoBean
     private TokenResolver tokenResolver;
@@ -211,6 +221,38 @@ class AuthControllerTest {
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody(String.class).isEqualTo("유효하지 않은 세션입니다.");
+    }
+
+    @Test
+    @DisplayName("로그아웃 요청은 인증된 사용자 세션을 무효화하고 204를 반환한다")
+    void logoutReturnsNoContent() {
+        String sessionId = "logout-session-id";
+        when(tokenResolver.resolve("Bearer valid-access-token"))
+                .thenReturn(Mono.just(new AuthPrincipal(7L, Role.USER, sessionId)));
+        when(sessionRepository.findActiveByUserId(7L))
+                .thenReturn(Mono.just(new Session(1L, 7L, sessionId, "refresh-token", LocalDateTime.now().plusHours(1))));
+        when(userLogout.logout(any(LogoutCommand.class))).thenReturn(Mono.empty());
+
+        webTestClient.post()
+                .uri("/auth/logout")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer valid-access-token")
+                .exchange()
+                .expectStatus().isNoContent()
+                .expectBody().isEmpty();
+
+        ArgumentCaptor<LogoutCommand> commandCaptor = ArgumentCaptor.forClass(LogoutCommand.class);
+        verify(userLogout).logout(commandCaptor.capture());
+        assertThat(commandCaptor.getValue()).isEqualTo(new LogoutCommand(7L));
+    }
+
+    @Test
+    @DisplayName("로그아웃 요청은 인증 정보가 없으면 401을 반환한다")
+    void logoutReturnsUnauthorizedWhenAuthorizationHeaderIsMissing() {
+        webTestClient.post()
+                .uri("/auth/logout")
+                .exchange()
+                .expectStatus().isUnauthorized();
     }
 
     @Test

@@ -75,6 +75,39 @@ class AuthFilterTest {
     }
 
     @Test
+    @DisplayName("로그아웃 경로는 잘못된 토큰 헤더면 요청을 통과시키지 않는다")
+    void invalidTokenOnLogoutPathReturnsErrorResponse() {
+        TokenResolver tokenResolver = mock(TokenResolver.class);
+        when(tokenResolver.resolve("Bearer invalid")).thenReturn(Mono.error(InvalidTokenException.EXCEPTION));
+
+        SessionRepository sessionRepository = mock(SessionRepository.class);
+
+        AuthFilter authFilter = new AuthFilter(
+                tokenResolver,
+                sessionRepository,
+                new ErrorCodeHttpStatusMapper(),
+                TOKEN_PROPERTIES
+        );
+
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.post("/auth/logout")
+                        .header("Authorization", "Bearer invalid")
+                        .build()
+        );
+        AtomicBoolean chainCalled = new AtomicBoolean(false);
+        WebFilterChain chain = webExchange -> {
+            chainCalled.set(true);
+            return Mono.empty();
+        };
+
+        StepVerifier.create(authFilter.filter(exchange, chain))
+                .verifyComplete();
+
+        assertThat(chainCalled).isFalse();
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     @DisplayName("보호 경로는 잘못된 토큰 헤더면 에러 응답을 반환한다")
     void invalidTokenOnProtectedPathReturnsErrorResponse() {
         TokenResolver tokenResolver = mock(TokenResolver.class);
