@@ -19,8 +19,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("사용자 저장 어댑터 단위 테스트")
-class UserAppenderAdapterTest {
+@DisplayName("사용자 Repository 어댑터 단위 테스트")
+class UserRepositoryAdapterTest {
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private R2dbcEntityTemplate template;
@@ -28,13 +28,14 @@ class UserAppenderAdapterTest {
     @Test
     @DisplayName("저장 성공 시 엔티티를 도메인으로 매핑해 반환한다")
     void saveReturnsMappedDomainUser() {
-        UserAppenderAdapter adapter = new UserAppenderAdapter(template);
-        User user = new User(1L, "user@test.com", "encoded", Role.USER);
+        UserRepositoryAdapter adapter = new UserRepositoryAdapter(template);
+        User user = new User(1L, "user@test.com", "encoded", Role.USER, "brand");
         UserEntity savedEntity = UserEntity.builder()
                 .id(1L)
                 .email("user@test.com")
                 .password("encoded")
                 .role("USER")
+                .protectTarget("brand")
                 .build();
 
         when(template.insert(UserEntity.class).using(any(UserEntity.class))).thenReturn(Mono.just(savedEntity));
@@ -44,6 +45,7 @@ class UserAppenderAdapterTest {
                     assertThat(savedUser.id()).isEqualTo(1L);
                     assertThat(savedUser.email()).isEqualTo("user@test.com");
                     assertThat(savedUser.role()).isEqualTo(Role.USER);
+                    assertThat(savedUser.protectTarget()).isEqualTo("brand");
                 })
                 .verifyComplete();
     }
@@ -51,8 +53,8 @@ class UserAppenderAdapterTest {
     @Test
     @DisplayName("중복 이메일 제약조건 오류는 EmailAlreadyExistsException으로 변환한다")
     void saveMapsDuplicateEmailError() {
-        UserAppenderAdapter adapter = new UserAppenderAdapter(template);
-        User user = new User(1L, "user@test.com", "encoded", Role.USER);
+        UserRepositoryAdapter adapter = new UserRepositoryAdapter(template);
+        User user = new User(1L, "user@test.com", "encoded", Role.USER, "brand");
 
         when(template.insert(UserEntity.class).using(any(UserEntity.class)))
                 .thenReturn(Mono.error(new DataIntegrityViolationException("Duplicate entry")));

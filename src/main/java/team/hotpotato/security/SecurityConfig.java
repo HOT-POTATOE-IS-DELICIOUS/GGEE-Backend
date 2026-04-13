@@ -9,12 +9,24 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import team.hotpotato.domain.member.application.input.TokenResolver;
+import team.hotpotato.domain.member.application.output.SessionRepository;
+import team.hotpotato.infrastructure.jwt.TokenProperties;
+import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
 
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final CorsConfigurationSource corsConfigurationSource;
-    private final AuthFilter authFilter;
+    private final TokenResolver tokenResolver;
+    private final SessionRepository sessionRepository;
+    private final ErrorCodeHttpStatusMapper errorCodeHttpStatusMapper;
+    private final TokenProperties tokenProperties;
+
+    @Bean
+    public AuthFilter authFilter() {
+        return new AuthFilter(tokenResolver, sessionRepository, errorCodeHttpStatusMapper, tokenProperties);
+    }
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
@@ -35,7 +47,7 @@ public class SecurityConfig {
                 });
 
         http
-                .addFilterBefore(authFilter, SecurityWebFiltersOrder.AUTHENTICATION);
+                .addFilterBefore(authFilter(), SecurityWebFiltersOrder.AUTHENTICATION);
 
         return http.build();
     }

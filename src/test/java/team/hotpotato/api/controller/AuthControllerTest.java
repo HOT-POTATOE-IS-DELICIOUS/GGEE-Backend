@@ -12,13 +12,26 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 import team.hotpotato.GgeeBackendApplication;
 import team.hotpotato.domain.member.application.input.TokenResolver;
-import team.hotpotato.domain.member.application.output.SessionReader;
+import team.hotpotato.domain.member.application.input.UserTokenRefresh;
+import team.hotpotato.domain.member.application.input.UserLogout;
+import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.usecase.login.LoginCommand;
 import team.hotpotato.domain.member.application.usecase.login.LoginResult;
+import team.hotpotato.domain.member.application.usecase.login.InvalidSessionException;
+import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.application.usecase.register.RegisterCommand;
+import team.hotpotato.domain.member.application.usecase.logout.LogoutCommand;
+import team.hotpotato.domain.member.application.usecase.refresh.RefreshCommand;
+import team.hotpotato.domain.member.application.usecase.refresh.RefreshResult;
 import team.hotpotato.domain.member.application.input.UserLogin;
 import team.hotpotato.domain.member.application.input.UserRegister;
+import team.hotpotato.domain.member.domain.Role;
+import team.hotpotato.domain.member.domain.Session;
+import team.hotpotato.infrastructure.jwt.ExpiredRefreshTokenException;
 import team.hotpotato.infrastructure.jwt.InvalidTokenException;
+import team.hotpotato.infrastructure.jwt.InvalidTokenTypeException;
+
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,10 +54,16 @@ class AuthControllerTest {
     private UserLogin userLogin;
 
     @MockitoBean
+    private UserTokenRefresh userTokenRefresh;
+
+    @MockitoBean
+    private UserLogout userLogout;
+
+    @MockitoBean
     private TokenResolver tokenResolver;
 
     @MockitoBean
-    private SessionReader sessionReader;
+    private SessionRepository sessionRepository;
 
     @BeforeEach
     void setUp() {
@@ -64,7 +83,8 @@ class AuthControllerTest {
                 .bodyValue("""
                         {
                           "email": "user@test.com",
-                          "password": "plainPassword"
+                          "password": "plainPassword",
+                          "protectTarget": "brand"
                         }
                         """)
                 .exchange()
@@ -73,7 +93,7 @@ class AuthControllerTest {
 
         ArgumentCaptor<RegisterCommand> commandCaptor = ArgumentCaptor.forClass(RegisterCommand.class);
         verify(userRegister).register(commandCaptor.capture());
-        assertThat(commandCaptor.getValue()).isEqualTo(new RegisterCommand("user@test.com", "plainPassword"));
+        assertThat(commandCaptor.getValue()).isEqualTo(new RegisterCommand("user@test.com", "plainPassword", "brand"));
     }
 
     @Test
@@ -103,6 +123,139 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("토큰 갱신 요청은 새 토큰 응답을 반환한다")
+    void refreshReturnsTokens() {
+        when(userTokenRefresh.refresh(any(RefreshCommand.class)))
+                .thenReturn(Mono.just(new RefreshResult("new-access-token", "new-refresh-token")));
+
+        webTestClient.post()
+                .uri("/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("""
+                        {
+                          "refreshToken": "valid-refresh-token"
+                        }
+                        """)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.accessToken").isEqualTo("new-access-token")
+                .jsonPath("$.refreshToken").isEqualTo("new-refresh-token");
+
+        ArgumentCaptor<RefreshCommand> commandCaptor = ArgumentCaptor.forClass(RefreshCommand.class);
+        verify(userTokenRefresh).refresh(commandCaptor.capture());
+        assertThat(commandCaptor.getValue()).isEqualTo(new RefreshCommand("valid-refresh-token"));
+    }
+
+    @Test
+    @DisplayName("만료된 refresh token으로 갱신 요청하면 401을 반환한다")
+    void refreshReturnsUnauthorizedWhenRefreshTokenExpired() {
+        when(userTokenRefresh.refresh(any(RefreshCommand.class)))
+                .thenReturn(Mono.error(ExpiredRefreshTokenException.EXCEPTION));
+
+        webTestClient.post()
+                .uri("/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("""
+                        {
+                          "refreshToken": "expired-refresh-token"
+                        }
+                        """)
+                .exchange()
+                .expectStatus().isUnauthorized()
+                .expectBody(String.class).isEqualTo("만료된 리프레시 토큰입니다.");
+    }
+
+    @Test
+    @DisplayName("access token을 refresh 엔드포인트에 전달하면 400을 반환한다")
+    void refreshReturnsBadRequestWhenAccessTokenIsProvided() {
+        when(userTokenRefresh.refresh(any(RefreshCommand.class)))
+                .thenReturn(Mono.error(InvalidTokenTypeException.EXCEPTION));
+
+        webTestClient.post()
+                .uri("/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("""
+                        {
+                          "refreshToken": "access-token"
+                        }
+                        """)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class).isEqualTo("올바르지 않은 JWT 토큰 타입입니다.");
+    }
+
+    @Test
+    @DisplayName("변조된 JWT로 갱신 요청하면 400을 반환한다")
+    void refreshReturnsBadRequestWhenJwtIsTampered() {
+        when(userTokenRefresh.refresh(any(RefreshCommand.class)))
+                .thenReturn(Mono.error(InvalidTokenException.EXCEPTION));
+
+        webTestClient.post()
+                .uri("/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("""
+                        {
+                          "refreshToken": "tampered.jwt.token"
+                        }
+                        """)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class).isEqualTo("올바르지 않은 JWT 토큰입니다.");
+    }
+
+    @Test
+    @DisplayName("세션이 무효화된 refresh token으로 갱신 요청하면 400을 반환한다")
+    void refreshReturnsBadRequestWhenSessionIsInvalidated() {
+        when(userTokenRefresh.refresh(any(RefreshCommand.class)))
+                .thenReturn(Mono.error(InvalidSessionException.EXCEPTION));
+
+        webTestClient.post()
+                .uri("/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("""
+                        {
+                          "refreshToken": "invalidated-refresh-token"
+                        }
+                        """)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class).isEqualTo("유효하지 않은 세션입니다.");
+    }
+
+    @Test
+    @DisplayName("로그아웃 요청은 인증된 사용자 세션을 무효화하고 204를 반환한다")
+    void logoutReturnsNoContent() {
+        String sessionId = "logout-session-id";
+        when(tokenResolver.resolve("Bearer valid-access-token"))
+                .thenReturn(Mono.just(new AuthPrincipal(7L, Role.USER, sessionId)));
+        when(sessionRepository.findActiveByUserId(7L))
+                .thenReturn(Mono.just(new Session(1L, 7L, sessionId, "refresh-token", LocalDateTime.now().plusHours(1))));
+        when(userLogout.logout(any(LogoutCommand.class))).thenReturn(Mono.empty());
+
+        webTestClient.post()
+                .uri("/auth/logout")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer valid-access-token")
+                .exchange()
+                .expectStatus().isNoContent()
+                .expectBody().isEmpty();
+
+        ArgumentCaptor<LogoutCommand> commandCaptor = ArgumentCaptor.forClass(LogoutCommand.class);
+        verify(userLogout).logout(commandCaptor.capture());
+        assertThat(commandCaptor.getValue()).isEqualTo(new LogoutCommand(7L));
+    }
+
+    @Test
+    @DisplayName("로그아웃 요청은 인증 정보가 없으면 401을 반환한다")
+    void logoutReturnsUnauthorizedWhenAuthorizationHeaderIsMissing() {
+        webTestClient.post()
+                .uri("/auth/logout")
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
     @DisplayName("잘못된 요청 본문은 400을 반환한다")
     void registerRejectsInvalidRequest() {
         webTestClient.post()
@@ -111,7 +264,8 @@ class AuthControllerTest {
                 .bodyValue("""
                         {
                           "email": "invalid-email",
-                          "password": "short"
+                          "password": "short",
+                          "protectTarget": ""
                         }
                         """)
                 .exchange()

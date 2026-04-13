@@ -23,14 +23,14 @@ public class CrawlJobEventPublisher {
                 .flatMap(payload -> Mono.fromFuture(
                         kafkaTemplate.send(
                                 crawlerJobProperties.createTopic(),
-                                message.clientRequestId(),
+                                message.jobId(),
                                 payload
                         )
                 ))
                 .doOnSuccess(result -> log.info(
-                        "크롤링 작업 생성 요청을 발행했습니다. topic={}, clientRequestId={}",
+                        "크롤링 작업 생성 요청을 발행했습니다. topic={}, jobId={}",
                         crawlerJobProperties.createTopic(),
-                        message.clientRequestId()
+                        message.jobId()
                 ))
                 .then();
     }

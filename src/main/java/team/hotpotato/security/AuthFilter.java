@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import org.springframework.web.server.ServerWebExchange;
@@ -14,19 +13,18 @@ import reactor.core.publisher.Mono;
 import team.hotpotato.common.exception.BusinessBaseException;
 import team.hotpotato.domain.member.application.input.TokenResolver;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
-import team.hotpotato.domain.member.application.output.SessionReader;
+import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.usecase.login.SessionExpiredException;
 import team.hotpotato.infrastructure.jwt.TokenProperties;
 import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
 
 import java.util.List;
 
-@Component
 @RequiredArgsConstructor
 public class AuthFilter implements WebFilter {
     private static final String ROLE_PREFIX = "ROLE_";
     private final TokenResolver tokenResolver;
-    private final SessionReader sessionReader;
+    private final SessionRepository sessionRepository;
     private final ErrorCodeHttpStatusMapper errorCodeHttpStatusMapper;
     private final TokenProperties tokenProperties;
     private final ServerWebExchangeMatcher publicPathMatcher =
@@ -51,7 +49,7 @@ public class AuthFilter implements WebFilter {
                 .flatMap(principal -> chain.filter(exchange)
                         .contextWrite(ReactiveSecurityContextHolder.withAuthentication(
                                 new UsernamePasswordAuthenticationToken(
-                                        principal.userId(),
+                                        new CustomAuthPrincipal(principal.userId(), principal.role(), principal.sessionId()),
                                         null,
                                         List.of(new SimpleGrantedAuthority(toAuthority(principal.role().name())))
                                 )
@@ -66,7 +64,7 @@ public class AuthFilter implements WebFilter {
     }
 
     private Mono<Void> validateSession(AuthPrincipal principal) {
-        return sessionReader.findActiveByUserId(principal.userId())
+        return sessionRepository.findActiveByUserId(principal.userId())
                 .switchIfEmpty(Mono.error(SessionExpiredException.EXCEPTION))
                 .flatMap(activeSession -> {
                     if (!activeSession.sessionId().equals(principal.sessionId())) {

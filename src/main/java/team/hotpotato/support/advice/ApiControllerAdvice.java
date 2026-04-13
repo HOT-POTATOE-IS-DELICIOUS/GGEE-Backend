@@ -28,7 +28,8 @@ public class ApiControllerAdvice {
 
     @ExceptionHandler(WebExchangeBindException.class)
     protected Mono<ResponseEntity<String>> handle(WebExchangeBindException e) {
-        String errorMessage = e.getFieldError().getDefaultMessage();
+        var fieldError = e.getFieldError();
+        String errorMessage = fieldError != null ? fieldError.getDefaultMessage() : ErrorCode.INTERNAL_SERVER_ERROR.message;
         exceptionLogger.log(errorMessage);
 
         return Mono.just(ResponseEntity.badRequest().body(errorMessage));
@@ -44,10 +45,10 @@ public class ApiControllerAdvice {
     }
 
     @ExceptionHandler(Exception.class)
-    protected ResponseEntity<String> handle(Exception e) {
+    protected Mono<ResponseEntity<String>> handle(Exception e) {
         exceptionLogger.log(e.getMessage());
 
-        return createErrorResponseEntity(ErrorCode.INTERNAL_SERVER_ERROR);
+        return Mono.just(createErrorResponseEntity(ErrorCode.INTERNAL_SERVER_ERROR));
     }
 
 
