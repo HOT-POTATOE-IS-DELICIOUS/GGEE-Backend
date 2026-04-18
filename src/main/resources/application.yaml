@@ -54,8 +54,6 @@ snowflake:
 
 ggee:
   crawler:
-    result-event-topic: crawl.result
-    deduplicated-comment-topic: crawl.comment.deduped
     dedup-store-name: ggee-crawler-dedup-store
     dedup-ttl: ${GGEE_CRAWLER_DEDUP_TTL}
     cleanup-interval: ${GGEE_CRAWLER_DEDUP_CLEANUP_INTERVAL}

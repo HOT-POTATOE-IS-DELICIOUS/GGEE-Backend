@@ -36,8 +36,6 @@ ggee:
     protect-target-indexing-dispatch-delay: 60000
   crawler:
     crawl-job-outbox-dispatch-delay: 60000
-    result-event-topic: crawl.result
-    deduplicated-comment-topic: crawl.comment.deduped
     dedup-store-name: ggee-crawler-dedup-store
     dedup-ttl: 10m
     cleanup-interval: 1m

@@ -14,16 +14,16 @@ import team.hotpotato.infrastructure.kafka.JsonSerdeFactory;
 public class IndexingJobCompletionStreamConfiguration {
 
     private static final String ALL_DONE = "all_done";
+    private static final String CRAWL_RESULT_TOPIC = "crawl.result";
 
     @Bean
     public KStream<String, CrawlResultMessage> indexingJobCompletionStream(
             StreamsBuilder streamsBuilder,
-            CrawlerStreamsProperties properties,
             JsonSerdeFactory serdeFactory,
             IndexingJobCompletionSink completionSink
     ) {
         return streamsBuilder
-                .stream(properties.resultEventTopic(), Consumed.with(Serdes.String(), serdeFactory.serde(CrawlResultMessage.class)))
+                .stream(CRAWL_RESULT_TOPIC, Consumed.with(Serdes.String(), serdeFactory.serde(CrawlResultMessage.class)))
                 .filter((jobId, payload) -> payload != null && ALL_DONE.equalsIgnoreCase(payload.status()))
                 .peek((jobId, payload) -> completionSink.complete(jobId));
     }

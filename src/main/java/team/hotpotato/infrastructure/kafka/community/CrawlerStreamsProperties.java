@@ -6,8 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "ggee.crawler")
 public record CrawlerStreamsProperties(
-        String resultEventTopic,
-        String deduplicatedCommentTopic,
         String dedupStoreName,
         Duration dedupTtl,
         Duration cleanupInterval
