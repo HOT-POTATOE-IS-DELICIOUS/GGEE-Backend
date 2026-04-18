@@ -3,12 +3,10 @@ package team.hotpotato.domain.reaction.application.usecase;
 import java.time.Duration;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import team.hotpotato.domain.reaction.application.input.IndexingJobCompletionWaiter;
 import team.hotpotato.domain.reaction.application.output.IndexingJobCompletionEvents;
 
-@Service
 @RequiredArgsConstructor
 public class IndexingJobCompletionWaiterUseCase implements IndexingJobCompletionWaiter {
 

@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import team.hotpotato.domain.member.application.input.RefreshTokenResolver;
@@ -49,8 +48,7 @@ class UserTokenRefreshUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new UserTokenRefreshUseCase(refreshTokenResolver, sessionRepository, tokenGenerator);
-        ReflectionTestUtils.setField(useCase, "refreshTokenActiveTimeSeconds", 1209600L);
+        useCase = new UserTokenRefreshUseCase(refreshTokenResolver, sessionRepository, tokenGenerator, 1_209_600L);
     }
 
     @Test

@@ -1,4 +1,4 @@
-package team.hotpotato.infrastructure.event.member;
+package team.hotpotato.infrastructure.member.indexing;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,38 +7,38 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import team.hotpotato.domain.member.application.event.ProtectTargetIndexingMessage;
+import team.hotpotato.domain.member.application.dto.ProtectTargetIndexingPublishCommand;
 import team.hotpotato.domain.member.application.output.ProtectTargetIndexingPublisher;
-import team.hotpotato.infrastructure.kafka.EventTopics;
+import team.hotpotato.infrastructure.crawler.CrawlerTopics;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ProtectTargetIndexingEventPublisher implements ProtectTargetIndexingPublisher {
+public class ProtectTargetIndexingKafkaPublisher implements ProtectTargetIndexingPublisher {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
     @Override
-    public Mono<Void> publish(ProtectTargetIndexingMessage message) {
-        return serialize(message)
+    public Mono<Void> publish(ProtectTargetIndexingPublishCommand command) {
+        return serialize(new ProtectTargetIndexingKafkaMessage(command.jobId(), command.keyword()))
                 .flatMap(payload -> Mono.fromFuture(
                         kafkaTemplate.send(
-                                EventTopics.CRAWL_REQUEST,
-                                message.jobId(),
+                                CrawlerTopics.CRAWL_REQUEST,
+                                command.jobId(),
                                 payload
                         )
                 ))
                 .doOnSuccess(result -> log.info(
                         "보호 대상 인덱싱 요청을 발행했습니다. topic={}, jobId={}, keyword={}",
-                        EventTopics.CRAWL_REQUEST,
-                        message.jobId(),
-                        message.keyword()
+                        CrawlerTopics.CRAWL_REQUEST,
+                        command.jobId(),
+                        command.keyword()
                 ))
                 .then();
     }
 
-    private Mono<String> serialize(ProtectTargetIndexingMessage message) {
+    private Mono<String> serialize(ProtectTargetIndexingKafkaMessage message) {
         try {
             return Mono.just(objectMapper.writeValueAsString(message));
         } catch (JsonProcessingException exception) {

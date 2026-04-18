@@ -8,12 +8,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import team.hotpotato.common.identity.IdGenerator;
+import team.hotpotato.common.transaction.ReactiveTransactionRunner;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
+import team.hotpotato.domain.member.application.output.PasswordHasher;
 import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.output.TokenGenerator;
 import team.hotpotato.domain.member.application.usecase.login.LoginCommand;
@@ -44,19 +44,40 @@ class UserLoginUseCaseTest {
     @Mock
     private IdGenerator idGenerator;
 
-    @Mock
-    private TransactionalOperator transactionalOperator;
-
-    private PasswordEncoder passwordEncoder;
+    private BCryptPasswordEncoder passwordEncoder;
+    private PasswordHasher passwordHasher;
+    private ReactiveTransactionRunner transactionRunner;
     private UserLoginUseCase userLoginUseCase;
 
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
-        userLoginUseCase = new UserLoginUseCase(userRepository, tokenGenerator, passwordEncoder, sessionRepository, idGenerator, transactionalOperator);
+        passwordHasher = new PasswordHasher() {
+            @Override
+            public Mono<String> hash(String rawPassword) {
+                return Mono.just(passwordEncoder.encode(rawPassword));
+            }
 
-        // Make the transactional operator just execute the callback without transaction
-        lenient().when(transactionalOperator.transactional(any(Mono.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            @Override
+            public Mono<Boolean> matches(String rawPassword, String hashedPassword) {
+                return Mono.just(passwordEncoder.matches(rawPassword, hashedPassword));
+            }
+        };
+        transactionRunner = new ReactiveTransactionRunner() {
+            @Override
+            public <T> Mono<T> transactional(Mono<T> mono) {
+                return mono;
+            }
+        };
+        userLoginUseCase = new UserLoginUseCase(
+                userRepository,
+                tokenGenerator,
+                passwordHasher,
+                sessionRepository,
+                idGenerator,
+                transactionRunner,
+                1_209_600L
+        );
     }
 
     @Test

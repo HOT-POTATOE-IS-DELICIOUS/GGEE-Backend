@@ -1,4 +1,4 @@
-package team.hotpotato.infrastructure.event.member;
+package team.hotpotato.infrastructure.member.indexing;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

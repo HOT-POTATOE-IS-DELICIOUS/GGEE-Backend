@@ -1,4 +1,4 @@
-package team.hotpotato.infrastructure.event.member;
+package team.hotpotato.infrastructure.member.indexing;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +11,7 @@ import team.hotpotato.domain.reaction.application.output.IndexingJobCompletionEv
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ProtectTargetIndexingCompletionHandler {
+public class ProtectTargetIndexingCompletionSubscriber {
 
     private final IndexingJobCompletionEvents completionEvents;
     private final ProtectTargetIndexingOutboxRepository outboxRepository;
