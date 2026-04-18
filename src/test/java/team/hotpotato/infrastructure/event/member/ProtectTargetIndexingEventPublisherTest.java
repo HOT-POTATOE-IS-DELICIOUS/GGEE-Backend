@@ -46,7 +46,7 @@ class ProtectTargetIndexingEventPublisherTest {
         ArgumentCaptor<String> payloadCaptor = ArgumentCaptor.forClass(String.class);
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), payloadCaptor.capture());
 
-        assertThat(topicCaptor.getValue()).isEqualTo("member.protect-target-indexing");
+        assertThat(topicCaptor.getValue()).isEqualTo("crawl.request");
         assertThat(keyCaptor.getValue()).isEqualTo("1");
         assertThat(payloadCaptor.getValue()).isEqualTo("{\"job_id\":\"1\",\"keyword\":\"brand\"}");
     }

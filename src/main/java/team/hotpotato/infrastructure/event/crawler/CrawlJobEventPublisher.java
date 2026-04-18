@@ -16,7 +16,7 @@ public class CrawlJobEventPublisher {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-    private static final String CRAWL_JOB_TOPIC = "crawl.request";
+    private static final String CRAWL_JOB_TOPIC = "crawl.job.create";
 
     public Mono<Void> publish(CrawlJobCreateMessage message) {
         return serialize(message)
