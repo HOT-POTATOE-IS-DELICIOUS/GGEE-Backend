@@ -40,6 +40,7 @@ paths:
               email: "user@example.com"
               password: "password123"
               protectTarget: "brand"
+              protectTargetInfo: "브랜드 공식몰"
       responses:
         "201":
           description: 회원가입 성공
@@ -68,6 +69,8 @@ paths:
                   value: "비밀번호는 최소 8자 이상 20자 이하여야 합니다."
                 blank_protect_target:
                   value: "보호 대상을 입력해주세요."
+                blank_protect_target_info:
+                  value: "보호 대상 정보를 입력해주세요."
         "409":
           description: 이미 존재하는 이메일
           content:
@@ -270,7 +273,7 @@ components:
   schemas:
     RegisterRequest:
       type: object
-      required: [email, password, protectTarget]
+      required: [email, password, protectTarget, protectTargetInfo]
       properties:
         email:
           type: string
@@ -287,6 +290,10 @@ components:
           type: string
           description: 보호 대상 브랜드 또는 키워드
           example: "brand"
+        protectTargetInfo:
+          type: string
+          description: 보호 대상 상세 정보
+          example: "브랜드 공식몰"
 
     LoginRequest:
       type: object

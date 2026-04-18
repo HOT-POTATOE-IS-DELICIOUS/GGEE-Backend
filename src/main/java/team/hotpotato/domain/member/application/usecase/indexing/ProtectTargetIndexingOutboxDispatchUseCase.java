@@ -15,10 +15,11 @@ public class ProtectTargetIndexingOutboxDispatchUseCase {
 
     public Mono<Void> dispatchPending() {
         return outboxRepository.findPending()
-                .concatMap(outbox -> protectTargetIndexingPublisher.publish(
+                                .concatMap(outbox -> protectTargetIndexingPublisher.publish(
                                         new ProtectTargetIndexingPublishCommand(
                                                 String.valueOf(outbox.id()),
-                                                outbox.protectTarget()
+                                                outbox.protectTarget(),
+                                                outbox.protectTargetInfo()
                                         )
                                 )
                                 .doOnError(error -> log.error(

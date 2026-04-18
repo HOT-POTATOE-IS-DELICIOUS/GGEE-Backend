@@ -29,13 +29,14 @@ class UserRepositoryAdapterTest {
     @DisplayName("저장 성공 시 엔티티를 도메인으로 매핑해 반환한다")
     void saveReturnsMappedDomainUser() {
         UserRepositoryAdapter adapter = new UserRepositoryAdapter(template);
-        User user = new User(1L, "user@test.com", "encoded", Role.USER, "brand");
+        User user = new User(1L, "user@test.com", "encoded", Role.USER, "brand", "브랜드 공식몰");
         UserEntity savedEntity = UserEntity.builder()
                 .id(1L)
                 .email("user@test.com")
                 .password("encoded")
                 .role("USER")
                 .protectTarget("brand")
+                .protectTargetInfo("브랜드 공식몰")
                 .build();
 
         when(template.insert(UserEntity.class).using(any(UserEntity.class))).thenReturn(Mono.just(savedEntity));
@@ -46,6 +47,7 @@ class UserRepositoryAdapterTest {
                     assertThat(savedUser.email()).isEqualTo("user@test.com");
                     assertThat(savedUser.role()).isEqualTo(Role.USER);
                     assertThat(savedUser.protectTarget()).isEqualTo("brand");
+                    assertThat(savedUser.protectTargetInfo()).isEqualTo("브랜드 공식몰");
                 })
                 .verifyComplete();
     }
@@ -54,7 +56,7 @@ class UserRepositoryAdapterTest {
     @DisplayName("중복 이메일 제약조건 오류는 EmailAlreadyExistsException으로 변환한다")
     void saveMapsDuplicateEmailError() {
         UserRepositoryAdapter adapter = new UserRepositoryAdapter(template);
-        User user = new User(1L, "user@test.com", "encoded", Role.USER, "brand");
+        User user = new User(1L, "user@test.com", "encoded", Role.USER, "brand", "브랜드 공식몰");
 
         when(template.insert(UserEntity.class).using(any(UserEntity.class)))
                 .thenReturn(Mono.error(new DataIntegrityViolationException("Duplicate entry")));

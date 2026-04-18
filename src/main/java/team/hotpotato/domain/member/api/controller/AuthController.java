@@ -38,7 +38,8 @@ public class AuthController {
                         new RegisterCommand(
                                 registerRequest.email(),
                                 registerRequest.password(),
-                                registerRequest.protectTarget()
+                                registerRequest.protectTarget(),
+                                registerRequest.protectTargetInfo()
                         )
                 )
                 .map(result -> new RegisterResponse(result.indexingJobId(), result.accessToken(), result.refreshToken()));

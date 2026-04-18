@@ -11,6 +11,7 @@ public final class ProtectTargetIndexingOutboxEntityMapper {
         return ProtectTargetIndexingOutboxEntity.builder()
                 .id(outbox.id())
                 .protectTarget(outbox.protectTarget())
+                .protectTargetInfo(outbox.protectTargetInfo())
                 .status(outbox.status().name())
                 .publishedAt(outbox.publishedAt())
                 .build();
@@ -20,6 +21,7 @@ public final class ProtectTargetIndexingOutboxEntityMapper {
         return new ProtectTargetIndexingOutbox(
                 entity.getId(),
                 entity.getProtectTarget(),
+                entity.getProtectTargetInfo(),
                 ProtectTargetIndexingOutboxStatus.valueOf(entity.getStatus()),
                 entity.getPublishedAt()
         );

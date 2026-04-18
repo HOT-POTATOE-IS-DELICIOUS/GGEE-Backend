@@ -36,6 +36,7 @@ class ProtectTargetIndexingOutboxDispatchUseCaseTest {
         ProtectTargetIndexingOutbox outbox = new ProtectTargetIndexingOutbox(
                 1L,
                 "brand",
+                "브랜드 공식몰",
                 ProtectTargetIndexingOutboxStatus.PENDING,
                 null
         );
@@ -56,6 +57,7 @@ class ProtectTargetIndexingOutboxDispatchUseCaseTest {
         verifyNoMoreInteractions(outboxRepository, publisher);
         org.junit.jupiter.api.Assertions.assertEquals("1", publishedMessage.jobId());
         org.junit.jupiter.api.Assertions.assertEquals("brand", publishedMessage.keyword());
+        org.junit.jupiter.api.Assertions.assertEquals("브랜드 공식몰", publishedMessage.protectTargetInfo());
     }
 
     @Test
@@ -66,6 +68,7 @@ class ProtectTargetIndexingOutboxDispatchUseCaseTest {
         ProtectTargetIndexingOutbox outbox = new ProtectTargetIndexingOutbox(
                 1L,
                 "brand",
+                "브랜드 공식몰",
                 ProtectTargetIndexingOutboxStatus.PENDING,
                 null
         );
@@ -84,6 +87,7 @@ class ProtectTargetIndexingOutboxDispatchUseCaseTest {
         ProtectTargetIndexingPublishCommand publishedMessage = messageCaptor.getValue();
         org.junit.jupiter.api.Assertions.assertEquals("1", publishedMessage.jobId());
         org.junit.jupiter.api.Assertions.assertEquals("brand", publishedMessage.keyword());
+        org.junit.jupiter.api.Assertions.assertEquals("브랜드 공식몰", publishedMessage.protectTargetInfo());
     }
 
     @Test

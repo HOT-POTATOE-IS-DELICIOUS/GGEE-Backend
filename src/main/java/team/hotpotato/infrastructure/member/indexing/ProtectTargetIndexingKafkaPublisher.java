@@ -21,7 +21,11 @@ public class ProtectTargetIndexingKafkaPublisher implements ProtectTargetIndexin
 
     @Override
     public Mono<Void> publish(ProtectTargetIndexingPublishCommand command) {
-        return serialize(new ProtectTargetIndexingKafkaMessage(command.jobId(), command.keyword()))
+        return serialize(new ProtectTargetIndexingKafkaMessage(
+                        command.jobId(),
+                        command.keyword(),
+                        command.protectTargetInfo()
+                ))
                 .flatMap(payload -> Mono.fromFuture(
                         kafkaTemplate.send(
                                 CrawlerTopics.CRAWL_REQUEST,
@@ -30,10 +34,11 @@ public class ProtectTargetIndexingKafkaPublisher implements ProtectTargetIndexin
                         )
                 ))
                 .doOnSuccess(result -> log.info(
-                        "보호 대상 인덱싱 요청을 발행했습니다. topic={}, jobId={}, keyword={}",
+                        "보호 대상 인덱싱 요청을 발행했습니다. topic={}, jobId={}, keyword={}, protectTargetInfo={}",
                         CrawlerTopics.CRAWL_REQUEST,
                         command.jobId(),
-                        command.keyword()
+                        command.keyword(),
+                        command.protectTargetInfo()
                 ))
                 .then();
     }

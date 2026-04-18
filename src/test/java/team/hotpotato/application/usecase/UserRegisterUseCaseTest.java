@@ -97,7 +97,9 @@ class UserRegisterUseCaseTest {
         when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("refresh-token");
         when(sessionRepository.save(any(Session.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
-        StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword", "brand")))
+        StepVerifier.create(userRegisterUseCase.register(
+                        new RegisterCommand("user@test.com", "plainPassword", "brand", "브랜드 공식몰")
+                ))
                 .expectNext(new RegisterResult("200", "access-token", "refresh-token"))
                 .verifyComplete();
 
@@ -113,12 +115,14 @@ class UserRegisterUseCaseTest {
         assertEquals("user@test.com", savedUser.email());
         assertEquals(Role.USER, savedUser.role());
         assertEquals("brand", savedUser.protectTarget());
+        assertEquals("브랜드 공식몰", savedUser.protectTargetInfo());
         assertNotEquals("plainPassword", savedUser.password());
         assertTrue(passwordEncoder.matches("plainPassword", savedUser.password()));
 
         ProtectTargetIndexingOutbox savedOutbox = outboxCaptor.getValue();
         assertEquals(200L, savedOutbox.id());
         assertEquals("brand", savedOutbox.protectTarget());
+        assertEquals("브랜드 공식몰", savedOutbox.protectTargetInfo());
         assertEquals(ProtectTargetIndexingOutboxStatus.PENDING, savedOutbox.status());
         assertNull(savedOutbox.publishedAt());
     }
@@ -130,7 +134,9 @@ class UserRegisterUseCaseTest {
         when(idGenerator.generateId()).thenReturn(1L);
         when(userRepository.save(any(User.class))).thenReturn(Mono.error(expected));
 
-        StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword", "brand")))
+        StepVerifier.create(userRegisterUseCase.register(
+                        new RegisterCommand("user@test.com", "plainPassword", "brand", "브랜드 공식몰")
+                ))
                 .expectErrorMatches(error -> error == expected)
                 .verify();
 
@@ -149,7 +155,9 @@ class UserRegisterUseCaseTest {
         when(outboxRepository.save(any(ProtectTargetIndexingOutbox.class)))
                 .thenReturn(Mono.error(expected));
 
-        StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword", "brand")))
+        StepVerifier.create(userRegisterUseCase.register(
+                        new RegisterCommand("user@test.com", "plainPassword", "brand", "브랜드 공식몰")
+                ))
                 .expectErrorMatches(error -> error == expected)
                 .verify();
 

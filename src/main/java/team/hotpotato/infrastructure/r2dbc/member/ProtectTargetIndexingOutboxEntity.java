@@ -18,6 +18,9 @@ public class ProtectTargetIndexingOutboxEntity extends BaseEntity {
     @Column("protect_target")
     private String protectTarget;
 
+    @Column("protect_target_info")
+    private String protectTargetInfo;
+
     @Column("status")
     private String status;
 

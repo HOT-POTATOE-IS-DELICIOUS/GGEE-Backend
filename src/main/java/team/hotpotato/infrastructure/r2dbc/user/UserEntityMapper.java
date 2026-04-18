@@ -14,6 +14,7 @@ public final class UserEntityMapper {
                 .password(user.password())
                 .role(user.role().toString())
                 .protectTarget(user.protectTarget())
+                .protectTargetInfo(user.protectTargetInfo())
                 .build();
     }
 
@@ -23,7 +24,8 @@ public final class UserEntityMapper {
                 userEntity.getEmail(),
                 userEntity.getPassword(),
                 Role.valueOf(userEntity.getRole()),
-                userEntity.getProtectTarget()
+                userEntity.getProtectTarget(),
+                userEntity.getProtectTargetInfo()
         );
     }
 }

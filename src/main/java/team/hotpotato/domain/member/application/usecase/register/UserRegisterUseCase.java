@@ -74,7 +74,8 @@ public class UserRegisterUseCase implements UserRegister {
                         registerCommand.email(),
                         hashedPassword,
                         Role.USER,
-                        registerCommand.protectTarget()
+                        registerCommand.protectTarget(),
+                        registerCommand.protectTargetInfo()
                 ));
     }
 
@@ -82,6 +83,7 @@ public class UserRegisterUseCase implements UserRegister {
         return outboxRepository.save(new ProtectTargetIndexingOutbox(
                 idGenerator.generateId(),
                 savedUser.protectTarget(),
+                savedUser.protectTargetInfo(),
                 ProtectTargetIndexingOutboxStatus.PENDING,
                 null
         ));

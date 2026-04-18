@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
   password VARCHAR(255) NOT NULL,
   role VARCHAR(32) NOT NULL,
   protect_target VARCHAR(255) NOT NULL,
+  protect_target_info VARCHAR(255) NOT NULL,
   "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   deleted BOOLEAN NOT NULL DEFAULT FALSE,
@@ -27,6 +28,7 @@ CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions (user_id);
 CREATE TABLE IF NOT EXISTS protect_target_indexing_outbox (
     id BIGINT PRIMARY KEY,
     protect_target VARCHAR(255) NOT NULL,
+    protect_target_info VARCHAR(255) NOT NULL,
     status VARCHAR(32) NOT NULL,
     published_at TIMESTAMP NULL,
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
