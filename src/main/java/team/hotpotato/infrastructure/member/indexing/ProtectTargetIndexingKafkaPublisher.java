@@ -29,7 +29,7 @@ public class ProtectTargetIndexingKafkaPublisher implements ProtectTargetIndexin
                 .flatMap(payload -> Mono.fromFuture(
                         kafkaTemplate.send(
                                 CrawlerTopics.CRAWL_REQUEST,
-                                command.jobId(),
+                                String.valueOf(command.jobId()),
                                 payload
                         )
                 ))

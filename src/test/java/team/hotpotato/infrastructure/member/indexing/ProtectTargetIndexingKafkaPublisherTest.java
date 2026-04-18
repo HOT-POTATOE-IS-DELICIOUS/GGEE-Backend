@@ -35,7 +35,7 @@ class ProtectTargetIndexingKafkaPublisherTest {
         ProtectTargetIndexingKafkaPublisher publisher =
                 new ProtectTargetIndexingKafkaPublisher(kafkaTemplate, new ObjectMapper());
         ProtectTargetIndexingPublishCommand command =
-                new ProtectTargetIndexingPublishCommand("1", "brand", "브랜드 공식몰");
+                new ProtectTargetIndexingPublishCommand(1L, "brand", "브랜드 공식몰");
 
         when(kafkaTemplate.send(anyString(), anyString(), anyString()))
                 .thenReturn(completedFuture());
@@ -51,7 +51,7 @@ class ProtectTargetIndexingKafkaPublisherTest {
         assertThat(topicCaptor.getValue()).isEqualTo(CrawlerTopics.CRAWL_REQUEST);
         assertThat(keyCaptor.getValue()).isEqualTo("1");
         assertThat(payloadCaptor.getValue())
-                .isEqualTo("{\"job_id\":\"1\",\"keyword\":\"brand\",\"protect_target_info\":\"브랜드 공식몰\"}");
+                .isEqualTo("{\"job_id\":1,\"keyword\":\"brand\",\"protect_target_info\":\"브랜드 공식몰\"}");
     }
 
     @Test
@@ -60,7 +60,7 @@ class ProtectTargetIndexingKafkaPublisherTest {
         ProtectTargetIndexingKafkaPublisher publisher =
                 new ProtectTargetIndexingKafkaPublisher(kafkaTemplate, objectMapper);
         ProtectTargetIndexingPublishCommand command =
-                new ProtectTargetIndexingPublishCommand("1", "brand", "브랜드 공식몰");
+                new ProtectTargetIndexingPublishCommand(1L, "brand", "브랜드 공식몰");
 
         when(objectMapper.writeValueAsString(any(ProtectTargetIndexingKafkaMessage.class)))
                 .thenThrow(new JsonProcessingException("serialization failed") {

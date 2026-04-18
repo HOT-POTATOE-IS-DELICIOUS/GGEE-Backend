@@ -17,7 +17,7 @@ public class ProtectTargetIndexingOutboxDispatchUseCase {
         return outboxRepository.findPending()
                                 .concatMap(outbox -> protectTargetIndexingPublisher.publish(
                                         new ProtectTargetIndexingPublishCommand(
-                                                String.valueOf(outbox.id()),
+                                                outbox.id(),
                                                 outbox.protectTarget(),
                                                 outbox.protectTargetInfo()
                                         )
