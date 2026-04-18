@@ -1,11 +1,5 @@
 package team.hotpotato.infrastructure.event.crawler;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.concurrent.CompletableFuture;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,11 +11,17 @@ import org.springframework.kafka.core.KafkaTemplate;
 import reactor.test.StepVerifier;
 import team.hotpotato.domain.reaction.application.community.CrawlJobCreateMessage;
 
+import java.util.concurrent.CompletableFuture;
+
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("크롤링 작업 생성 발행 어댑터 단위 테스트")
 class CrawlJobEventPublisherTest {
 
-    @Mock
+	@Mock
     private KafkaTemplate<String, String> kafkaTemplate;
 
     private CrawlJobEventPublisher crawlJobEventPublisher;
@@ -30,8 +30,7 @@ class CrawlJobEventPublisherTest {
     void setUp() {
         crawlJobEventPublisher = new CrawlJobEventPublisher(
                 kafkaTemplate,
-                new ObjectMapper(),
-                new CrawlerJobProperties("crawl.job.create")
+                new ObjectMapper()
         );
     }
 

@@ -16,20 +16,20 @@ public class CrawlJobEventPublisher {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-    private final CrawlerJobProperties crawlerJobProperties;
+    private static final String CRAWL_JOB_TOPIC = "crawl.request";
 
     public Mono<Void> publish(CrawlJobCreateMessage message) {
         return serialize(message)
                 .flatMap(payload -> Mono.fromFuture(
                         kafkaTemplate.send(
-                                crawlerJobProperties.createTopic(),
+								CRAWL_JOB_TOPIC,
                                 message.jobId(),
                                 payload
                         )
                 ))
                 .doOnSuccess(result -> log.info(
                         "크롤링 작업 생성 요청을 발행했습니다. topic={}, jobId={}",
-                        crawlerJobProperties.createTopic(),
+						CRAWL_JOB_TOPIC,
                         message.jobId()
                 ))
                 .then();

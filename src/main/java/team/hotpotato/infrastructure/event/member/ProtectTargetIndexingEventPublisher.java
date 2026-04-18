@@ -17,21 +17,21 @@ public class ProtectTargetIndexingEventPublisher implements ProtectTargetIndexin
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-    private final MemberEventProperties memberEventProperties;
+	private static final String PROTECT_TARGET_INDEXING_TOPIC = "crawl.request";
 
     @Override
     public Mono<Void> publish(ProtectTargetIndexingMessage message) {
         return serialize(message)
                 .flatMap(payload -> Mono.fromFuture(
                         kafkaTemplate.send(
-                                memberEventProperties.protectTargetIndexingTopic(),
+								PROTECT_TARGET_INDEXING_TOPIC,
                                 message.jobId(),
                                 payload
                         )
                 ))
                 .doOnSuccess(result -> log.info(
                         "보호 대상 인덱싱 요청을 발행했습니다. topic={}, jobId={}, keyword={}",
-                        memberEventProperties.protectTargetIndexingTopic(),
+						PROTECT_TARGET_INDEXING_TOPIC,
                         message.jobId(),
                         message.keyword()
                 ))
