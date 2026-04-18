@@ -47,16 +47,16 @@ public class IssueGraphHttpSource implements IssueGraphSource {
                                         issue.title(),
                                         issue.summary(),
                                         issue.date(),
-                                        issue.criticism(),
-                                        issue.support(),
-                                        issue.interest()
+                                        defaultToZero(issue.criticism()),
+                                        defaultToZero(issue.support()),
+                                        defaultToZero(issue.interest())
                                 ))
                                 .toList(),
                         Optional.ofNullable(response.connections()).orElse(List.of()).stream()
                                 .map(connection -> new IssueConnection(
                                         connection.sourceId(),
                                         connection.targetId(),
-                                        connection.similarity()
+                                        defaultToZero(connection.similarity())
                                 ))
                                 .toList()
                 ))
@@ -64,6 +64,10 @@ public class IssueGraphHttpSource implements IssueGraphSource {
                 .doOnError(TimeoutException.class, throwable -> log.warn("Issue graph API call timed out"))
                 .onErrorMap(WebClientException.class, throwable -> IssueGraphServiceUnavailableException.EXCEPTION)
                 .onErrorMap(TimeoutException.class, throwable -> IssueGraphServiceUnavailableException.EXCEPTION);
+    }
+
+    private double defaultToZero(Double value) {
+        return value == null ? 0.0 : value;
     }
 
     private record IssueGraphHttpResponse(
@@ -78,16 +82,16 @@ public class IssueGraphHttpSource implements IssueGraphSource {
             String title,
             String summary,
             String date,
-            double criticism,
-            double support,
-            double interest
+            Double criticism,
+            Double support,
+            Double interest
     ) {
     }
 
     private record IssueConnectionHttpResponse(
             @JsonProperty("source_id") String sourceId,
             @JsonProperty("target_id") String targetId,
-            double similarity
+            Double similarity
     ) {
     }
 }
