@@ -32,7 +32,10 @@ snowflake:
   worker-id: 1
 
 ggee:
+  member:
+    protect-target-indexing-dispatch-delay: 60000
   crawler:
+    crawl-job-outbox-dispatch-delay: 60000
     result-event-topic: crawl.result
     deduplicated-comment-topic: crawl.comment.deduped
     dedup-store-name: ggee-crawler-dedup-store
