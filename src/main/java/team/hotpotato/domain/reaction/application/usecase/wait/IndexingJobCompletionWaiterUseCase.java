@@ -1,4 +1,4 @@
-package team.hotpotato.domain.reaction.application.usecase;
+package team.hotpotato.domain.reaction.application.usecase.wait;
 
 import java.time.Duration;
 
