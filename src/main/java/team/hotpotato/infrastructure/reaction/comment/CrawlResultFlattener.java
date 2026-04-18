@@ -1,10 +1,13 @@
-package team.hotpotato.domain.reaction.application.community;
+package team.hotpotato.infrastructure.reaction.comment;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 import lombok.experimental.UtilityClass;
+import team.hotpotato.infrastructure.crawler.message.CrawlCommentMessage;
+import team.hotpotato.infrastructure.crawler.message.CrawlPostMessage;
+import team.hotpotato.infrastructure.crawler.message.CrawlResultMessage;
 
 @UtilityClass
 public class CrawlResultFlattener {

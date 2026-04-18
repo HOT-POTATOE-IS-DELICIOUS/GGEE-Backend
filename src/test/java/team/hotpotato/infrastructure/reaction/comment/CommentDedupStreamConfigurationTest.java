@@ -1,4 +1,4 @@
-package team.hotpotato.infrastructure.kafka.streams;
+package team.hotpotato.infrastructure.reaction.comment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,14 +17,11 @@ import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.TestOutputTopic;
 import org.apache.kafka.streams.TopologyTestDriver;
 import org.junit.jupiter.api.Test;
-import team.hotpotato.infrastructure.kafka.community.CrawlerStreamsProperties;
-import team.hotpotato.domain.reaction.application.community.CrawlCommentMessage;
-import team.hotpotato.domain.reaction.application.community.CrawlPostMessage;
-import team.hotpotato.domain.reaction.application.community.CrawlResultMessage;
-import team.hotpotato.domain.reaction.application.community.DeduplicatedCommentMessage;
-import team.hotpotato.infrastructure.kafka.EventTopics;
-import team.hotpotato.infrastructure.kafka.JsonSerdeFactory;
-import team.hotpotato.infrastructure.kafka.community.CommentDedupStreamConfiguration;
+import team.hotpotato.infrastructure.crawler.CrawlerTopics;
+import team.hotpotato.infrastructure.crawler.message.CrawlCommentMessage;
+import team.hotpotato.infrastructure.crawler.message.CrawlPostMessage;
+import team.hotpotato.infrastructure.crawler.message.CrawlResultMessage;
+import team.hotpotato.infrastructure.kafka.config.JsonSerdeFactory;
 
 class CommentDedupStreamConfigurationTest {
 
@@ -66,7 +63,7 @@ class CommentDedupStreamConfigurationTest {
     );
 
     private TopologyTestDriver createDriver() {
-        CrawlerStreamsProperties properties = new CrawlerStreamsProperties(
+        CommentDedupStreamProperties properties = new CommentDedupStreamProperties(
                 "crawler-comment-dedup-store",
                 Duration.ofDays(1),
                 Duration.ofMinutes(5)
@@ -86,7 +83,7 @@ class CommentDedupStreamConfigurationTest {
 
     private TestInputTopic<String, CrawlResultMessage> inputTopic(TopologyTestDriver driver) {
         return driver.createInputTopic(
-                EventTopics.CRAWL_RESULT,
+                CrawlerTopics.CRAWL_RESULT,
                 new StringSerializer(),
                 SERDE_FACTORY.serde(CrawlResultMessage.class).serializer()
         );
@@ -94,7 +91,7 @@ class CommentDedupStreamConfigurationTest {
 
     private TestOutputTopic<String, DeduplicatedCommentMessage> outputTopic(TopologyTestDriver driver) {
         return driver.createOutputTopic(
-                EventTopics.CRAWL_COMMENT_DEDUPED,
+                CrawlerTopics.CRAWL_COMMENT_DEDUPED,
                 new StringDeserializer(),
                 SERDE_FACTORY.serde(DeduplicatedCommentMessage.class).deserializer()
         );

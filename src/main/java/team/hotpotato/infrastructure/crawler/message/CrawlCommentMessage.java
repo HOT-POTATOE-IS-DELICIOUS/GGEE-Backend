@@ -1,4 +1,4 @@
-package team.hotpotato.domain.reaction.application.community;
+package team.hotpotato.infrastructure.crawler.message;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

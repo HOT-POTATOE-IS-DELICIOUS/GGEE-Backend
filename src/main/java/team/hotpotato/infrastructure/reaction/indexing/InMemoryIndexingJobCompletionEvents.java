@@ -1,4 +1,4 @@
-package team.hotpotato.infrastructure.event.crawler;
+package team.hotpotato.infrastructure.reaction.indexing;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -8,7 +8,7 @@ import team.hotpotato.domain.reaction.application.output.IndexingJobCompletionEv
 
 @Slf4j
 @Component
-public class IndexingJobCompletionSink implements IndexingJobCompletionEvents {
+public class InMemoryIndexingJobCompletionEvents implements IndexingJobCompletionEvents {
 
     private static final int BUFFER_SIZE = 256;
 

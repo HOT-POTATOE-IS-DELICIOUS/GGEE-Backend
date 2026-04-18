@@ -1,13 +1,11 @@
-package team.hotpotato.infrastructure.kafka;
+package team.hotpotato.infrastructure.kafka.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
-import org.springframework.stereotype.Component;
 import team.hotpotato.common.serde.JsonSerde;
 
-@Component
 @RequiredArgsConstructor
 public class JsonSerdeFactory implements JsonSerde {
 

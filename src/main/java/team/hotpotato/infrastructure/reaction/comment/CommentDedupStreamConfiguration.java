@@ -1,4 +1,4 @@
-package team.hotpotato.infrastructure.kafka.community;
+package team.hotpotato.infrastructure.reaction.comment;
 
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -10,11 +10,9 @@ import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import team.hotpotato.domain.reaction.application.community.CrawlResultFlattener;
-import team.hotpotato.domain.reaction.application.community.CrawlResultMessage;
-import team.hotpotato.domain.reaction.application.community.DeduplicatedCommentMessage;
-import team.hotpotato.infrastructure.kafka.EventTopics;
-import team.hotpotato.infrastructure.kafka.JsonSerdeFactory;
+import team.hotpotato.infrastructure.crawler.CrawlerTopics;
+import team.hotpotato.infrastructure.crawler.message.CrawlResultMessage;
+import team.hotpotato.infrastructure.kafka.config.JsonSerdeFactory;
 
 @Configuration(proxyBeanMethods = false)
 public class CommentDedupStreamConfiguration {
@@ -24,13 +22,13 @@ public class CommentDedupStreamConfiguration {
     @Bean
     public KStream<String, DeduplicatedCommentMessage> commentDedupStream(
             StreamsBuilder streamsBuilder,
-            CrawlerStreamsProperties properties,
+            CommentDedupStreamProperties properties,
             JsonSerdeFactory serdeFactory
     ) {
         streamsBuilder.addStateStore(dedupStoreBuilder(properties));
 
         KStream<String, DeduplicatedCommentMessage> stream = streamsBuilder
-                .stream(EventTopics.CRAWL_RESULT, Consumed.with(Serdes.String(), serdeFactory.serde(CrawlResultMessage.class)))
+                .stream(CrawlerTopics.CRAWL_RESULT, Consumed.with(Serdes.String(), serdeFactory.serde(CrawlResultMessage.class)))
                 .filter((jobId, payload) -> payload != null && COMPLETED.equalsIgnoreCase(payload.status()))
                 .flatMapValues(CrawlResultFlattener::flattenComments)
                 .selectKey((jobId, comment) -> comment.id())
@@ -43,12 +41,12 @@ public class CommentDedupStreamConfiguration {
                         properties.dedupStoreName()
                 );
 
-        stream.to(EventTopics.CRAWL_COMMENT_DEDUPED, Produced.with(Serdes.String(), serdeFactory.serde(DeduplicatedCommentMessage.class)));
+        stream.to(CrawlerTopics.CRAWL_COMMENT_DEDUPED, Produced.with(Serdes.String(), serdeFactory.serde(DeduplicatedCommentMessage.class)));
 
         return stream;
     }
 
-    private StoreBuilder<KeyValueStore<String, Long>> dedupStoreBuilder(CrawlerStreamsProperties properties) {
+    private StoreBuilder<KeyValueStore<String, Long>> dedupStoreBuilder(CommentDedupStreamProperties properties) {
         return Stores.keyValueStoreBuilder(
                 Stores.persistentKeyValueStore(properties.dedupStoreName()),
                 Serdes.String(),

@@ -1,4 +1,4 @@
-package team.hotpotato.infrastructure.kafka.community;
+package team.hotpotato.infrastructure.reaction.comment;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -12,7 +12,6 @@ import org.apache.kafka.streams.processor.api.FixedKeyProcessorSupplier;
 import org.apache.kafka.streams.processor.api.FixedKeyRecord;
 import org.apache.kafka.streams.state.KeyValueIterator;
 import org.apache.kafka.streams.state.KeyValueStore;
-import team.hotpotato.domain.reaction.application.community.DeduplicatedCommentMessage;
 
 @RequiredArgsConstructor
 public class CommentDeduplicationProcessorSupplier implements FixedKeyProcessorSupplier<String, DeduplicatedCommentMessage, DeduplicatedCommentMessage> {
