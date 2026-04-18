@@ -53,6 +53,10 @@ snowflake:
   worker-id: ${SNOWFLAKE_WORKER_ID}
 
 ggee:
+  ai:
+    issue:
+      base-url: ${GGEE_AI_ISSUE_BASE_URL}
+      timeout: ${GGEE_AI_ISSUE_TIMEOUT}
   crawler:
     dedup-store-name: ggee-crawler-dedup-store
     dedup-ttl: ${GGEE_CRAWLER_DEDUP_TTL}

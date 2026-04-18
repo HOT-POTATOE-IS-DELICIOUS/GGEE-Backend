@@ -32,6 +32,10 @@ snowflake:
   worker-id: 1
 
 ggee:
+  ai:
+    issue:
+      base-url: http://localhost:18080
+      timeout: 3s
   member:
     protect-target-indexing-dispatch-delay: 60000
   crawler:

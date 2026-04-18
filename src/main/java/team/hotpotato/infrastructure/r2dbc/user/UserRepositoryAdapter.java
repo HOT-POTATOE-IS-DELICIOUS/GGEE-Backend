@@ -15,6 +15,15 @@ public class UserRepositoryAdapter implements UserRepository {
     private final R2dbcEntityTemplate template;
 
     @Override
+    public Mono<User> findById(Long userId) {
+        return template.selectOne(
+                        Query.query(Criteria.where("id").is(userId)),
+                        UserEntity.class
+                )
+                .map(UserEntityMapper::toDomain);
+    }
+
+    @Override
     public Mono<User> findByEmail(String email) {
         return template.selectOne(
                         Query.query(Criteria.where("email").is(email)),

@@ -16,7 +16,6 @@ import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutboxStatus;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.Session;
 import team.hotpotato.domain.member.domain.User;
-import team.hotpotato.domain.member.application.usecase.register.RegisterResult;
 
 import java.time.LocalDateTime;
 

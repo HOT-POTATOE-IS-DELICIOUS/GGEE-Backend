@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import team.hotpotato.common.identity.IdGenerator;
 import team.hotpotato.common.transaction.ReactiveTransactionRunner;
+import team.hotpotato.domain.member.application.input.GetUser;
 import team.hotpotato.domain.member.application.input.RefreshTokenResolver;
 import team.hotpotato.domain.member.application.input.UserLogin;
 import team.hotpotato.domain.member.application.input.UserLogout;
@@ -15,6 +16,7 @@ import team.hotpotato.domain.member.application.output.ProtectTargetIndexingPubl
 import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.output.TokenGenerator;
 import team.hotpotato.domain.member.application.output.UserRepository;
+import team.hotpotato.domain.member.application.query.user.GetUserQuery;
 import team.hotpotato.domain.member.application.usecase.indexing.ProtectTargetIndexingOutboxDispatchUseCase;
 import team.hotpotato.domain.member.application.usecase.login.UserLoginUseCase;
 import team.hotpotato.domain.member.application.usecase.logout.UserLogoutUseCase;
@@ -24,6 +26,11 @@ import team.hotpotato.infrastructure.jwt.TokenProperties;
 
 @Configuration(proxyBeanMethods = false)
 public class MemberUseCaseConfig {
+
+    @Bean
+    public GetUser getUser(UserRepository userRepository) {
+        return new GetUserQuery(userRepository);
+    }
 
     @Bean
     public UserRegister userRegister(
