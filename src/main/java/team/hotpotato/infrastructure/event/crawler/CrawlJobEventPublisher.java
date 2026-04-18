@@ -8,6 +8,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import team.hotpotato.domain.reaction.application.community.CrawlJobCreateMessage;
+import team.hotpotato.infrastructure.kafka.EventTopics;
 
 @Slf4j
 @Component
@@ -16,20 +17,19 @@ public class CrawlJobEventPublisher {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-    private static final String CRAWL_JOB_TOPIC = "crawl.job.create";
 
     public Mono<Void> publish(CrawlJobCreateMessage message) {
         return serialize(message)
                 .flatMap(payload -> Mono.fromFuture(
                         kafkaTemplate.send(
-								CRAWL_JOB_TOPIC,
+                                EventTopics.CRAWL_JOB_CREATE,
                                 message.jobId(),
                                 payload
                         )
                 ))
                 .doOnSuccess(result -> log.info(
                         "크롤링 작업 생성 요청을 발행했습니다. topic={}, jobId={}",
-						CRAWL_JOB_TOPIC,
+                        EventTopics.CRAWL_JOB_CREATE,
                         message.jobId()
                 ))
                 .then();

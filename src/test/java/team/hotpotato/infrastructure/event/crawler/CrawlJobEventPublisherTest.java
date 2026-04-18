@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 import reactor.test.StepVerifier;
 import team.hotpotato.domain.reaction.application.community.CrawlJobCreateMessage;
+import team.hotpotato.infrastructure.kafka.EventTopics;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -43,7 +44,7 @@ class CrawlJobEventPublisherTest {
                 3
         );
         when(kafkaTemplate.send(
-                eq("crawl.job.create"),
+                eq(EventTopics.CRAWL_JOB_CREATE),
                 eq("req-1"),
                 eq("{\"job_id\":\"req-1\",\"keyword\":\"키워드\",\"max_pages\":3}")
         )).thenReturn(CompletableFuture.completedFuture(null));
@@ -52,7 +53,7 @@ class CrawlJobEventPublisherTest {
                 .verifyComplete();
 
         verify(kafkaTemplate).send(
-                "crawl.job.create",
+                EventTopics.CRAWL_JOB_CREATE,
                 "req-1",
                 "{\"job_id\":\"req-1\",\"keyword\":\"키워드\",\"max_pages\":3}"
         );

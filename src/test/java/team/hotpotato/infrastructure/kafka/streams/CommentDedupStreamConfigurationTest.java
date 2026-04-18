@@ -22,6 +22,7 @@ import team.hotpotato.domain.reaction.application.community.CrawlCommentMessage;
 import team.hotpotato.domain.reaction.application.community.CrawlPostMessage;
 import team.hotpotato.domain.reaction.application.community.CrawlResultMessage;
 import team.hotpotato.domain.reaction.application.community.DeduplicatedCommentMessage;
+import team.hotpotato.infrastructure.kafka.EventTopics;
 import team.hotpotato.infrastructure.kafka.JsonSerdeFactory;
 import team.hotpotato.infrastructure.kafka.community.CommentDedupStreamConfiguration;
 
@@ -85,7 +86,7 @@ class CommentDedupStreamConfigurationTest {
 
     private TestInputTopic<String, CrawlResultMessage> inputTopic(TopologyTestDriver driver) {
         return driver.createInputTopic(
-                "crawl.result",
+                EventTopics.CRAWL_RESULT,
                 new StringSerializer(),
                 SERDE_FACTORY.serde(CrawlResultMessage.class).serializer()
         );
@@ -93,7 +94,7 @@ class CommentDedupStreamConfigurationTest {
 
     private TestOutputTopic<String, DeduplicatedCommentMessage> outputTopic(TopologyTestDriver driver) {
         return driver.createOutputTopic(
-                "crawl.comment.deduped",
+                EventTopics.CRAWL_COMMENT_DEDUPED,
                 new StringDeserializer(),
                 SERDE_FACTORY.serde(DeduplicatedCommentMessage.class).deserializer()
         );

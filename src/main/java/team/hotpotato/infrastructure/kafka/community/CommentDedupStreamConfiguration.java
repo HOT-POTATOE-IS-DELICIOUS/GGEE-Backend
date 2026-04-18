@@ -13,14 +13,13 @@ import org.springframework.context.annotation.Configuration;
 import team.hotpotato.domain.reaction.application.community.CrawlResultFlattener;
 import team.hotpotato.domain.reaction.application.community.CrawlResultMessage;
 import team.hotpotato.domain.reaction.application.community.DeduplicatedCommentMessage;
+import team.hotpotato.infrastructure.kafka.EventTopics;
 import team.hotpotato.infrastructure.kafka.JsonSerdeFactory;
 
 @Configuration(proxyBeanMethods = false)
 public class CommentDedupStreamConfiguration {
 
     private static final String COMPLETED = "completed";
-    private static final String CRAWL_RESULT_TOPIC = "crawl.result";
-    private static final String DEDUPLICATED_COMMENT_TOPIC = "crawl.comment.deduped";
 
     @Bean
     public KStream<String, DeduplicatedCommentMessage> commentDedupStream(
@@ -31,7 +30,7 @@ public class CommentDedupStreamConfiguration {
         streamsBuilder.addStateStore(dedupStoreBuilder(properties));
 
         KStream<String, DeduplicatedCommentMessage> stream = streamsBuilder
-                .stream(CRAWL_RESULT_TOPIC, Consumed.with(Serdes.String(), serdeFactory.serde(CrawlResultMessage.class)))
+                .stream(EventTopics.CRAWL_RESULT, Consumed.with(Serdes.String(), serdeFactory.serde(CrawlResultMessage.class)))
                 .filter((jobId, payload) -> payload != null && COMPLETED.equalsIgnoreCase(payload.status()))
                 .flatMapValues(CrawlResultFlattener::flattenComments)
                 .selectKey((jobId, comment) -> comment.id())
@@ -44,7 +43,7 @@ public class CommentDedupStreamConfiguration {
                         properties.dedupStoreName()
                 );
 
-        stream.to(DEDUPLICATED_COMMENT_TOPIC, Produced.with(Serdes.String(), serdeFactory.serde(DeduplicatedCommentMessage.class)));
+        stream.to(EventTopics.CRAWL_COMMENT_DEDUPED, Produced.with(Serdes.String(), serdeFactory.serde(DeduplicatedCommentMessage.class)));
 
         return stream;
     }

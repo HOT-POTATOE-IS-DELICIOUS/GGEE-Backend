@@ -12,6 +12,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import reactor.test.StepVerifier;
 import team.hotpotato.domain.member.application.event.ProtectTargetIndexingMessage;
+import team.hotpotato.infrastructure.kafka.EventTopics;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -46,7 +47,7 @@ class ProtectTargetIndexingEventPublisherTest {
         ArgumentCaptor<String> payloadCaptor = ArgumentCaptor.forClass(String.class);
         verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), payloadCaptor.capture());
 
-        assertThat(topicCaptor.getValue()).isEqualTo("crawl.request");
+        assertThat(topicCaptor.getValue()).isEqualTo(EventTopics.CRAWL_REQUEST);
         assertThat(keyCaptor.getValue()).isEqualTo("1");
         assertThat(payloadCaptor.getValue()).isEqualTo("{\"job_id\":\"1\",\"keyword\":\"brand\"}");
     }

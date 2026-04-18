@@ -8,13 +8,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import team.hotpotato.domain.reaction.application.community.CrawlResultMessage;
 import team.hotpotato.infrastructure.event.crawler.IndexingJobCompletionSink;
+import team.hotpotato.infrastructure.kafka.EventTopics;
 import team.hotpotato.infrastructure.kafka.JsonSerdeFactory;
 
 @Configuration(proxyBeanMethods = false)
 public class IndexingJobCompletionStreamConfiguration {
 
     private static final String ALL_DONE = "all_done";
-    private static final String CRAWL_RESULT_TOPIC = "crawl.result";
 
     @Bean
     public KStream<String, CrawlResultMessage> indexingJobCompletionStream(
@@ -23,7 +23,7 @@ public class IndexingJobCompletionStreamConfiguration {
             IndexingJobCompletionSink completionSink
     ) {
         return streamsBuilder
-                .stream(CRAWL_RESULT_TOPIC, Consumed.with(Serdes.String(), serdeFactory.serde(CrawlResultMessage.class)))
+                .stream(EventTopics.CRAWL_RESULT, Consumed.with(Serdes.String(), serdeFactory.serde(CrawlResultMessage.class)))
                 .filter((jobId, payload) -> payload != null && ALL_DONE.equalsIgnoreCase(payload.status()))
                 .peek((jobId, payload) -> completionSink.complete(jobId));
     }
