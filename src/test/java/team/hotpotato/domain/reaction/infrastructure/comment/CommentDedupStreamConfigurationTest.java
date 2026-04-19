@@ -23,11 +23,14 @@ import team.hotpotato.infrastructure.crawler.message.CrawlCommentMessage;
 import team.hotpotato.infrastructure.crawler.message.CrawlPostMessage;
 import team.hotpotato.infrastructure.crawler.message.CrawlResultMessage;
 import team.hotpotato.infrastructure.kafka.config.JsonSerdeFactory;
+import team.hotpotato.infrastructure.kafka.config.SchemaRegistrySerdeFactory;
 
 class CommentDedupStreamConfigurationTest {
 
     private static final long FIXED_POST_ID = 123456789L;
     private static final IdGenerator FIXED_ID_GENERATOR = () -> FIXED_POST_ID;
+    private static final SchemaRegistrySerdeFactory SCHEMA_REGISTRY_SERDE_FACTORY =
+            new SchemaRegistrySerdeFactory("mock://test-scope");
 
     @Test
     void suppressesDuplicateCommentsWithinOneDayTtl() {
@@ -82,7 +85,7 @@ class CommentDedupStreamConfigurationTest {
 
         CommentDedupStreamConfiguration configuration = new CommentDedupStreamConfiguration();
         StreamsBuilder builder = new StreamsBuilder();
-        configuration.commentDedupStream(builder, properties, SERDE_FACTORY, FIXED_ID_GENERATOR);
+        configuration.commentDedupStream(builder, properties, SERDE_FACTORY, SCHEMA_REGISTRY_SERDE_FACTORY, FIXED_ID_GENERATOR);
 
         Properties streamProperties = new Properties();
         streamProperties.put(StreamsConfig.APPLICATION_ID_CONFIG, "comment-dedup-test");
@@ -104,7 +107,7 @@ class CommentDedupStreamConfigurationTest {
         return driver.createOutputTopic(
                 CrawlerTopics.CRAWL_POST_DEDUPED,
                 new StringDeserializer(),
-                SERDE_FACTORY.serde(DeduplicatedPostMessage.class).deserializer()
+                SCHEMA_REGISTRY_SERDE_FACTORY.serde(DeduplicatedPostMessage.class).deserializer()
         );
     }
 
@@ -112,7 +115,7 @@ class CommentDedupStreamConfigurationTest {
         return driver.createOutputTopic(
                 CrawlerTopics.CRAWL_COMMENT_DEDUPED,
                 new StringDeserializer(),
-                SERDE_FACTORY.serde(DeduplicatedCommentMessage.class).deserializer()
+                SCHEMA_REGISTRY_SERDE_FACTORY.serde(DeduplicatedCommentMessage.class).deserializer()
         );
     }
 
