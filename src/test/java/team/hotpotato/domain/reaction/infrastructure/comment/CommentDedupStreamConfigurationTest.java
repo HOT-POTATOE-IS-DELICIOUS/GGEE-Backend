@@ -29,16 +29,18 @@ class CommentDedupStreamConfigurationTest {
     void suppressesDuplicateCommentsWithinOneDayTtl() {
         try (TopologyTestDriver driver = createDriver()) {
             TestInputTopic<String, CrawlResultMessage> inputTopic = inputTopic(driver);
-            TestOutputTopic<String, DeduplicatedCommentMessage> outputTopic = outputTopic(driver);
+            TestOutputTopic<String, DeduplicatedPostMessage> outputTopic = outputTopic(driver);
 
             String url = "https://community.example/posts/1";
             inputTopic.pipeInput("job-1", crawlResult("job-1", url, 1001, "2026-03-23T00:00:00Z"), Instant.parse("2026-03-23T00:00:00Z"));
             inputTopic.pipeInput("job-2", crawlResult("job-2", url, 1001, "2026-03-23T06:00:00Z"), Instant.parse("2026-03-23T06:00:00Z"));
 
-            List<DeduplicatedCommentMessage> emitted = outputTopic.readValuesToList();
+            List<DeduplicatedPostMessage> emitted = outputTopic.readValuesToList();
 
             assertThat(emitted).hasSize(1);
-            assertThat(emitted.getFirst().id()).isEqualTo("1001|" + url);
+            assertThat(emitted.getFirst().postUrl()).isEqualTo(url);
+            assertThat(emitted.getFirst().newComments()).hasSize(1);
+            assertThat(emitted.getFirst().newComments().getFirst().id()).isEqualTo(1001);
         }
     }
 
@@ -46,13 +48,13 @@ class CommentDedupStreamConfigurationTest {
     void reEmitsCommentAfterTtlExpires() {
         try (TopologyTestDriver driver = createDriver()) {
             TestInputTopic<String, CrawlResultMessage> inputTopic = inputTopic(driver);
-            TestOutputTopic<String, DeduplicatedCommentMessage> outputTopic = outputTopic(driver);
+            TestOutputTopic<String, DeduplicatedPostMessage> outputTopic = outputTopic(driver);
 
             String url = "https://community.example/posts/2";
             inputTopic.pipeInput("job-1", crawlResult("job-1", url, 2002, "2026-03-23T00:00:00Z"), Instant.parse("2026-03-23T00:00:00Z"));
             inputTopic.pipeInput("job-2", crawlResult("job-2", url, 2002, "2026-03-24T01:00:01Z"), Instant.parse("2026-03-24T01:00:01Z"));
 
-            List<DeduplicatedCommentMessage> emitted = outputTopic.readValuesToList();
+            List<DeduplicatedPostMessage> emitted = outputTopic.readValuesToList();
 
             assertThat(emitted).hasSize(2);
         }
@@ -89,11 +91,11 @@ class CommentDedupStreamConfigurationTest {
         );
     }
 
-    private TestOutputTopic<String, DeduplicatedCommentMessage> outputTopic(TopologyTestDriver driver) {
+    private TestOutputTopic<String, DeduplicatedPostMessage> outputTopic(TopologyTestDriver driver) {
         return driver.createOutputTopic(
                 CrawlerTopics.CRAWL_COMMENT_DEDUPED,
                 new StringDeserializer(),
-                SERDE_FACTORY.serde(DeduplicatedCommentMessage.class).deserializer()
+                SERDE_FACTORY.serde(DeduplicatedPostMessage.class).deserializer()
         );
     }
 
