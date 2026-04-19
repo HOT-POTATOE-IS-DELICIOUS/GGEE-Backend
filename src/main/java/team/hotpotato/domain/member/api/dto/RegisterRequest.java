@@ -14,6 +14,9 @@ public record RegisterRequest(
         String password,
 
         @NotBlank(message = "보호 대상을 입력해주세요.")
-        String protectTarget
+        String protectTarget,
+
+        @NotBlank(message = "보호 대상 정보를 입력해주세요.")
+        String protectTargetInfo
 ) {
 }

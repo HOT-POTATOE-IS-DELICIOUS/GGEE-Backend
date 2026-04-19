@@ -1,8 +1,8 @@
 package team.hotpotato.domain.member.application.output;
 
 import reactor.core.publisher.Mono;
-import team.hotpotato.domain.member.application.event.ProtectTargetIndexingMessage;
+import team.hotpotato.domain.member.application.dto.ProtectTargetIndexingPublishCommand;
 
 public interface ProtectTargetIndexingPublisher {
-    Mono<Void> publish(ProtectTargetIndexingMessage message);
+    Mono<Void> publish(ProtectTargetIndexingPublishCommand command);
 }

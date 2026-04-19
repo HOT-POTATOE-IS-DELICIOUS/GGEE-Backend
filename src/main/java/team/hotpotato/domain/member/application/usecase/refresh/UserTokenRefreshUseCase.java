@@ -1,8 +1,6 @@
 package team.hotpotato.domain.member.application.usecase.refresh;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import team.hotpotato.domain.member.application.input.RefreshTokenResolver;
 import team.hotpotato.domain.member.application.input.UserTokenRefresh;
@@ -13,15 +11,12 @@ import team.hotpotato.domain.member.application.usecase.login.SessionExpiredExce
 
 import java.time.LocalDateTime;
 
-@Service
 @RequiredArgsConstructor
 public class UserTokenRefreshUseCase implements UserTokenRefresh {
     private final RefreshTokenResolver refreshTokenResolver;
     private final SessionRepository sessionRepository;
     private final TokenGenerator tokenGenerator;
-
-    @Value("${jwt.refresh-token-active-time}")
-    private long refreshTokenActiveTimeSeconds;
+    private final long refreshTokenActiveTimeSeconds;
 
     @Override
     public Mono<RefreshResult> refresh(RefreshCommand command) {

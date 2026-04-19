@@ -53,14 +53,14 @@ snowflake:
   worker-id: ${SNOWFLAKE_WORKER_ID}
 
 ggee:
-  member:
-    protect-target-indexing-topic: ${GGEE_MEMBER_PROTECT_TARGET_INDEXING_TOPIC}
-    protect-target-indexing-dispatch-delay: ${GGEE_MEMBER_PROTECT_TARGET_INDEXING_DISPATCH_DELAY}
+  ai:
+    audit:
+      base-url: ${GGEE_AI_AUDIT_BASE_URL}
+      timeout: ${GGEE_AI_AUDIT_TIMEOUT}
+    issue:
+      base-url: ${GGEE_AI_ISSUE_BASE_URL}
+      timeout: ${GGEE_AI_ISSUE_TIMEOUT}
   crawler:
-    result-event-topic: ${GGEE_CRAWLER_RESULT_EVENT_TOPIC}
-    deduplicated-comment-topic: ${GGEE_CRAWLER_DEDUPLICATED_COMMENT_TOPIC}
-    dedup-store-name: ${GGEE_CRAWLER_DEDUP_STORE_NAME}
+    dedup-store-name: ggee-crawler-dedup-store
     dedup-ttl: ${GGEE_CRAWLER_DEDUP_TTL}
     cleanup-interval: ${GGEE_CRAWLER_DEDUP_CLEANUP_INTERVAL}
-    job:
-      create-topic: ${GGEE_CRAWLER_JOB_CREATE_TOPIC}

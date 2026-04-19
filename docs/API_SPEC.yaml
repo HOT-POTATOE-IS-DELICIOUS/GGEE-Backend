@@ -22,6 +22,10 @@ tags:
     description: 회원가입 및 로그인
   - name: IndexingJob
     description: 인덱싱 작업 상태 조회
+  - name: Audit
+    description: 입장문 검수
+  - name: Issue
+    description: 이슈 계통도 조회
 
 paths:
   /auth/register:
@@ -40,6 +44,7 @@ paths:
               email: "user@example.com"
               password: "password123"
               protectTarget: "brand"
+              protectTargetInfo: "브랜드 공식몰"
       responses:
         "201":
           description: 회원가입 성공
@@ -68,6 +73,8 @@ paths:
                   value: "비밀번호는 최소 8자 이상 20자 이하여야 합니다."
                 blank_protect_target:
                   value: "보호 대상을 입력해주세요."
+                blank_protect_target_info:
+                  value: "보호 대상 정보를 입력해주세요."
         "409":
           description: 이미 존재하는 이메일
           content:
@@ -256,6 +263,139 @@ paths:
                 session_expired:
                   value: "다른 기기에서 로그인되어 세션이 만료되었습니다."
 
+  /issues:
+    get:
+      tags: [Issue]
+      operationId: getIssues
+      summary: 이슈 계통도 조회
+      description: |
+        로그인한 사용자의 `protectTarget`, `protectTargetInfo`를 기준으로 이슈 목록과 이슈 간 의미적 연결 관계를 조회합니다.
+        `connections.source_id -> connections.target_id` 방향은 최신 이슈가 과거 이슈를 재조명하는 의미입니다.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 이슈 계통도 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuesResponse'
+              example:
+                protect_target: "백종원"
+                issues:
+                  - id: "4:c39a66eb-67e6-4ff4-954a-4c9d2fbcd69a:6050"
+                    title: "백종원 더본코리아 가맹점 갑질 논란"
+                    summary: "더본코리아 가맹점주들이 본사의 갑질 행위를 폭로하며..."
+                    date: "2024-03-15"
+                    criticism: 0.82
+                    support: 0.12
+                    interest: 0.73
+                  - id: "4:c39a66eb-67e6-4ff4-954a-4c9d2fbcd69a:6120"
+                    title: "백종원 연돈볼카츠 허위광고 의혹"
+                    summary: "연돈볼카츠 브랜드의 광고가 실제와 다르다는 지적이..."
+                    date: "2024-09-01"
+                    criticism: 0.76
+                    support: 0.18
+                    interest: 0.69
+                connections:
+                  - source_id: "4:c39a66eb-67e6-4ff4-954a-4c9d2fbcd69a:6120"
+                    target_id: "4:c39a66eb-67e6-4ff4-954a-4c9d2fbcd69a:6050"
+                    similarity: 0.847
+        "401":
+          description: 인증 실패 또는 세션 만료
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                expired_token:
+                  value: "만료된 JWT 토큰입니다."
+                session_expired:
+                  value: "다른 기기에서 로그인되어 세션이 만료되었습니다."
+        "404":
+          description: 인증된 사용자를 찾을 수 없음
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "사용자를 찾을 수 없습니다."
+        "503":
+          description: 이슈 계통도 조회 서버 통신 실패
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "이슈 계통도 조회 서버와 통신할 수 없습니다."
+
+  /audit:
+    post:
+      tags: [Audit]
+      operationId: auditStatement
+      summary: 입장문 검수
+      description: |
+        입력한 엔티티 정보와 입장문 텍스트를 기준으로 문장 단위 검수를 수행합니다.
+        여러 시선에서 탐지된 결과를 문장별로 묶어 수정 제안과 함께 반환합니다.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditRequest'
+            example:
+              text: "홍어들이 또 난리났네."
+      responses:
+        "200":
+          description: 입장문 검수 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditResponse'
+              example:
+                audit_id: 107519243230003200
+                message_id: "550e8400-e29b-41d4-a716-446655440000"
+                reviews:
+                  - sentence:
+                      sentence_text: "홍어들이 또 난리났네."
+                      start_offset: 0
+                      end_offset: 12
+                    perspective_ids: ["community"]
+                    perspective_labels: ["커뮤니티 성향"]
+                    suggestions:
+                      - start_index: 0
+                        end_index: 4
+                        before: "홍어들이"
+                        after: "그 사람들이"
+                        reason: "이 문장에서 일베 커뮤니티 특유의 언어·문화 표현이 탐지되었습니다."
+        "400":
+          description: 요청 본문 검증 실패
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                blank_text:
+                  value: "검수할 입장문을 입력해주세요."
+        "401":
+          description: 인증 실패 또는 세션 만료
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                expired_token:
+                  value: "만료된 JWT 토큰입니다."
+                session_expired:
+                  value: "다른 기기에서 로그인되어 세션이 만료되었습니다."
+        "503":
+          description: 입장문 검수 서버 통신 실패
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "입장문 검수 서버와 통신할 수 없습니다."
+
 security:
   - BearerAuth: []
 
@@ -270,7 +410,7 @@ components:
   schemas:
     RegisterRequest:
       type: object
-      required: [email, password, protectTarget]
+      required: [email, password, protectTarget, protectTargetInfo]
       properties:
         email:
           type: string
@@ -287,6 +427,10 @@ components:
           type: string
           description: 보호 대상 브랜드 또는 키워드
           example: "brand"
+        protectTargetInfo:
+          type: string
+          description: 보호 대상 상세 정보
+          example: "브랜드 공식몰"
 
     LoginRequest:
       type: object
@@ -345,3 +489,166 @@ components:
         refreshToken:
           type: string
           description: "새로 발급된 JWT 리프레시 토큰 (토큰 로테이션)"
+
+    AuditRequest:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          description: 검수할 입장문 원문
+          minLength: 1
+          example: "홍어들이 또 난리났네."
+
+    AuditResponse:
+      type: object
+      properties:
+        audit_id:
+          type: integer
+          format: int64
+          description: 검수 실행 고유 ID
+          example: 107519243230003200
+        message_id:
+          type: string
+          format: uuid
+          description: 외부 검수 서버가 반환한 메시지 추적 ID
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        reviews:
+          type: array
+          description: 이슈가 탐지된 문장별 검수 결과
+          items:
+            $ref: '#/components/schemas/AuditReview'
+
+    AuditReview:
+      type: object
+      properties:
+        sentence:
+          $ref: '#/components/schemas/AuditSentence'
+        perspective_ids:
+          type: array
+          description: 이슈를 탐지한 시선 ID 목록
+          items:
+            type: string
+          example: ["community", "gender"]
+        perspective_labels:
+          type: array
+          description: 이슈를 탐지한 시선 한글 라벨 목록
+          items:
+            type: string
+          example: ["커뮤니티 성향", "성별 편향"]
+        suggestions:
+          type: array
+          description: 문장에 대한 수정 제안 목록
+          items:
+            $ref: '#/components/schemas/AuditSuggestion'
+
+    AuditSentence:
+      type: object
+      properties:
+        sentence_text:
+          type: string
+          description: 검수 대상 문장 텍스트
+          example: "홍어들이 또 난리났네."
+        start_offset:
+          type: integer
+          description: 원본 text 기준 시작 위치
+          example: 0
+        end_offset:
+          type: integer
+          description: 원본 text 기준 끝 위치
+          example: 12
+
+    AuditSuggestion:
+      type: object
+      properties:
+        start_index:
+          type: integer
+          description: sentence 내부 시작 위치
+          example: 0
+        end_index:
+          type: integer
+          description: sentence 내부 끝 위치
+          example: 4
+        before:
+          type: string
+          description: 원문 문제 표현
+          example: "홍어들이"
+        after:
+          type: string
+          description: 바로 적용 가능한 수정 표현
+          example: "그 사람들이"
+        reason:
+          type: string
+          description: 문제 표현에 대한 설명
+          example: "이 문장에서 일베 커뮤니티 특유의 언어·문화 표현이 탐지되었습니다."
+
+    IssuesResponse:
+      type: object
+      properties:
+        protect_target:
+          type: string
+          description: 로그인한 사용자의 보호 대상 이름
+          example: "백종원"
+        issues:
+          type: array
+          description: 연결된 이슈 목록. 날짜 오름차순 정렬
+          items:
+            $ref: '#/components/schemas/IssueNode'
+        connections:
+          type: array
+          description: 유사도 임계값 이상인 이슈 연결 목록
+          items:
+            $ref: '#/components/schemas/IssueConnection'
+
+    IssueNode:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Neo4j 노드 고유 ID
+          example: "4:c39a66eb-67e6-4ff4-954a-4c9d2fbcd69a:6050"
+        title:
+          type: string
+          description: 이슈 제목
+          example: "백종원 더본코리아 가맹점 갑질 논란"
+        summary:
+          type: string
+          description: 이슈 요약문
+          example: "더본코리아 가맹점주들이 본사의 갑질 행위를 폭로하며..."
+        date:
+          type: string
+          format: date
+          description: 이슈 발생 날짜 (YYYY-MM-DD)
+          example: "2024-03-15"
+        criticism:
+          type: number
+          format: double
+          description: 비판 여론 지수 (0.0 ~ 1.0)
+          example: 0.82
+        support:
+          type: number
+          format: double
+          description: 지지 여론 지수 (0.0 ~ 1.0)
+          example: 0.12
+        interest:
+          type: number
+          format: double
+          description: 관심도 지수 (0.0 ~ 1.0)
+          example: 0.73
+
+    IssueConnection:
+      type: object
+      properties:
+        source_id:
+          type: string
+          description: 더 최신 날짜의 이슈 ID
+          example: "4:c39a66eb-67e6-4ff4-954a-4c9d2fbcd69a:6120"
+        target_id:
+          type: string
+          description: 더 오래된 날짜의 이슈 ID
+          example: "4:c39a66eb-67e6-4ff4-954a-4c9d2fbcd69a:6050"
+        similarity:
+          type: number
+          format: double
+          description: 두 이슈 간 Cosine Similarity (0.0 ~ 1.0)
+          example: 0.847

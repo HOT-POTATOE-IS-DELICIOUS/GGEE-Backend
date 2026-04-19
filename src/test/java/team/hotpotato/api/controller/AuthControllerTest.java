@@ -27,9 +27,9 @@ import team.hotpotato.domain.member.application.input.UserLogin;
 import team.hotpotato.domain.member.application.input.UserRegister;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.Session;
-import team.hotpotato.infrastructure.jwt.ExpiredRefreshTokenException;
-import team.hotpotato.infrastructure.jwt.InvalidTokenException;
-import team.hotpotato.infrastructure.jwt.InvalidTokenTypeException;
+import team.hotpotato.domain.member.infrastructure.jwt.ExpiredRefreshTokenException;
+import team.hotpotato.domain.member.infrastructure.jwt.InvalidTokenException;
+import team.hotpotato.domain.member.infrastructure.jwt.InvalidTokenTypeException;
 
 import java.time.LocalDateTime;
 
@@ -84,7 +84,8 @@ class AuthControllerTest {
                         {
                           "email": "user@test.com",
                           "password": "plainPassword",
-                          "protectTarget": "brand"
+                          "protectTarget": "brand",
+                          "protectTargetInfo": "브랜드 공식몰"
                         }
                         """)
                 .exchange()
@@ -93,7 +94,9 @@ class AuthControllerTest {
 
         ArgumentCaptor<RegisterCommand> commandCaptor = ArgumentCaptor.forClass(RegisterCommand.class);
         verify(userRegister).register(commandCaptor.capture());
-        assertThat(commandCaptor.getValue()).isEqualTo(new RegisterCommand("user@test.com", "plainPassword", "brand"));
+        assertThat(commandCaptor.getValue()).isEqualTo(
+                new RegisterCommand("user@test.com", "plainPassword", "brand", "브랜드 공식몰")
+        );
     }
 
     @Test
@@ -265,7 +268,8 @@ class AuthControllerTest {
                         {
                           "email": "invalid-email",
                           "password": "short",
-                          "protectTarget": ""
+                          "protectTarget": "",
+                          "protectTargetInfo": ""
                         }
                         """)
                 .exchange()

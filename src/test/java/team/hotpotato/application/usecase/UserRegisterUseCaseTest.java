@@ -8,12 +8,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import team.hotpotato.common.identity.IdGenerator;
+import team.hotpotato.common.transaction.ReactiveTransactionRunner;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
+import team.hotpotato.domain.member.application.output.PasswordHasher;
 import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxRepository;
 import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.output.TokenGenerator;
@@ -50,36 +50,62 @@ class UserRegisterUseCaseTest {
     @Mock
     private IdGenerator idGenerator;
 
-    @Mock
-    private TransactionalOperator transactionalOperator;
-
-    private PasswordEncoder passwordEncoder;
+    private BCryptPasswordEncoder passwordEncoder;
+    private PasswordHasher passwordHasher;
+    private ReactiveTransactionRunner transactionRunner;
     private UserRegisterUseCase userRegisterUseCase;
 
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
-        userRegisterUseCase = new UserRegisterUseCase(userRepository, outboxRepository, sessionRepository, tokenGenerator, idGenerator, passwordEncoder, transactionalOperator);
-        lenient().when(transactionalOperator.transactional(any(Mono.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        passwordHasher = new PasswordHasher() {
+            @Override
+            public Mono<String> hash(String rawPassword) {
+                return Mono.just(passwordEncoder.encode(rawPassword));
+            }
+
+            @Override
+            public Mono<Boolean> matches(String rawPassword, String hashedPassword) {
+                return Mono.just(passwordEncoder.matches(rawPassword, hashedPassword));
+            }
+        };
+        transactionRunner = new ReactiveTransactionRunner() {
+            @Override
+            public <T> Mono<T> transactional(Mono<T> mono) {
+                return mono;
+            }
+        };
+        userRegisterUseCase = new UserRegisterUseCase(
+                userRepository,
+                outboxRepository,
+                sessionRepository,
+                tokenGenerator,
+                idGenerator,
+                passwordHasher,
+                transactionRunner,
+                1_209_600L
+        );
     }
 
     @Test
     @DisplayName("회원가입 성공 시 사용자 저장과 outbox 적재가 함께 수행된다")
     void registerCompletesAndStoresEncodedUser() {
-        when(idGenerator.generateId()).thenReturn(100L, 200L, 300L);
+        when(idGenerator.generateId()).thenReturn(100L, 200L, 300L, 400L);
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
         when(outboxRepository.save(any(ProtectTargetIndexingOutbox.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
         when(tokenGenerator.generateAccessToken(any(AuthPrincipal.class))).thenReturn("access-token");
         when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("refresh-token");
         when(sessionRepository.save(any(Session.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
-        StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword", "brand")))
+        StepVerifier.create(userRegisterUseCase.register(
+                        new RegisterCommand("user@test.com", "plainPassword", "brand", "브랜드 공식몰")
+                ))
                 .expectNext(new RegisterResult("200", "access-token", "refresh-token"))
                 .verifyComplete();
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         ArgumentCaptor<ProtectTargetIndexingOutbox> outboxCaptor = ArgumentCaptor.forClass(ProtectTargetIndexingOutbox.class);
-        verify(idGenerator, times(3)).generateId();
+        verify(idGenerator, times(4)).generateId();
         verify(userRepository).save(userCaptor.capture());
         verify(outboxRepository).save(outboxCaptor.capture());
         verifyNoMoreInteractions(idGenerator, userRepository, outboxRepository);
@@ -89,12 +115,14 @@ class UserRegisterUseCaseTest {
         assertEquals("user@test.com", savedUser.email());
         assertEquals(Role.USER, savedUser.role());
         assertEquals("brand", savedUser.protectTarget());
+        assertEquals("브랜드 공식몰", savedUser.protectTargetInfo());
         assertNotEquals("plainPassword", savedUser.password());
         assertTrue(passwordEncoder.matches("plainPassword", savedUser.password()));
 
         ProtectTargetIndexingOutbox savedOutbox = outboxCaptor.getValue();
         assertEquals(200L, savedOutbox.id());
         assertEquals("brand", savedOutbox.protectTarget());
+        assertEquals("브랜드 공식몰", savedOutbox.protectTargetInfo());
         assertEquals(ProtectTargetIndexingOutboxStatus.PENDING, savedOutbox.status());
         assertNull(savedOutbox.publishedAt());
     }
@@ -106,7 +134,9 @@ class UserRegisterUseCaseTest {
         when(idGenerator.generateId()).thenReturn(1L);
         when(userRepository.save(any(User.class))).thenReturn(Mono.error(expected));
 
-        StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword", "brand")))
+        StepVerifier.create(userRegisterUseCase.register(
+                        new RegisterCommand("user@test.com", "plainPassword", "brand", "브랜드 공식몰")
+                ))
                 .expectErrorMatches(error -> error == expected)
                 .verify();
 
@@ -125,7 +155,9 @@ class UserRegisterUseCaseTest {
         when(outboxRepository.save(any(ProtectTargetIndexingOutbox.class)))
                 .thenReturn(Mono.error(expected));
 
-        StepVerifier.create(userRegisterUseCase.register(new RegisterCommand("user@test.com", "plainPassword", "brand")))
+        StepVerifier.create(userRegisterUseCase.register(
+                        new RegisterCommand("user@test.com", "plainPassword", "brand", "브랜드 공식몰")
+                ))
                 .expectErrorMatches(error -> error == expected)
                 .verify();
 

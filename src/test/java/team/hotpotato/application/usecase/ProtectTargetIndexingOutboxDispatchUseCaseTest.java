@@ -9,7 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-import team.hotpotato.domain.member.application.event.ProtectTargetIndexingMessage;
+import team.hotpotato.domain.member.application.dto.ProtectTargetIndexingPublishCommand;
 import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxRepository;
 import team.hotpotato.domain.member.application.output.ProtectTargetIndexingPublisher;
 import team.hotpotato.domain.member.application.usecase.indexing.ProtectTargetIndexingOutboxDispatchUseCase;
@@ -36,6 +36,7 @@ class ProtectTargetIndexingOutboxDispatchUseCaseTest {
         ProtectTargetIndexingOutbox outbox = new ProtectTargetIndexingOutbox(
                 1L,
                 "brand",
+                "브랜드 공식몰",
                 ProtectTargetIndexingOutboxStatus.PENDING,
                 null
         );
@@ -47,15 +48,16 @@ class ProtectTargetIndexingOutboxDispatchUseCaseTest {
         StepVerifier.create(useCase.dispatchPending())
                 .verifyComplete();
 
-        ArgumentCaptor<ProtectTargetIndexingMessage> messageCaptor =
-                ArgumentCaptor.forClass(ProtectTargetIndexingMessage.class);
+        ArgumentCaptor<ProtectTargetIndexingPublishCommand> messageCaptor =
+                ArgumentCaptor.forClass(ProtectTargetIndexingPublishCommand.class);
         verify(outboxRepository).findPending();
         verify(publisher).publish(messageCaptor.capture());
         verify(outboxRepository).markPublished(1L);
-        ProtectTargetIndexingMessage publishedMessage = messageCaptor.getValue();
+        ProtectTargetIndexingPublishCommand publishedMessage = messageCaptor.getValue();
         verifyNoMoreInteractions(outboxRepository, publisher);
-        org.junit.jupiter.api.Assertions.assertEquals("1", publishedMessage.jobId());
+        org.junit.jupiter.api.Assertions.assertEquals(1L, publishedMessage.jobId());
         org.junit.jupiter.api.Assertions.assertEquals("brand", publishedMessage.keyword());
+        org.junit.jupiter.api.Assertions.assertEquals("브랜드 공식몰", publishedMessage.protectTargetInfo());
     }
 
     @Test
@@ -66,6 +68,7 @@ class ProtectTargetIndexingOutboxDispatchUseCaseTest {
         ProtectTargetIndexingOutbox outbox = new ProtectTargetIndexingOutbox(
                 1L,
                 "brand",
+                "브랜드 공식몰",
                 ProtectTargetIndexingOutboxStatus.PENDING,
                 null
         );
@@ -76,14 +79,15 @@ class ProtectTargetIndexingOutboxDispatchUseCaseTest {
         StepVerifier.create(useCase.dispatchPending())
                 .verifyComplete();
 
-        ArgumentCaptor<ProtectTargetIndexingMessage> messageCaptor =
-                ArgumentCaptor.forClass(ProtectTargetIndexingMessage.class);
+        ArgumentCaptor<ProtectTargetIndexingPublishCommand> messageCaptor =
+                ArgumentCaptor.forClass(ProtectTargetIndexingPublishCommand.class);
         verify(outboxRepository).findPending();
         verify(publisher).publish(messageCaptor.capture());
         verify(outboxRepository, never()).markPublished(anyLong());
-        ProtectTargetIndexingMessage publishedMessage = messageCaptor.getValue();
-        org.junit.jupiter.api.Assertions.assertEquals("1", publishedMessage.jobId());
+        ProtectTargetIndexingPublishCommand publishedMessage = messageCaptor.getValue();
+        org.junit.jupiter.api.Assertions.assertEquals(1L, publishedMessage.jobId());
         org.junit.jupiter.api.Assertions.assertEquals("brand", publishedMessage.keyword());
+        org.junit.jupiter.api.Assertions.assertEquals("브랜드 공식몰", publishedMessage.protectTargetInfo());
     }
 
     @Test

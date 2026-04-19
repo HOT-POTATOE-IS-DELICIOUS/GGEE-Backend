@@ -2,14 +2,12 @@ package team.hotpotato.domain.member.application.usecase.indexing;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import team.hotpotato.domain.member.application.event.ProtectTargetIndexingMessage;
+import team.hotpotato.domain.member.application.dto.ProtectTargetIndexingPublishCommand;
 import team.hotpotato.domain.member.application.output.ProtectTargetIndexingPublisher;
 import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxRepository;
 
 @Slf4j
-@Service
 @RequiredArgsConstructor
 public class ProtectTargetIndexingOutboxDispatchUseCase {
     private final ProtectTargetIndexingOutboxRepository outboxRepository;
@@ -17,10 +15,11 @@ public class ProtectTargetIndexingOutboxDispatchUseCase {
 
     public Mono<Void> dispatchPending() {
         return outboxRepository.findPending()
-                .concatMap(outbox -> protectTargetIndexingPublisher.publish(
-                                        new ProtectTargetIndexingMessage(
-                                                String.valueOf(outbox.id()),
-                                                outbox.protectTarget()
+                                .concatMap(outbox -> protectTargetIndexingPublisher.publish(
+                                        new ProtectTargetIndexingPublishCommand(
+                                                outbox.id(),
+                                                outbox.protectTarget(),
+                                                outbox.protectTargetInfo()
                                         )
                                 )
                                 .doOnError(error -> log.error(
