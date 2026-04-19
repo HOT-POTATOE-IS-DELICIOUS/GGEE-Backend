@@ -1,14 +1,18 @@
 package team.hotpotato.domain.reaction.infrastructure.comment;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 
-public record DeduplicatedPostMessage(
+import com.fasterxml.jackson.annotation.JsonProperty;
+import team.hotpotato.infrastructure.crawler.message.CrawlCommentMessage;
+
+public record CommentDedupResult(
         @JsonProperty("post_id") Long postId,
         String site,
         String keyword,
         @JsonProperty("crawled_at") String crawledAt,
         @JsonProperty("event_timestamp_ms") Long eventTimestampMs,
         @JsonProperty("post_url") String postUrl,
-        @JsonProperty("post_title") String postTitle
+        @JsonProperty("post_title") String postTitle,
+        @JsonProperty("new_comments") List<CrawlCommentMessage> newComments
 ) {
 }
