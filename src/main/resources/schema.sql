@@ -46,7 +46,6 @@ CREATE TABLE IF NOT EXISTS audits (
     protect_target VARCHAR(255) NOT NULL,
     protect_target_info VARCHAR(255) NOT NULL,
     text TEXT NOT NULL,
-    message_id VARCHAR(255) NOT NULL,
     reviews_json TEXT NOT NULL,
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
