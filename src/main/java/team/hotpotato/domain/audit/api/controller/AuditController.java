@@ -13,8 +13,8 @@ import team.hotpotato.domain.audit.api.dto.AuditResponse;
 import team.hotpotato.domain.audit.api.dto.AuditReviewResponse;
 import team.hotpotato.domain.audit.api.dto.AuditSentenceResponse;
 import team.hotpotato.domain.audit.api.dto.AuditSuggestionResponse;
-import team.hotpotato.domain.audit.application.dto.AuditCommand;
 import team.hotpotato.domain.audit.application.input.AuditStatement;
+import team.hotpotato.domain.audit.application.usecase.audit.AuditCommand;
 import team.hotpotato.security.CustomAuthPrincipal;
 
 @RequiredArgsConstructor

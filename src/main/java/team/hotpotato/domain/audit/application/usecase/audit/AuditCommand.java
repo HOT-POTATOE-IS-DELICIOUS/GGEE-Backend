@@ -1,4 +1,4 @@
-package team.hotpotato.domain.audit.application.dto;
+package team.hotpotato.domain.audit.application.usecase.audit;
 
 public record AuditCommand(
         Long userId,

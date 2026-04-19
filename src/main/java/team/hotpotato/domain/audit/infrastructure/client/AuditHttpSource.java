@@ -7,7 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import reactor.core.publisher.Mono;
 import team.hotpotato.domain.audit.application.output.AuditSource;
-import team.hotpotato.domain.audit.application.usecase.AuditServiceUnavailableException;
+import team.hotpotato.domain.audit.application.usecase.audit.AuditServiceUnavailableException;
 import team.hotpotato.domain.audit.domain.AuditAnalysis;
 import team.hotpotato.domain.audit.domain.AuditReview;
 import team.hotpotato.domain.audit.domain.AuditSentence;

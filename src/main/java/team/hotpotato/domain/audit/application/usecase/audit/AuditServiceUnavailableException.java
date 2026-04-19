@@ -1,4 +1,4 @@
-package team.hotpotato.domain.audit.application.usecase;
+package team.hotpotato.domain.audit.application.usecase.audit;
 
 import team.hotpotato.common.exception.BusinessBaseException;
 import team.hotpotato.common.exception.ErrorCode;

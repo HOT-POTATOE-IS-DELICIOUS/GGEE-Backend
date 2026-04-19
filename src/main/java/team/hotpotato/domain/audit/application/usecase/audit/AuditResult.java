@@ -1,4 +1,4 @@
-package team.hotpotato.domain.audit.application.dto;
+package team.hotpotato.domain.audit.application.usecase.audit;
 
 import team.hotpotato.domain.audit.domain.AuditReview;
 

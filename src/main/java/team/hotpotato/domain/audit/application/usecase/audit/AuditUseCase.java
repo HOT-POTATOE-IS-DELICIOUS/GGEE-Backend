@@ -1,11 +1,9 @@
-package team.hotpotato.domain.audit.application.usecase;
+package team.hotpotato.domain.audit.application.usecase.audit;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import team.hotpotato.common.identity.IdGenerator;
-import team.hotpotato.domain.audit.application.dto.AuditCommand;
-import team.hotpotato.domain.audit.application.dto.AuditResult;
 import team.hotpotato.domain.audit.application.input.AuditStatement;
 import team.hotpotato.domain.audit.application.output.AuditRepository;
 import team.hotpotato.domain.audit.application.output.AuditSource;
