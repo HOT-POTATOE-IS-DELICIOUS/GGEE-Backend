@@ -13,41 +13,45 @@ import org.apache.kafka.streams.processor.api.ProcessorSupplier;
 import org.apache.kafka.streams.processor.api.Record;
 import org.apache.kafka.streams.state.KeyValueIterator;
 import org.apache.kafka.streams.state.KeyValueStore;
+import team.hotpotato.common.identity.IdGenerator;
 import team.hotpotato.infrastructure.crawler.message.CrawlCommentMessage;
 import team.hotpotato.infrastructure.crawler.message.CrawlPostMessage;
 import team.hotpotato.infrastructure.crawler.message.CrawlResultMessage;
 
 @RequiredArgsConstructor
-public class CommentDeduplicationProcessorSupplier implements ProcessorSupplier<String, CrawlResultMessage, String, DeduplicatedPostMessage> {
+public class CommentDeduplicationProcessorSupplier implements ProcessorSupplier<String, CrawlResultMessage, String, CommentDedupResult> {
 
     private final String storeName;
     private final Duration ttl;
     private final Duration cleanupInterval;
+    private final IdGenerator idGenerator;
 
     @Override
-    public Processor<String, CrawlResultMessage, String, DeduplicatedPostMessage> get() {
-        return new CommentDeduplicationProcessor(storeName, ttl, cleanupInterval);
+    public Processor<String, CrawlResultMessage, String, CommentDedupResult> get() {
+        return new CommentDeduplicationProcessor(storeName, ttl, cleanupInterval, idGenerator);
     }
 
     private static final class CommentDeduplicationProcessor
-            implements Processor<String, CrawlResultMessage, String, DeduplicatedPostMessage> {
+            implements Processor<String, CrawlResultMessage, String, CommentDedupResult> {
 
         private final String storeName;
         private final long ttlMs;
         private final Duration cleanupInterval;
+        private final IdGenerator idGenerator;
 
-        private ProcessorContext<String, DeduplicatedPostMessage> context;
+        private ProcessorContext<String, CommentDedupResult> context;
         private KeyValueStore<String, Long> dedupStore;
 
-        private CommentDeduplicationProcessor(String storeName, Duration ttl, Duration cleanupInterval) {
+        private CommentDeduplicationProcessor(String storeName, Duration ttl, Duration cleanupInterval, IdGenerator idGenerator) {
             this.storeName = storeName;
             this.ttlMs = ttl.toMillis();
             this.cleanupInterval = cleanupInterval;
+            this.idGenerator = idGenerator;
         }
 
         @Override
         @SuppressWarnings("unchecked")
-        public void init(ProcessorContext<String, DeduplicatedPostMessage> context) {
+        public void init(ProcessorContext<String, CommentDedupResult> context) {
             this.context = context;
             this.dedupStore = context.getStateStore(storeName);
             context.schedule(cleanupInterval, PunctuationType.WALL_CLOCK_TIME, this::purgeExpiredEntries);
@@ -69,9 +73,11 @@ public class CommentDeduplicationProcessorSupplier implements ProcessorSupplier<
                 List<CrawlCommentMessage> newComments = filterNewComments(post.comments(), postUrl, eventTimestampMs);
 
                 if (!newComments.isEmpty()) {
+                    long postId = idGenerator.generateId();
                     context.forward(new Record<>(
                             postUrl,
-                            new DeduplicatedPostMessage(
+                            new CommentDedupResult(
+                                    postId,
                                     crawlResult.site(),
                                     crawlResult.keyword(),
                                     crawlResult.timestamp(),

@@ -11,6 +11,7 @@ import org.apache.kafka.streams.state.Stores;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import team.hotpotato.common.identity.IdGenerator;
 import team.hotpotato.infrastructure.crawler.CrawlerTopics;
 import team.hotpotato.infrastructure.crawler.message.CrawlResultMessage;
 import team.hotpotato.infrastructure.kafka.config.JsonSerdeFactory;
@@ -22,26 +23,40 @@ public class CommentDedupStreamConfiguration {
     private static final String COMPLETED = "completed";
 
     @Bean
-    public KStream<String, DeduplicatedPostMessage> commentDedupStream(
+    public KStream<String, CommentDedupResult> commentDedupStream(
             StreamsBuilder streamsBuilder,
             CommentDedupStreamProperties properties,
-            JsonSerdeFactory serdeFactory
+            JsonSerdeFactory serdeFactory,
+            IdGenerator idGenerator
     ) {
         streamsBuilder.addStateStore(dedupStoreBuilder(properties));
 
-        KStream<String, DeduplicatedPostMessage> stream = streamsBuilder
+        KStream<String, CommentDedupResult> stream = streamsBuilder
                 .stream(CrawlerTopics.CRAWL_RESULT, Consumed.with(Serdes.String(), serdeFactory.serde(CrawlResultMessage.class)))
                 .filter((jobId, payload) -> payload != null && COMPLETED.equalsIgnoreCase(payload.status()))
                 .process(
                         new CommentDeduplicationProcessorSupplier(
                                 properties.dedupStoreName(),
                                 properties.dedupTtl(),
-                                properties.cleanupInterval()
+                                properties.cleanupInterval(),
+                                idGenerator
                         ),
                         properties.dedupStoreName()
                 );
 
-        stream.to(CrawlerTopics.CRAWL_COMMENT_DEDUPED, Produced.with(Serdes.String(), serdeFactory.serde(DeduplicatedPostMessage.class)));
+        stream.mapValues(r -> new DeduplicatedPostMessage(
+                        r.postId(), r.site(), r.keyword(), r.crawledAt(),
+                        r.eventTimestampMs(), r.postUrl(), r.postTitle()))
+                .to(CrawlerTopics.CRAWL_POST_DEDUPED,
+                        Produced.with(Serdes.String(), serdeFactory.serde(DeduplicatedPostMessage.class)));
+
+        stream.flatMapValues(r -> r.newComments().stream()
+                        .map(c -> new DeduplicatedCommentMessage(
+                                r.postId(), c.id(), c.parentId(), c.author(),
+                                c.date(), c.content(), c.likes(), c.dislikes()))
+                        .toList())
+                .to(CrawlerTopics.CRAWL_COMMENT_DEDUPED,
+                        Produced.with(Serdes.String(), serdeFactory.serde(DeduplicatedCommentMessage.class)));
 
         return stream;
     }
