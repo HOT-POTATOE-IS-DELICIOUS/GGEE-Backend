@@ -1,38 +1,42 @@
 package team.hotpotato.domain.reaction.infrastructure.comment;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.streams.processor.PunctuationType;
-import org.apache.kafka.streams.processor.api.FixedKeyProcessor;
-import org.apache.kafka.streams.processor.api.FixedKeyProcessorContext;
-import org.apache.kafka.streams.processor.api.FixedKeyProcessorSupplier;
-import org.apache.kafka.streams.processor.api.FixedKeyRecord;
+import org.apache.kafka.streams.processor.api.Processor;
+import org.apache.kafka.streams.processor.api.ProcessorContext;
+import org.apache.kafka.streams.processor.api.ProcessorSupplier;
+import org.apache.kafka.streams.processor.api.Record;
 import org.apache.kafka.streams.state.KeyValueIterator;
 import org.apache.kafka.streams.state.KeyValueStore;
+import team.hotpotato.infrastructure.crawler.message.CrawlCommentMessage;
+import team.hotpotato.infrastructure.crawler.message.CrawlPostMessage;
+import team.hotpotato.infrastructure.crawler.message.CrawlResultMessage;
 
 @RequiredArgsConstructor
-public class CommentDeduplicationProcessorSupplier implements FixedKeyProcessorSupplier<String, DeduplicatedCommentMessage, DeduplicatedCommentMessage> {
+public class CommentDeduplicationProcessorSupplier implements ProcessorSupplier<String, CrawlResultMessage, String, DeduplicatedPostMessage> {
 
     private final String storeName;
     private final Duration ttl;
     private final Duration cleanupInterval;
 
     @Override
-    public FixedKeyProcessor<String, DeduplicatedCommentMessage, DeduplicatedCommentMessage> get() {
+    public Processor<String, CrawlResultMessage, String, DeduplicatedPostMessage> get() {
         return new CommentDeduplicationProcessor(storeName, ttl, cleanupInterval);
     }
 
     private static final class CommentDeduplicationProcessor
-            implements FixedKeyProcessor<String, DeduplicatedCommentMessage, DeduplicatedCommentMessage> {
+            implements Processor<String, CrawlResultMessage, String, DeduplicatedPostMessage> {
 
         private final String storeName;
         private final long ttlMs;
         private final Duration cleanupInterval;
 
-        private FixedKeyProcessorContext<String, DeduplicatedCommentMessage> context;
+        private ProcessorContext<String, DeduplicatedPostMessage> context;
         private KeyValueStore<String, Long> dedupStore;
 
         private CommentDeduplicationProcessor(String storeName, Duration ttl, Duration cleanupInterval) {
@@ -43,33 +47,64 @@ public class CommentDeduplicationProcessorSupplier implements FixedKeyProcessorS
 
         @Override
         @SuppressWarnings("unchecked")
-        public void init(FixedKeyProcessorContext<String, DeduplicatedCommentMessage> context) {
+        public void init(ProcessorContext<String, DeduplicatedPostMessage> context) {
             this.context = context;
             this.dedupStore = context.getStateStore(storeName);
             context.schedule(cleanupInterval, PunctuationType.WALL_CLOCK_TIME, this::purgeExpiredEntries);
         }
 
         @Override
-        public void process(FixedKeyRecord<String, DeduplicatedCommentMessage> record) {
-            if (record == null || record.key() == null || record.value() == null) return;
+        public void process(Record<String, CrawlResultMessage> record) {
+            CrawlResultMessage crawlResult = record.value();
+            if (crawlResult == null || crawlResult.results() == null) return;
 
-            long eventTimestamp = record.value().eventTimestampMs() != null
-                    ? record.value().eventTimestampMs()
-                    : record.timestamp();
+            long eventTimestampMs = parseTimestamp(crawlResult.timestamp());
 
-            long cutoffTimestamp = eventTimestamp - ttlMs;
-            Long previousSeenTimestamp = dedupStore.get(record.key());
+            for (CrawlPostMessage post : crawlResult.results()) {
+                if (post == null || isBlank(post.url()) || post.comments() == null || post.comments().isEmpty()) {
+                    continue;
+                }
 
-            // 슬라이딩 TTL: 중복이 들어올 때마다 타임스탬프를 갱신한다.
-            // 같은 댓글이 계속 크롤링되는 동안에는 억제되고,
-            // TTL 기간 동안 크롤링이 없다가 다시 나타나면 재방출된다.
-            dedupStore.put(record.key(), eventTimestamp);
+                String postUrl = post.url().trim();
+                List<CrawlCommentMessage> newComments = filterNewComments(post.comments(), postUrl, eventTimestampMs);
 
-            if (previousSeenTimestamp != null && previousSeenTimestamp >= cutoffTimestamp) {
-                return;
+                if (!newComments.isEmpty()) {
+                    context.forward(new Record<>(
+                            postUrl,
+                            new DeduplicatedPostMessage(
+                                    crawlResult.site(),
+                                    crawlResult.keyword(),
+                                    crawlResult.timestamp(),
+                                    eventTimestampMs,
+                                    postUrl,
+                                    post.title(),
+                                    newComments
+                            ),
+                            eventTimestampMs
+                    ));
+                }
+            }
+        }
+
+        private List<CrawlCommentMessage> filterNewComments(List<CrawlCommentMessage> comments, String postUrl, long eventTimestampMs) {
+            long cutoff = eventTimestampMs - ttlMs;
+            List<CrawlCommentMessage> newComments = new ArrayList<>();
+
+            for (CrawlCommentMessage comment : comments) {
+                if (comment == null || comment.id() == null) continue;
+
+                String dedupKey = comment.id() + "|" + postUrl;
+                Long previousSeenAt = dedupStore.get(dedupKey);
+
+                // 슬라이딩 TTL: 중복이 들어올 때마다 타임스탬프를 갱신한다.
+                dedupStore.put(dedupKey, eventTimestampMs);
+
+                if (previousSeenAt == null || previousSeenAt < cutoff) {
+                    newComments.add(comment);
+                }
             }
 
-            context.forward(record.withTimestamp(eventTimestamp));
+            return newComments;
         }
 
         @Override
@@ -92,6 +127,19 @@ public class CommentDeduplicationProcessorSupplier implements FixedKeyProcessorS
             for (String expiredKey : expiredKeys) {
                 dedupStore.delete(expiredKey);
             }
+        }
+
+        private static long parseTimestamp(String timestamp) {
+            if (timestamp == null || timestamp.isBlank()) return System.currentTimeMillis();
+            try {
+                return Instant.parse(timestamp.trim()).toEpochMilli();
+            } catch (Exception ignored) {
+                return System.currentTimeMillis();
+            }
+        }
+
+        private static boolean isBlank(String value) {
+            return value == null || value.isBlank();
         }
     }
 }

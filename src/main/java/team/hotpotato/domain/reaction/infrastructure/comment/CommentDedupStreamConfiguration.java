@@ -22,19 +22,17 @@ public class CommentDedupStreamConfiguration {
     private static final String COMPLETED = "completed";
 
     @Bean
-    public KStream<String, DeduplicatedCommentMessage> commentDedupStream(
+    public KStream<String, DeduplicatedPostMessage> commentDedupStream(
             StreamsBuilder streamsBuilder,
             CommentDedupStreamProperties properties,
             JsonSerdeFactory serdeFactory
     ) {
         streamsBuilder.addStateStore(dedupStoreBuilder(properties));
 
-        KStream<String, DeduplicatedCommentMessage> stream = streamsBuilder
+        KStream<String, DeduplicatedPostMessage> stream = streamsBuilder
                 .stream(CrawlerTopics.CRAWL_RESULT, Consumed.with(Serdes.String(), serdeFactory.serde(CrawlResultMessage.class)))
                 .filter((jobId, payload) -> payload != null && COMPLETED.equalsIgnoreCase(payload.status()))
-                .flatMapValues(CrawlResultFlattener::flattenComments)
-                .selectKey((jobId, comment) -> comment.id())
-                .processValues(
+                .process(
                         new CommentDeduplicationProcessorSupplier(
                                 properties.dedupStoreName(),
                                 properties.dedupTtl(),
@@ -43,7 +41,7 @@ public class CommentDedupStreamConfiguration {
                         properties.dedupStoreName()
                 );
 
-        stream.to(CrawlerTopics.CRAWL_COMMENT_DEDUPED, Produced.with(Serdes.String(), serdeFactory.serde(DeduplicatedCommentMessage.class)));
+        stream.to(CrawlerTopics.CRAWL_COMMENT_DEDUPED, Produced.with(Serdes.String(), serdeFactory.serde(DeduplicatedPostMessage.class)));
 
         return stream;
     }
