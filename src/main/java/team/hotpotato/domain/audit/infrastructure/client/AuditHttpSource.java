@@ -29,7 +29,7 @@ public class AuditHttpSource implements AuditSource {
     public Mono<AuditAnalysis> audit(String protectTarget, String protectTargetInfo, String text) {
         return webClientBuilder.baseUrl(properties.baseUrl()).build()
                 .post()
-                .uri("/v1/audit")
+                .uri("/audit")
                 .bodyValue(new AuditHttpRequest(protectTarget, protectTargetInfo, text))
                 .retrieve()
                 .bodyToMono(AuditHttpResponse.class)
