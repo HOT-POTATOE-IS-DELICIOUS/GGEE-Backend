@@ -15,8 +15,8 @@ import team.hotpotato.domain.member.application.input.TokenResolver;
 import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.Session;
-import team.hotpotato.infrastructure.jwt.InvalidTokenException;
-import team.hotpotato.infrastructure.jwt.TokenProperties;
+import team.hotpotato.domain.member.infrastructure.jwt.InvalidTokenException;
+import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
 import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
 
 import java.time.LocalDateTime;

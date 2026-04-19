@@ -15,7 +15,7 @@ import team.hotpotato.domain.member.application.input.TokenResolver;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.usecase.login.SessionExpiredException;
-import team.hotpotato.infrastructure.jwt.TokenProperties;
+import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
 import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
 
 import java.util.List;

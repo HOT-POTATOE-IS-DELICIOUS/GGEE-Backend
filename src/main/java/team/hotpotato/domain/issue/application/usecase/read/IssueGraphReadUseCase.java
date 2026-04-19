@@ -1,6 +1,7 @@
 package team.hotpotato.domain.issue.application.usecase.read;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import team.hotpotato.domain.issue.application.dto.IssueGraphReadCommand;
 import team.hotpotato.domain.issue.application.dto.IssueGraphReadResult;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Service
 @RequiredArgsConstructor
 public class IssueGraphReadUseCase implements IssueGraphRead {
     private final IssueGraphSource issueGraphSource;

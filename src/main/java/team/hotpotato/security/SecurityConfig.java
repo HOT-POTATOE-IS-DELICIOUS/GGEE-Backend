@@ -11,7 +11,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import team.hotpotato.domain.member.application.input.TokenResolver;
 import team.hotpotato.domain.member.application.output.SessionRepository;
-import team.hotpotato.infrastructure.jwt.TokenProperties;
+import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
 import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
 
 @Configuration

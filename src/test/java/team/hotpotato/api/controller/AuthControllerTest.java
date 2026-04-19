@@ -27,9 +27,9 @@ import team.hotpotato.domain.member.application.input.UserLogin;
 import team.hotpotato.domain.member.application.input.UserRegister;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.Session;
-import team.hotpotato.infrastructure.jwt.ExpiredRefreshTokenException;
-import team.hotpotato.infrastructure.jwt.InvalidTokenException;
-import team.hotpotato.infrastructure.jwt.InvalidTokenTypeException;
+import team.hotpotato.domain.member.infrastructure.jwt.ExpiredRefreshTokenException;
+import team.hotpotato.domain.member.infrastructure.jwt.InvalidTokenException;
+import team.hotpotato.domain.member.infrastructure.jwt.InvalidTokenTypeException;
 
 import java.time.LocalDateTime;
 
