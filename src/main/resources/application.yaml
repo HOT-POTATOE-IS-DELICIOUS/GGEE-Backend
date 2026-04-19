@@ -54,6 +54,9 @@ snowflake:
 
 ggee:
   ai:
+    audit:
+      base-url: ${GGEE_AI_AUDIT_BASE_URL}
+      timeout: ${GGEE_AI_AUDIT_TIMEOUT}
     issue:
       base-url: ${GGEE_AI_ISSUE_BASE_URL}
       timeout: ${GGEE_AI_ISSUE_TIMEOUT}

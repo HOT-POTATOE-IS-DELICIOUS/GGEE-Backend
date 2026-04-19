@@ -33,6 +33,9 @@ snowflake:
 
 ggee:
   ai:
+    audit:
+      base-url: http://localhost:18081
+      timeout: 3s
     issue:
       base-url: http://localhost:18080
       timeout: 3s
