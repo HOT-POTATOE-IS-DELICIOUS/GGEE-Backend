@@ -354,7 +354,6 @@ paths:
                 $ref: '#/components/schemas/AuditResponse'
               example:
                 audit_id: 107519243230003200
-                message_id: "550e8400-e29b-41d4-a716-446655440000"
                 reviews:
                   - sentence:
                       sentence_text: "홍어들이 또 난리났네."
@@ -508,11 +507,6 @@ components:
           format: int64
           description: 검수 실행 고유 ID
           example: 107519243230003200
-        message_id:
-          type: string
-          format: uuid
-          description: 외부 검수 서버가 반환한 메시지 추적 ID
-          example: "550e8400-e29b-41d4-a716-446655440000"
         reviews:
           type: array
           description: 이슈가 탐지된 문장별 검수 결과
