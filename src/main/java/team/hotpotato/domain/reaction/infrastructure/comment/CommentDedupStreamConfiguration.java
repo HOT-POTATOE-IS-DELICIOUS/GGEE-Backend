@@ -15,6 +15,7 @@ import team.hotpotato.common.identity.IdGenerator;
 import team.hotpotato.infrastructure.crawler.CrawlerTopics;
 import team.hotpotato.infrastructure.crawler.message.CrawlResultMessage;
 import team.hotpotato.infrastructure.kafka.config.JsonSerdeFactory;
+import team.hotpotato.infrastructure.kafka.config.SchemaRegistrySerdeFactory;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(CommentDedupStreamProperties.class)
@@ -27,6 +28,7 @@ public class CommentDedupStreamConfiguration {
             StreamsBuilder streamsBuilder,
             CommentDedupStreamProperties properties,
             JsonSerdeFactory serdeFactory,
+            SchemaRegistrySerdeFactory schemaRegistrySerdeFactory,
             IdGenerator idGenerator
     ) {
         streamsBuilder.addStateStore(dedupStoreBuilder(properties));
@@ -48,7 +50,7 @@ public class CommentDedupStreamConfiguration {
                         r.postId(), r.site(), r.keyword(), r.crawledAt(),
                         r.eventTimestampMs(), r.postUrl(), r.postTitle()))
                 .to(CrawlerTopics.CRAWL_POST_DEDUPED,
-                        Produced.with(Serdes.String(), serdeFactory.serde(DeduplicatedPostMessage.class)));
+                        Produced.with(Serdes.String(), schemaRegistrySerdeFactory.serde(DeduplicatedPostMessage.class)));
 
         stream.flatMapValues(r -> r.newComments().stream()
                         .map(c -> new DeduplicatedCommentMessage(
@@ -56,7 +58,7 @@ public class CommentDedupStreamConfiguration {
                                 c.date(), c.content(), c.likes(), c.dislikes()))
                         .toList())
                 .to(CrawlerTopics.CRAWL_COMMENT_DEDUPED,
-                        Produced.with(Serdes.String(), serdeFactory.serde(DeduplicatedCommentMessage.class)));
+                        Produced.with(Serdes.String(), schemaRegistrySerdeFactory.serde(DeduplicatedCommentMessage.class)));
 
         return stream;
     }
