@@ -28,20 +28,10 @@ public class AuditUseCase implements AuditStatement {
                                 user.protectTarget(),
                                 user.protectTargetInfo(),
                                 command.text(),
-                                analysis.messageId(),
                                 analysis.reviews()
                         ))
                 )
                 .flatMap(auditRepository::save)
-                .map(audit -> new Audit(
-                        audit.auditId(),
-                        audit.userId(),
-                        audit.protectTarget(),
-                        audit.protectTargetInfo(),
-                        audit.text(),
-                        audit.messageId(),
-                        audit.reviews()
-                ))
-                .map(audit -> new AuditResult(audit.auditId(), audit.messageId(), audit.reviews()));
+                .map(audit -> new AuditResult(audit.auditId(), audit.reviews()));
     }
 }

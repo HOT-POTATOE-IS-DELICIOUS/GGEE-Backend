@@ -34,7 +34,6 @@ public class AuditController {
                 ))
                 .map(result -> new AuditResponse(
                         result.auditId(),
-                        result.messageId(),
                         result.reviews().stream()
                                 .map(review -> new AuditReviewResponse(
                                         new AuditSentenceResponse(

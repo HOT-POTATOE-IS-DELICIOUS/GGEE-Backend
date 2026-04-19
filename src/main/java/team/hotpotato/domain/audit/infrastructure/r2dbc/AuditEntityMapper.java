@@ -13,7 +13,6 @@ public final class AuditEntityMapper {
                 .protectTarget(audit.protectTarget())
                 .protectTargetInfo(audit.protectTargetInfo())
                 .text(audit.text())
-                .messageId(audit.messageId())
                 .reviewsJson(reviewsJson)
                 .build();
     }

@@ -25,9 +25,6 @@ public class AuditEntity extends BaseEntity {
     @Column("text")
     private String text;
 
-    @Column("message_id")
-    private String messageId;
-
     @Column("reviews_json")
     private String reviewsJson;
 }
