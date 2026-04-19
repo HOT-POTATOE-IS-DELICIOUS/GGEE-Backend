@@ -40,7 +40,6 @@ class AuditRepositoryAdapterTest {
                 "백종원",
                 "더본코리아",
                 "홍어들이 또 난리났네.",
-                "550e8400-e29b-41d4-a716-446655440000",
                 List.of(new AuditReview(
                         new AuditSentence("홍어들이 또 난리났네.", 0, 12),
                         List.of("community"),
@@ -67,7 +66,6 @@ class AuditRepositoryAdapterTest {
         assertThat(entityCaptor.getValue().getId()).isEqualTo(1001L);
         assertThat(entityCaptor.getValue().getUserId()).isEqualTo(7L);
         assertThat(entityCaptor.getValue().getProtectTarget()).isEqualTo("백종원");
-        assertThat(entityCaptor.getValue().getMessageId()).isEqualTo("550e8400-e29b-41d4-a716-446655440000");
         assertThat(entityCaptor.getValue().getReviewsJson()).contains("community");
     }
 }

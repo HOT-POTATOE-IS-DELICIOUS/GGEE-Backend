@@ -65,7 +65,6 @@ class AuditControllerTest {
         when(auditStatement.audit(any(AuditCommand.class)))
                 .thenReturn(Mono.just(new AuditResult(
                         1001L,
-                        "550e8400-e29b-41d4-a716-446655440000",
                         List.of(new AuditReview(
                                 new AuditSentence("홍어들이 또 난리났네.", 0, 12),
                                 List.of("community"),
@@ -93,7 +92,6 @@ class AuditControllerTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.audit_id").isEqualTo(1001)
-                .jsonPath("$.message_id").isEqualTo("550e8400-e29b-41d4-a716-446655440000")
                 .jsonPath("$.reviews[0].sentence.sentence_text").isEqualTo("홍어들이 또 난리났네.")
                 .jsonPath("$.reviews[0].sentence.start_offset").isEqualTo(0)
                 .jsonPath("$.reviews[0].perspective_ids[0]").isEqualTo("community")
