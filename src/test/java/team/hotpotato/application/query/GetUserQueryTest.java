@@ -1,4 +1,4 @@
-package team.hotpotato.application.usecase;
+package team.hotpotato.application.query;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

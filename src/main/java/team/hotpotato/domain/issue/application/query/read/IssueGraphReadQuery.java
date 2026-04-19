@@ -1,10 +1,8 @@
-package team.hotpotato.domain.issue.application.usecase.read;
+package team.hotpotato.domain.issue.application.query.read;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import team.hotpotato.domain.issue.application.dto.IssueGraphReadCommand;
-import team.hotpotato.domain.issue.application.dto.IssueGraphReadResult;
 import team.hotpotato.domain.issue.application.input.IssueGraphRead;
 import team.hotpotato.domain.issue.application.output.IssueGraphSource;
 import team.hotpotato.domain.issue.domain.IssueConnection;
@@ -20,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class IssueGraphReadUseCase implements IssueGraphRead {
+public class IssueGraphReadQuery implements IssueGraphRead {
     private final IssueGraphSource issueGraphSource;
     private final GetUser getUser;
 

@@ -9,8 +9,8 @@ import reactor.core.publisher.Mono;
 import team.hotpotato.domain.issue.api.dto.IssueConnectionResponse;
 import team.hotpotato.domain.issue.api.dto.IssueNodeResponse;
 import team.hotpotato.domain.issue.api.dto.IssuesResponse;
-import team.hotpotato.domain.issue.application.dto.IssueGraphReadCommand;
 import team.hotpotato.domain.issue.application.input.IssueGraphRead;
+import team.hotpotato.domain.issue.application.query.read.IssueGraphReadCommand;
 import team.hotpotato.security.CustomAuthPrincipal;
 
 @RequiredArgsConstructor

@@ -7,7 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import reactor.core.publisher.Mono;
 import team.hotpotato.domain.issue.application.output.IssueGraphSource;
-import team.hotpotato.domain.issue.application.usecase.read.IssueGraphServiceUnavailableException;
+import team.hotpotato.domain.issue.application.query.read.IssueGraphServiceUnavailableException;
 import team.hotpotato.domain.issue.domain.IssueConnection;
 import team.hotpotato.domain.issue.domain.IssueGraph;
 import team.hotpotato.domain.issue.domain.IssueNode;

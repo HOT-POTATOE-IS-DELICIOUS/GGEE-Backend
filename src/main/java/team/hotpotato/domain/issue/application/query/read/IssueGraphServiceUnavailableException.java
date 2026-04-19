@@ -1,4 +1,4 @@
-package team.hotpotato.domain.issue.application.usecase.read;
+package team.hotpotato.domain.issue.application.query.read;
 
 import team.hotpotato.common.exception.BusinessBaseException;
 import team.hotpotato.common.exception.ErrorCode;

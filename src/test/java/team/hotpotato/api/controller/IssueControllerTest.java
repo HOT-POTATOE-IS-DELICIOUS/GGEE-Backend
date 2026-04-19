@@ -10,9 +10,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 import team.hotpotato.GgeeBackendApplication;
-import team.hotpotato.domain.issue.application.dto.IssueGraphReadCommand;
-import team.hotpotato.domain.issue.application.dto.IssueGraphReadResult;
 import team.hotpotato.domain.issue.application.input.IssueGraphRead;
+import team.hotpotato.domain.issue.application.query.read.IssueGraphReadCommand;
+import team.hotpotato.domain.issue.application.query.read.IssueGraphReadResult;
 import team.hotpotato.domain.issue.domain.IssueConnection;
 import team.hotpotato.domain.issue.domain.IssueNode;
 import team.hotpotato.domain.member.application.input.TokenResolver;
@@ -55,7 +55,7 @@ class IssueControllerTest {
     }
 
     @Test
-    @DisplayName("이슈 계통도 조회 요청은 command로 변환되어 응답을 반환한다")
+    @DisplayName("이슈 계통도 조회 요청은 query command로 변환되어 응답을 반환한다")
     void getIssuesReturnsIssueGraph() {
         when(tokenResolver.resolve("Bearer valid-access-token"))
                 .thenReturn(Mono.just(new AuthPrincipal(7L, Role.USER, "issue-session-id")));

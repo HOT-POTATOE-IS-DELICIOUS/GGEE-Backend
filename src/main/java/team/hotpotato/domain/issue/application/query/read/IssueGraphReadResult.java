@@ -1,4 +1,4 @@
-package team.hotpotato.domain.issue.application.dto;
+package team.hotpotato.domain.issue.application.query.read;
 
 import team.hotpotato.domain.issue.domain.IssueConnection;
 import team.hotpotato.domain.issue.domain.IssueNode;

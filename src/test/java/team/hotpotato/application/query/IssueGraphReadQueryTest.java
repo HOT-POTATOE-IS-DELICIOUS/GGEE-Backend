@@ -1,12 +1,12 @@
-package team.hotpotato.application.usecase;
+package team.hotpotato.application.query;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-import team.hotpotato.domain.issue.application.dto.IssueGraphReadCommand;
 import team.hotpotato.domain.issue.application.output.IssueGraphSource;
-import team.hotpotato.domain.issue.application.usecase.read.IssueGraphReadUseCase;
+import team.hotpotato.domain.issue.application.query.read.IssueGraphReadCommand;
+import team.hotpotato.domain.issue.application.query.read.IssueGraphReadQuery;
 import team.hotpotato.domain.member.application.input.GetUser;
 import team.hotpotato.domain.issue.domain.IssueConnection;
 import team.hotpotato.domain.issue.domain.IssueGraph;
@@ -18,8 +18,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName("이슈 계통도 조회 유스케이스 단위 테스트")
-class IssueGraphReadUseCaseTest {
+@DisplayName("이슈 계통도 조회 쿼리 단위 테스트")
+class IssueGraphReadQueryTest {
 
     @Test
     @DisplayName("로그인한 사용자의 보호 대상 정보로 이슈 계통도를 조회하고 정규화한다")
@@ -40,9 +40,9 @@ class IssueGraphReadUseCaseTest {
                 List.of(new IssueConnection("older", "latest", 0.847))
             ));
         };
-        IssueGraphReadUseCase useCase = new IssueGraphReadUseCase(source, getUser);
+        IssueGraphReadQuery query = new IssueGraphReadQuery(source, getUser);
 
-        StepVerifier.create(useCase.read(new IssueGraphReadCommand(7L)))
+        StepVerifier.create(query.read(new IssueGraphReadCommand(7L)))
                 .assertNext(result -> {
                     assertThat(capturedArguments[0]).isEqualTo("백종원");
                     assertThat(capturedArguments[1]).isEqualTo("더본코리아");

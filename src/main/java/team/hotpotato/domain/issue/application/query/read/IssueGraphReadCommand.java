@@ -1,4 +1,4 @@
-package team.hotpotato.domain.issue.application.dto;
+package team.hotpotato.domain.issue.application.query.read;
 
 public record IssueGraphReadCommand(
         Long userId
