@@ -18,7 +18,7 @@ import team.hotpotato.domain.audit.application.input.AuditStatement;
 import team.hotpotato.security.CustomAuthPrincipal;
 
 @RequiredArgsConstructor
-@RequestMapping("/v1/audit")
+@RequestMapping("/audit")
 @RestController
 public class AuditController {
     private final AuditStatement auditStatement;

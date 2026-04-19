@@ -327,7 +327,7 @@ paths:
                 type: string
               example: "이슈 계통도 조회 서버와 통신할 수 없습니다."
 
-  /v1/audit:
+  /audit:
     post:
       tags: [Audit]
       operationId: auditStatement

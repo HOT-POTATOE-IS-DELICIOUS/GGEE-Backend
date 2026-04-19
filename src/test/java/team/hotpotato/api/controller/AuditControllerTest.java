@@ -81,7 +81,7 @@ class AuditControllerTest {
                 )));
 
         webTestClient.post()
-                .uri("/v1/audit")
+                .uri("/audit")
                 .header("Authorization", "Bearer valid-access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
@@ -114,7 +114,7 @@ class AuditControllerTest {
                 .thenReturn(Mono.error(AuditServiceUnavailableException.EXCEPTION));
 
         webTestClient.post()
-                .uri("/v1/audit")
+                .uri("/audit")
                 .header("Authorization", "Bearer valid-access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
@@ -133,7 +133,7 @@ class AuditControllerTest {
         mockAuthenticatedUser();
 
         webTestClient.post()
-                .uri("/v1/audit")
+                .uri("/audit")
                 .header("Authorization", "Bearer valid-access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
@@ -152,7 +152,7 @@ class AuditControllerTest {
     @DisplayName("인증 정보가 없으면 401을 반환한다")
     void auditReturnsUnauthorizedWhenAuthorizationHeaderIsMissing() {
         webTestClient.post()
-                .uri("/v1/audit")
+                .uri("/audit")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {
