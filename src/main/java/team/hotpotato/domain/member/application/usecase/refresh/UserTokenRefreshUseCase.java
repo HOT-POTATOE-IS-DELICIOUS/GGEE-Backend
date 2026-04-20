@@ -1,7 +1,9 @@
 package team.hotpotato.domain.member.application.usecase.refresh;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
 import team.hotpotato.domain.member.application.input.RefreshTokenResolver;
 import team.hotpotato.domain.member.application.input.UserTokenRefresh;
 import team.hotpotato.domain.member.application.output.SessionRepository;
@@ -11,12 +13,13 @@ import team.hotpotato.domain.member.application.usecase.login.SessionExpiredExce
 
 import java.time.LocalDateTime;
 
+@Service
 @RequiredArgsConstructor
 public class UserTokenRefreshUseCase implements UserTokenRefresh {
     private final RefreshTokenResolver refreshTokenResolver;
     private final SessionRepository sessionRepository;
     private final TokenGenerator tokenGenerator;
-    private final long refreshTokenActiveTimeSeconds;
+    private final TokenProperties tokenProperties;
 
     @Override
     public Mono<RefreshResult> refresh(RefreshCommand command) {
@@ -33,7 +36,7 @@ public class UserTokenRefreshUseCase implements UserTokenRefresh {
 
                             String newAccessToken = tokenGenerator.generateAccessToken(principal);
                             String newRefreshToken = tokenGenerator.generateRefreshToken(principal);
-                            LocalDateTime newExpiresAt = LocalDateTime.now().plusSeconds(refreshTokenActiveTimeSeconds);
+                            LocalDateTime newExpiresAt = LocalDateTime.now().plusSeconds(tokenProperties.refreshTokenActiveTime());
 
                             return sessionRepository.updateRefreshToken(principal.sessionId(), newRefreshToken, newExpiresAt)
                                     .thenReturn(new RefreshResult(newAccessToken, newRefreshToken));
