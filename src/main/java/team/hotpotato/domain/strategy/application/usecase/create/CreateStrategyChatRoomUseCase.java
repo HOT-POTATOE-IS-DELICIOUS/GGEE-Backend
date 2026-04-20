@@ -1,5 +1,6 @@
 package team.hotpotato.domain.strategy.application.usecase.create;
 
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -20,7 +21,8 @@ public class CreateStrategyChatRoomUseCase implements CreateStrategyChatRoom {
         return roomRepository.save(new StrategyChatRoom(
                         idGenerator.generateId(),
                         command.userId(),
-                        null
+                        null,
+                        LocalDateTime.now()
                 ))
                 .map(saved -> new CreateStrategyChatRoomResult(
                         saved.id(),
