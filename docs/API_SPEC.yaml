@@ -26,6 +26,8 @@ tags:
     description: 입장문 검수
   - name: Issue
     description: 이슈 계통도 조회
+  - name: Strategy
+    description: 전략 채팅
 
 paths:
   /auth/register:
@@ -395,6 +397,135 @@ paths:
                 type: string
               example: "입장문 검수 서버와 통신할 수 없습니다."
 
+  /strategy/rooms:
+    post:
+      tags: [Strategy]
+      operationId: createStrategyChatRoom
+      summary: 전략 채팅방 생성
+      description: 로그인한 사용자의 전략 채팅방을 새로 생성합니다.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 채팅방 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StrategyRoomResponse'
+              example:
+                roomId: 107519243230003200
+                lastChattedAt: null
+                createdAt: "2024-03-15T10:00:00"
+        "401":
+          description: 인증 실패 또는 세션 만료
+          content:
+            text/plain:
+              schema:
+                type: string
+
+    get:
+      tags: [Strategy]
+      operationId: getStrategyChatRooms
+      summary: 전략 채팅방 목록 조회
+      description: 로그인한 사용자의 전략 채팅방 목록을 조회합니다.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 채팅방 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StrategyRoomResponse'
+        "401":
+          description: 인증 실패 또는 세션 만료
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /strategy/rooms/{roomId}/messages:
+    get:
+      tags: [Strategy]
+      operationId: getStrategyChatMessages
+      summary: 전략 채팅 메시지 목록 조회
+      description: 특정 채팅방의 메시지 목록을 조회합니다.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          description: 채팅방 ID
+          schema:
+            type: integer
+            format: int64
+          example: 107519243230003200
+      responses:
+        "200":
+          description: 메시지 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StrategyMessageResponse'
+        "401":
+          description: 인증 실패 또는 세션 만료
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /strategy/rooms/{roomId}/messages/stream:
+    post:
+      tags: [Strategy]
+      operationId: streamStrategyChat
+      summary: 전략 채팅 AI 스트림
+      description: |
+        사용자 메시지를 전송하고 AI 응답을 Server-Sent Events(SSE) 스트림으로 수신합니다.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          description: 채팅방 ID
+          schema:
+            type: integer
+            format: int64
+          example: 107519243230003200
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StreamRequest'
+            example:
+              message: "백종원 관련 최신 이슈를 분석해줘"
+      responses:
+        "200":
+          description: SSE 스트림 연결 성공
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "400":
+          description: 요청 본문 검증 실패
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "메시지를 입력해주세요."
+        "401":
+          description: 인증 실패 또는 세션 만료
+          content:
+            text/plain:
+              schema:
+                type: string
+
 security:
   - BearerAuth: []
 
@@ -646,3 +777,71 @@ components:
           format: double
           description: 두 이슈 간 Cosine Similarity (0.0 ~ 1.0)
           example: 0.847
+
+    StreamRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          description: 사용자 채팅 메시지
+          minLength: 1
+          example: "백종원 관련 최신 이슈를 분석해줘"
+
+    StrategyRoomResponse:
+      type: object
+      properties:
+        roomId:
+          type: integer
+          format: int64
+          description: 채팅방 ID
+          example: 107519243230003200
+        lastChattedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: 마지막 채팅 시각 (채팅 없으면 null)
+          example: "2024-03-15T10:30:00"
+        createdAt:
+          type: string
+          format: date-time
+          description: 채팅방 생성 시각
+          example: "2024-03-15T10:00:00"
+
+    StrategyMessageResponse:
+      type: object
+      properties:
+        messageId:
+          type: integer
+          format: int64
+          description: 메시지 ID
+          example: 107519243230003201
+        role:
+          type: string
+          enum: [USER, ASSISTANT]
+          description: 메시지 발신자 역할
+          example: "USER"
+        content:
+          type: string
+          description: 메시지 내용
+          example: "백종원 관련 최신 이슈를 분석해줘"
+        intent:
+          type: string
+          nullable: true
+          description: AI가 분석한 메시지 의도
+          example: "issue_analysis"
+        refinedQuery:
+          type: string
+          nullable: true
+          description: AI가 재작성한 검색 쿼리
+          example: "백종원 최신 이슈 2024"
+        metaJson:
+          type: string
+          nullable: true
+          description: 메시지 관련 메타데이터 (JSON 문자열)
+          example: null
+        createdAt:
+          type: string
+          format: date-time
+          description: 메시지 생성 시각
+          example: "2024-03-15T10:30:00"
