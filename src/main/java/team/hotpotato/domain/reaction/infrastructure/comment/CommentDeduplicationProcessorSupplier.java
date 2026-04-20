@@ -2,6 +2,7 @@ package team.hotpotato.domain.reaction.infrastructure.comment;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,7 +81,7 @@ public class CommentDeduplicationProcessorSupplier implements ProcessorSupplier<
                                     postId,
                                     crawlResult.site(),
                                     crawlResult.keyword(),
-                                    crawlResult.timestamp(),
+                                    OffsetDateTime.parse(crawlResult.timestamp()),
                                     eventTimestampMs,
                                     postUrl,
                                     post.title(),
