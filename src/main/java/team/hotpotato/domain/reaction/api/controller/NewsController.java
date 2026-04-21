@@ -17,8 +17,8 @@ import team.hotpotato.domain.reaction.application.query.read.NodeNewsReadCommand
 public class NewsController {
     private final NodeNewsRead nodeNewsRead;
 
-    @GetMapping("/{nodeId}")
-    public Mono<NodeNewsResponse> getNews(@PathVariable String nodeId) {
+    @GetMapping("/{node_id}")
+    public Mono<NodeNewsResponse> getNews(@PathVariable("node_id") String nodeId) {
         return nodeNewsRead.read(new NodeNewsReadCommand(nodeId))
                 .map(result -> new NodeNewsResponse(
                         result.nodeId(),

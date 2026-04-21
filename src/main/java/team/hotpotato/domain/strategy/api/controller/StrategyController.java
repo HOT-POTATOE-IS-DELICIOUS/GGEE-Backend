@@ -54,10 +54,10 @@ public class StrategyController {
                 ));
     }
 
-    @GetMapping("/{roomId}/messages")
+    @GetMapping("/{room_id}/messages")
     public Flux<MessageResponse> getMessages(
             @AuthenticationPrincipal CustomAuthPrincipal principal,
-            @PathVariable Long roomId
+            @PathVariable("room_id") Long roomId
     ) {
         return getStrategyChatMessages.getMessages(roomId, principal.userId())
                 .map(result -> new MessageResponse(
@@ -71,10 +71,10 @@ public class StrategyController {
                 ));
     }
 
-    @PostMapping(value = "/{roomId}/messages/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/{room_id}/messages/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> stream(
             @AuthenticationPrincipal CustomAuthPrincipal principal,
-            @PathVariable Long roomId,
+            @PathVariable("room_id") Long roomId,
             @Valid @RequestBody StreamRequest request
     ) {
         return streamStrategyChat.stream(new StreamStrategyChatCommand(

@@ -21,8 +21,8 @@ public class IndexingJobController {
 
     private final IndexingJobCompletionWaiter completionWaiter;
 
-    @GetMapping(value = "/{jobId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<String>> streamJobCompletion(@PathVariable String jobId) {
+    @GetMapping(value = "/{job_id}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> streamJobCompletion(@PathVariable("job_id") String jobId) {
         Flux<ServerSentEvent<String>> heartbeat = Flux.interval(HEARTBEAT_INTERVAL)
                 .map(i -> ServerSentEvent.<String>builder()
                         .event("heartbeat")

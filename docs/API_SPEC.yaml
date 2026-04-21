@@ -225,7 +225,7 @@ paths:
                 session_expired:
                   value: "다른 기기에서 로그인되어 세션이 만료되었습니다."
 
-  /indexing/jobs/{jobId}:
+  /indexing/jobs/{job_id}:
     get:
       tags: [IndexingJob]
       operationId: streamJobCompletion
@@ -236,7 +236,7 @@ paths:
       security:
         - BearerAuth: []
       parameters:
-        - name: jobId
+        - name: job_id
           in: path
           required: true
           description: 인덱싱 작업 ID (`/auth/register` 응답의 `indexing_job_id`)
@@ -399,7 +399,7 @@ paths:
                 type: string
               example: "입장문 검수 서버와 통신할 수 없습니다."
 
-  /news/{nodeId}:
+  /news/{node_id}:
     get:
       tags: [News]
       operationId: getNews
@@ -408,7 +408,7 @@ paths:
       security:
         - BearerAuth: []
       parameters:
-        - name: nodeId
+        - name: node_id
           in: path
           required: true
           description: 이슈 노드 ID (`/issues` 응답의 `issues[].id`)
@@ -520,7 +520,7 @@ paths:
               schema:
                 type: string
 
-  /strategy/rooms/{roomId}/messages:
+  /strategy/rooms/{room_id}/messages:
     get:
       tags: [Strategy]
       operationId: getStrategyChatMessages
@@ -529,7 +529,7 @@ paths:
       security:
         - BearerAuth: []
       parameters:
-        - name: roomId
+        - name: room_id
           in: path
           required: true
           description: 채팅방 ID
@@ -553,7 +553,7 @@ paths:
               schema:
                 type: string
 
-  /strategy/rooms/{roomId}/messages/stream:
+  /strategy/rooms/{room_id}/messages/stream:
     post:
       tags: [Strategy]
       operationId: streamStrategyChat
@@ -563,7 +563,7 @@ paths:
       security:
         - BearerAuth: []
       parameters:
-        - name: roomId
+        - name: room_id
           in: path
           required: true
           description: 채팅방 ID
