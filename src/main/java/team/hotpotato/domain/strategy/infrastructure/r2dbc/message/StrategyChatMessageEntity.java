@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import io.r2dbc.postgresql.codec.Json;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 import team.hotpotato.infrastructure.r2dbc.common.BaseEntity;
@@ -30,7 +31,7 @@ public class StrategyChatMessageEntity extends BaseEntity {
     private String refinedQuery;
 
     @Column("meta_json")
-    private String metaJson;
+    private Json metaJson;
 
     @Column("ai_message_id")
     private String aiMessageId;

@@ -1,5 +1,6 @@
 package team.hotpotato.domain.strategy.infrastructure.r2dbc.message;
 
+import io.r2dbc.postgresql.codec.Json;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import team.hotpotato.domain.strategy.domain.MessageRole;
@@ -16,7 +17,7 @@ public final class StrategyChatMessageEntityMapper {
                 .content(message.content())
                 .intent(message.intent())
                 .refinedQuery(message.refinedQuery())
-                .metaJson(message.metaJson())
+                .metaJson(message.metaJson() != null ? Json.of(message.metaJson()) : null)
                 .aiMessageId(message.aiMessageId())
                 .build();
     }
@@ -29,7 +30,7 @@ public final class StrategyChatMessageEntityMapper {
                 entity.getContent(),
                 entity.getIntent(),
                 entity.getRefinedQuery(),
-                entity.getMetaJson(),
+                entity.getMetaJson() != null ? entity.getMetaJson().asString() : null,
                 entity.getAiMessageId(),
                 entity.getCreatedAt()
         );
