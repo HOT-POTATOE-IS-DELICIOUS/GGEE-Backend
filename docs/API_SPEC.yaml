@@ -26,6 +26,8 @@ tags:
     description: 입장문 검수
   - name: Issue
     description: 이슈 계통도 조회
+  - name: News
+    description: 이슈 관련 뉴스 조회
   - name: Strategy
     description: 전략 채팅
 
@@ -175,10 +177,8 @@ paths:
                   value: "올바르지 않은 JWT 토큰입니다."
                 invalid_token_type:
                   value: "올바르지 않은 JWT 토큰 타입입니다."
-                invalid_session:
-                  value: "유효하지 않은 세션입니다."
         "401":
-          description: 만료된 Refresh Token 또는 세션 만료
+          description: 만료된 Refresh Token, 세션 만료 또는 유효하지 않은 세션
           content:
             text/plain:
               schema:
@@ -188,6 +188,8 @@ paths:
                   value: "만료된 리프레시 토큰입니다."
                 session_expired:
                   value: "다른 기기에서 로그인되어 세션이 만료되었습니다."
+                invalid_session:
+                  value: "유효하지 않은 세션입니다."
 
   /auth/logout:
     post:
@@ -396,6 +398,58 @@ paths:
               schema:
                 type: string
               example: "입장문 검수 서버와 통신할 수 없습니다."
+
+  /news/{nodeId}:
+    get:
+      tags: [News]
+      operationId: getNews
+      summary: 이슈 관련 뉴스 조회
+      description: 특정 이슈 노드 ID에 연결된 뉴스 목록을 조회합니다.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: nodeId
+          in: path
+          required: true
+          description: 이슈 노드 ID (`/issues` 응답의 `issues[].id`)
+          schema:
+            type: string
+          example: "4:c39a66eb-67e6-4ff4-954a-4c9d2fbcd69a:6050"
+      responses:
+        "200":
+          description: 뉴스 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeNewsResponse'
+              example:
+                node_id: "4:c39a66eb-67e6-4ff4-954a-4c9d2fbcd69a:6050"
+                count: 2
+                news:
+                  - title: "백종원 더본코리아 가맹점 갑질 논란"
+                    summary: "더본코리아 가맹점주들이 본사의 갑질 행위를 폭로하며..."
+                    link: "https://example.com/news/1"
+                  - title: "더본코리아 가맹점주 집단 소송 예고"
+                    summary: "가맹점주 200여 명이 법적 대응에 나서겠다고..."
+                    link: "https://example.com/news/2"
+        "401":
+          description: 인증 실패 또는 세션 만료
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                expired_token:
+                  value: "만료된 JWT 토큰입니다."
+                session_expired:
+                  value: "다른 기기에서 로그인되어 세션이 만료되었습니다."
+        "503":
+          description: 뉴스 조회 서버 통신 실패
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "뉴스 조회 서버와 통신할 수 없습니다."
 
   /strategy/rooms:
     post:
@@ -726,6 +780,39 @@ components:
           type: string
           description: 문제 표현에 대한 설명
           example: "이 문장에서 일베 커뮤니티 특유의 언어·문화 표현이 탐지되었습니다."
+
+    NodeNewsResponse:
+      type: object
+      properties:
+        node_id:
+          type: string
+          description: 이슈 노드 ID
+          example: "4:c39a66eb-67e6-4ff4-954a-4c9d2fbcd69a:6050"
+        count:
+          type: integer
+          description: 뉴스 항목 수
+          example: 2
+        news:
+          type: array
+          description: 뉴스 목록
+          items:
+            $ref: '#/components/schemas/NewsItemResponse'
+
+    NewsItemResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          description: 뉴스 제목
+          example: "백종원 더본코리아 가맹점 갑질 논란"
+        summary:
+          type: string
+          description: 뉴스 요약
+          example: "더본코리아 가맹점주들이 본사의 갑질 행위를 폭로하며..."
+        link:
+          type: string
+          description: 뉴스 원문 링크
+          example: "https://example.com/news/1"
 
     IssuesResponse:
       type: object
