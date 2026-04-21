@@ -1,8 +1,10 @@
 package team.hotpotato.domain.member.infrastructure.indexing;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 record ProtectTargetIndexingKafkaMessage(
-        Long jobId,
+        @JsonProperty("job_id") Long jobId,
         String keyword,
-        String protectTargetInfo
+        @JsonProperty("protect_target_info") String protectTargetInfo
 ) {
 }
