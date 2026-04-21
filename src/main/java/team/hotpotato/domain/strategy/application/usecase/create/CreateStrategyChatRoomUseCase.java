@@ -21,13 +21,10 @@ public class CreateStrategyChatRoomUseCase implements CreateStrategyChatRoom {
         return roomRepository.save(new StrategyChatRoom(
                         idGenerator.generateId(),
                         command.userId(),
+                        "",
                         null,
                         LocalDateTime.now()
                 ))
-                .map(saved -> new CreateStrategyChatRoomResult(
-                        saved.id(),
-                        saved.lastChattedAt(),
-                        saved.createdAt()
-                ));
+                .map(saved -> new CreateStrategyChatRoomResult(saved.id()));
     }
 }

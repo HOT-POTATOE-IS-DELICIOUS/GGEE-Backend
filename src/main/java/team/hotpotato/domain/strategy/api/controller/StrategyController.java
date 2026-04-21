@@ -12,16 +12,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import team.hotpotato.domain.strategy.api.dto.CreateRoomResponse;
+import team.hotpotato.domain.strategy.api.dto.CreateRoomRequest;
 import team.hotpotato.domain.strategy.api.dto.MessageResponse;
 import team.hotpotato.domain.strategy.api.dto.RoomResponse;
 import team.hotpotato.domain.strategy.api.dto.StreamRequest;
-import team.hotpotato.domain.strategy.application.input.CreateStrategyChatRoom;
+import team.hotpotato.domain.strategy.application.input.CreateAndStreamStrategyChat;
 import team.hotpotato.domain.strategy.application.input.GetStrategyChatMessages;
 import team.hotpotato.domain.strategy.application.input.GetStrategyChatRooms;
 import team.hotpotato.domain.strategy.application.input.StreamStrategyChat;
-import team.hotpotato.domain.strategy.application.usecase.create.CreateStrategyChatRoomCommand;
 import team.hotpotato.domain.strategy.application.usecase.stream.StreamStrategyChatCommand;
 import team.hotpotato.security.CustomAuthPrincipal;
 
@@ -30,21 +28,17 @@ import team.hotpotato.security.CustomAuthPrincipal;
 @RestController
 public class StrategyController {
 
-    private final CreateStrategyChatRoom createStrategyChatRoom;
+    private final CreateAndStreamStrategyChat createAndStreamStrategyChat;
     private final StreamStrategyChat streamStrategyChat;
     private final GetStrategyChatRooms getStrategyChatRooms;
     private final GetStrategyChatMessages getStrategyChatMessages;
 
-    @PostMapping
-    public Mono<CreateRoomResponse> createRoom(
-            @AuthenticationPrincipal CustomAuthPrincipal principal
+    @PostMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> createRoom(
+            @AuthenticationPrincipal CustomAuthPrincipal principal,
+            @Valid @RequestBody CreateRoomRequest request
     ) {
-        return createStrategyChatRoom.create(new CreateStrategyChatRoomCommand(principal.userId()))
-                .map(result -> new CreateRoomResponse(
-                        result.roomId(),
-                        result.lastChattedAt(),
-                        result.createdAt()
-                ));
+        return createAndStreamStrategyChat.createAndStream(principal.userId(), request.message());
     }
 
     @GetMapping
@@ -54,6 +48,7 @@ public class StrategyController {
         return getStrategyChatRooms.getRooms(principal.userId())
                 .map(result -> new RoomResponse(
                         result.roomId(),
+                        result.title(),
                         result.lastChattedAt(),
                         result.createdAt()
                 ));
