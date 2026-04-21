@@ -172,7 +172,7 @@ paths:
                 type: string
               examples:
                 blank_token:
-                  value: "refreshToken이 입력되지 않았습니다."
+                  value: "refresh_token이 입력되지 않았습니다."
                 invalid_token:
                   value: "올바르지 않은 JWT 토큰입니다."
                 invalid_token_type:
@@ -273,7 +273,7 @@ paths:
       operationId: getIssues
       summary: 이슈 계통도 조회
       description: |
-        로그인한 사용자의 `protectTarget`, `protectTargetInfo`를 기준으로 이슈 목록과 이슈 간 의미적 연결 관계를 조회합니다.
+        로그인한 사용자의 `protect_target`, `protect_target_info`를 기준으로 이슈 목록과 이슈 간 의미적 연결 관계를 조회합니다.
         `connections.source_id -> connections.target_id` 방향은 최신 이슈가 과거 이슈를 재조명하는 의미입니다.
       security:
         - BearerAuth: []

@@ -224,6 +224,8 @@ src/test/java/team/hotpotato/
     - `./gradlew test` and `./gradlew check`
 8) API 문서 반영:
     - API를 추가하거나 수정한 경우 `docs/API_SPEC.yaml`을 반드시 함께 수정한다.
+    - request/response body의 모든 필드명은 **snake_case**를 사용한다.
+      (operationId, 스키마명, path parameter 변수명 등 OpenAPI 표준 키는 제외)
 
 ## 보안 (AuthFilter)
 
