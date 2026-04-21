@@ -17,6 +17,7 @@ public class GetStrategyChatRoomsQuery implements GetStrategyChatRooms {
         return roomRepository.findAllByUserId(userId)
                 .map(room -> new StrategyChatRoomsResult(
                         room.id(),
+                        room.title(),
                         room.lastChattedAt(),
                         room.createdAt()
                 ));

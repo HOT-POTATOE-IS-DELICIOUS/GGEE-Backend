@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public record StrategyChatRoomsResult(
         Long roomId,
+        String title,
         LocalDateTime lastChattedAt,
         LocalDateTime createdAt
 ) {
