@@ -38,15 +38,15 @@ public class AuditHttpSource implements AuditSource {
                                 .map(review -> new AuditReview(
                                         new AuditSentence(
                                                 review.sentence().sentenceText(),
-                                                review.sentence().startOffset(),
-                                                review.sentence().endOffset()
+                                                defaultToZero(review.sentence().startOffset()),
+                                                defaultToZero(review.sentence().endOffset())
                                         ),
                                         Optional.ofNullable(review.perspectiveIds()).orElse(List.of()),
                                         Optional.ofNullable(review.perspectiveLabels()).orElse(List.of()),
                                         Optional.ofNullable(review.suggestions()).orElse(List.of()).stream()
                                                 .map(suggestion -> new AuditSuggestion(
-                                                        suggestion.startIndex(),
-                                                        suggestion.endIndex(),
+                                                        defaultToZero(suggestion.startIndex()),
+                                                        defaultToZero(suggestion.endIndex()),
                                                         suggestion.before(),
                                                         suggestion.after(),
                                                         suggestion.reason()
@@ -59,5 +59,9 @@ public class AuditHttpSource implements AuditSource {
                 .doOnError(TimeoutException.class, throwable -> log.warn("Audit API call timed out"))
                 .onErrorMap(WebClientException.class, throwable -> AuditServiceUnavailableException.EXCEPTION)
                 .onErrorMap(TimeoutException.class, throwable -> AuditServiceUnavailableException.EXCEPTION);
+    }
+
+    private int defaultToZero(Integer value) {
+        return value == null ? 0 : value;
     }
 }
