@@ -17,6 +17,9 @@ public class StrategyChatRoomEntity extends BaseEntity {
     @Column("user_id")
     private Long userId;
 
+    @Column("title")
+    private String title;
+
     @Column("last_chatted_at")
     private java.time.LocalDateTime lastChattedAt;
 

@@ -11,6 +11,7 @@ public final class StrategyChatRoomEntityMapper {
         return StrategyChatRoomEntity.builder()
                 .id(room.id())
                 .userId(room.userId())
+                .title(room.title())
                 .lastChattedAt(room.lastChattedAt())
                 .build();
     }
@@ -19,6 +20,7 @@ public final class StrategyChatRoomEntityMapper {
         return new StrategyChatRoom(
                 entity.getId(),
                 entity.getUserId(),
+                entity.getTitle(),
                 entity.getLastChattedAt(),
                 entity.getCreatedAt()
         );

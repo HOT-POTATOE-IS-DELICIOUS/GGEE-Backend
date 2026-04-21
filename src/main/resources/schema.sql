@@ -59,6 +59,7 @@ CREATE INDEX IF NOT EXISTS idx_audits_user_id_created_at
 CREATE TABLE IF NOT EXISTS strategy_chat_rooms (
     id BIGINT PRIMARY KEY,
     user_id BIGINT NOT NULL,
+    title VARCHAR(20) NOT NULL,
     last_chatted_at TIMESTAMP NULL,
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
