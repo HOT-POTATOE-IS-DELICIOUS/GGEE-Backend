@@ -1,8 +1,10 @@
 package team.hotpotato.domain.strategy.infrastructure.client;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public record StrategyAiRequest(
         String message,
-        String entityName,
-        String entityInfo
+        @JsonProperty("entity_name") String entityName,
+        @JsonProperty("entity_info") String entityInfo
 ) {
 }
