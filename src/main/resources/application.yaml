@@ -63,6 +63,9 @@ ggee:
     issue:
       base-url: ${GGEE_AI_ISSUE_BASE_URL}
       timeout: ${GGEE_AI_ISSUE_TIMEOUT}
+    reaction:
+      base-url: ${GGEE_AI_REACTION_BASE_URL}
+      timeout: ${GGEE_AI_REACTION_TIMEOUT}
     strategy:
       base-url: ${GGEE_AI_STRATEGY_BASE_URL}
   crawler:
