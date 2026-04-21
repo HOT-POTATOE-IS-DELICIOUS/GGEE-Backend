@@ -45,8 +45,8 @@ paths:
             example:
               email: "test@test.com"
               password: "password1234"
-              protectTarget: "백종원"
-              protectTargetInfo: "더본코리아"
+              protect_target: "백종원"
+              protect_target_info: "더본코리아"
       responses:
         "201":
           description: 회원가입 성공
@@ -56,8 +56,8 @@ paths:
                 $ref: '#/components/schemas/RegisterResponse'
               example:
                 indexing_job_id: "107519243230003200"
-                accessToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
-                refreshToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
+                access_token: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
+                refresh_token: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
         "400":
           description: 요청 본문 검증 실패
           content:
@@ -110,8 +110,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
               example:
-                accessToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDc1MTkyNDMyMzAwMDMyIiwicm9sZSI6IlVTRVIiLCJ0b2tlblR5cGUiOiJBQ0NFU1NfVE9LRU4iLCJzZXNzaW9uSWQiOiJjYmQyZGU5ZC1mMmExLTQ2Y2EtOWJhZS0zZjIzNjk2YzY3ZGEiLCJpYXQiOjE3NzU0Mjg2ODksImV4cCI6MTc3NTQzMjI4OX0.xxxxx"
-                refreshToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDc1MTkyNDMyMzAwMDMyIiwicm9sZSI6IlVTRVIiLCJ0b2tlblR5cGUiOiJSRUZSRVNIX1RPS0VOIiwic2Vzc2lvbklkIjoiY2JkMmRlOWQtZjJhMS00NmNhLTliYWUtM2YyMzY5NmM2N2RhIiwiaWF0IjoxNzc1NDI4Njg5LCJleHAiOjE3NzY2MzgyODl9.xxxxx"
+                access_token: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDc1MTkyNDMyMzAwMDMyIiwicm9sZSI6IlVTRVIiLCJ0b2tlblR5cGUiOiJBQ0NFU1NfVE9LRU4iLCJzZXNzaW9uSWQiOiJjYmQyZGU5ZC1mMmExLTQ2Y2EtOWJhZS0zZjIzNjk2YzY3ZGEiLCJpYXQiOjE3NzU0Mjg2ODksImV4cCI6MTc3NTQzMjI4OX0.xxxxx"
+                refresh_token: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDc1MTkyNDMyMzAwMDMyIiwicm9sZSI6IlVTRVIiLCJ0b2tlblR5cGUiOiJSRUZSRVNIX1RPS0VOIiwic2Vzc2lvbklkIjoiY2JkMmRlOWQtZjJhMS00NmNhLTliYWUtM2YyMzY5NmM2N2RhIiwiaWF0IjoxNzc1NDI4Njg5LCJleHAiOjE3NzY2MzgyODl9.xxxxx"
         "400":
           description: 요청 본문 검증 실패
           content:
@@ -151,7 +151,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RefreshRequest'
             example:
-              refreshToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
+              refresh_token: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
       responses:
         "200":
           description: 토큰 갱신 성공
@@ -160,8 +160,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/RefreshResponse'
               example:
-                accessToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
-                refreshToken: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
+                access_token: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
+                refresh_token: "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.xxxxx"
         "400":
           description: 요청 본문 검증 실패 또는 잘못된 토큰
           content:
@@ -422,7 +422,7 @@ paths:
                 type: string
               example: |
                 event: room_created
-                data: {"roomId": 107519243230003200}
+                data: {"room_id": 107519243230003200}
 
                 event: content_chunk
                 data: {"delta": "안녕하세요"}
@@ -560,7 +560,7 @@ components:
   schemas:
     RegisterRequest:
       type: object
-      required: [email, password, protectTarget, protectTargetInfo]
+      required: [email, password, protect_target, protect_target_info]
       properties:
         email:
           type: string
@@ -573,11 +573,11 @@ components:
           maxLength: 20
           description: 비밀번호 (8~20자)
           example: "password123"
-        protectTarget:
+        protect_target:
           type: string
           description: 보호 대상 브랜드 또는 키워드
           example: "brand"
-        protectTargetInfo:
+        protect_target_info:
           type: string
           description: 보호 대상 상세 정보
           example: "브랜드 공식몰"
@@ -605,38 +605,38 @@ components:
           type: string
           description: "인덱싱 작업 ID. `/indexing/jobs/{jobId}` SSE 엔드포인트에서 완료 여부를 확인하는 데 사용"
           example: "107519243230003200"
-        accessToken:
+        access_token:
           type: string
           description: "JWT 액세스 토큰. Claims: sub(userId), role, tokenType, sessionId, iat, exp"
-        refreshToken:
+        refresh_token:
           type: string
           description: "JWT 리프레시 토큰. Claims: sub(userId), role, tokenType, sessionId, iat, exp"
 
     LoginResponse:
       type: object
       properties:
-        accessToken:
+        access_token:
           type: string
           description: "JWT 액세스 토큰. 만료 시간은 환경 설정에 따름. Claims: sub(userId), role, tokenType, sessionId, iat, exp"
-        refreshToken:
+        refresh_token:
           type: string
           description: "JWT 리프레시 토큰. 만료 시간은 환경 설정에 따름. Claims: sub(userId), role, tokenType, sessionId, iat, exp"
 
     RefreshRequest:
       type: object
-      required: [refreshToken]
+      required: [refresh_token]
       properties:
-        refreshToken:
+        refresh_token:
           type: string
           description: 로그인 또는 이전 갱신 시 발급받은 Refresh Token
 
     RefreshResponse:
       type: object
       properties:
-        accessToken:
+        access_token:
           type: string
           description: "새로 발급된 JWT 액세스 토큰"
-        refreshToken:
+        refresh_token:
           type: string
           description: "새로 발급된 JWT 리프레시 토큰 (토큰 로테이션)"
 
@@ -811,7 +811,7 @@ components:
     CreateStrategyRoomResponse:
       type: object
       properties:
-        roomId:
+        room_id:
           type: integer
           format: int64
           description: 생성된 채팅방 ID
@@ -830,7 +830,7 @@ components:
     StrategyRoomResponse:
       type: object
       properties:
-        roomId:
+        room_id:
           type: integer
           format: int64
           description: 채팅방 ID
@@ -839,13 +839,13 @@ components:
           type: string
           description: 채팅방 제목 (첫 메시지 앞 12자)
           example: "백종원 관련 최신"
-        lastChattedAt:
+        last_chatted_at:
           type: string
           format: date-time
           nullable: true
           description: 마지막 채팅 시각 (채팅 없으면 null)
           example: "2024-03-15T10:30:00"
-        createdAt:
+        created_at:
           type: string
           format: date-time
           description: 채팅방 생성 시각
@@ -854,7 +854,7 @@ components:
     StrategyMessageResponse:
       type: object
       properties:
-        messageId:
+        message_id:
           type: integer
           format: int64
           description: 메시지 ID
@@ -873,17 +873,17 @@ components:
           nullable: true
           description: AI가 분석한 메시지 의도
           example: "issue_analysis"
-        refinedQuery:
+        refined_query:
           type: string
           nullable: true
           description: AI가 재작성한 검색 쿼리
           example: "백종원 최신 이슈 2024"
-        metaJson:
+        meta_json:
           type: string
           nullable: true
           description: 메시지 관련 메타데이터 (JSON 문자열)
           example: null
-        createdAt:
+        created_at:
           type: string
           format: date-time
           description: 메시지 생성 시각
