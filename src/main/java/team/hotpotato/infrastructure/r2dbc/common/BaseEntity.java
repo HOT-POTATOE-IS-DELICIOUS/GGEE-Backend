@@ -28,9 +28,8 @@ public class BaseEntity {
     @Column("createdAt")
     private LocalDateTime createdAt;
 
-	@Builder.Default
     @Column("deleted")
-    private Boolean deleted = false;
+    private Boolean deleted;
 
     @Column("deleted_at")
     private LocalDateTime deletedAt;
@@ -46,7 +45,7 @@ public class BaseEntity {
 	}
 
 	public boolean isDeleted() {
-		return deleted;
+		return Boolean.TRUE.equals(deleted);
 	}
 }
 

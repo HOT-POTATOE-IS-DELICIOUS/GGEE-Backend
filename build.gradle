@@ -40,7 +40,7 @@ dependencies {
     implementation 'io.confluent:kafka-json-schema-serializer:7.6.0'
 
     runtimeOnly 'org.postgresql:postgresql'
-    runtimeOnly 'org.postgresql:r2dbc-postgresql'
+    implementation 'org.postgresql:r2dbc-postgresql'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 
