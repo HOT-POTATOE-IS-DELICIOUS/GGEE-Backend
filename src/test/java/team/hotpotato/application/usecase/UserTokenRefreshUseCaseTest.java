@@ -19,6 +19,7 @@ import team.hotpotato.domain.member.application.usecase.refresh.RefreshCommand;
 import team.hotpotato.domain.member.application.usecase.refresh.UserTokenRefreshUseCase;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.Session;
+import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
 
 import java.time.LocalDateTime;
 
@@ -48,7 +49,7 @@ class UserTokenRefreshUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new UserTokenRefreshUseCase(refreshTokenResolver, sessionRepository, tokenGenerator, 1_209_600L);
+        useCase = new UserTokenRefreshUseCase(refreshTokenResolver, sessionRepository, tokenGenerator, new TokenProperties(3600L, 1_209_600L, "Bearer", "Authorization", "dummyKey"));
     }
 
     @Test

@@ -8,7 +8,6 @@ public record Audit(
         String protectTarget,
         String protectTargetInfo,
         String text,
-        String messageId,
         List<AuditReview> reviews
 ) {
 }

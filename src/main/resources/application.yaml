@@ -8,6 +8,9 @@ spring:
     username: ${SPRING_R2DBC_USERNAME}
     password: ${SPRING_R2DBC_PASSWORD}
 
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     producer:
@@ -60,7 +63,16 @@ ggee:
     issue:
       base-url: ${GGEE_AI_ISSUE_BASE_URL}
       timeout: ${GGEE_AI_ISSUE_TIMEOUT}
+    reaction:
+      base-url: ${GGEE_AI_REACTION_BASE_URL}
+      timeout: ${GGEE_AI_REACTION_TIMEOUT}
+    strategy:
+      base-url: ${GGEE_AI_STRATEGY_BASE_URL}
   crawler:
     dedup-store-name: ggee-crawler-dedup-store
     dedup-ttl: ${GGEE_CRAWLER_DEDUP_TTL}
     cleanup-interval: ${GGEE_CRAWLER_DEDUP_CLEANUP_INTERVAL}
+
+schema:
+  registry:
+    url: ${SCHEMA_REGISTRY_URL}

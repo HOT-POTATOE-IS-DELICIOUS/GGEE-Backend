@@ -26,6 +26,7 @@ import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutboxStatus;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.Session;
 import team.hotpotato.domain.member.domain.User;
+import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -83,7 +84,7 @@ class UserRegisterUseCaseTest {
                 idGenerator,
                 passwordHasher,
                 transactionRunner,
-                1_209_600L
+                new TokenProperties(3600L, 1_209_600L, "Bearer", "Authorization", "dummyKey")
         );
     }
 

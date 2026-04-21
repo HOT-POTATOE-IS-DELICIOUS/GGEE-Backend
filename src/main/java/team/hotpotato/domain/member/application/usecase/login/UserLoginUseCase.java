@@ -1,7 +1,9 @@
 package team.hotpotato.domain.member.application.usecase.login;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
 import team.hotpotato.common.transaction.ReactiveTransactionRunner;
 import team.hotpotato.common.identity.IdGenerator;
 import team.hotpotato.domain.member.application.input.UserLogin;
@@ -14,6 +16,7 @@ import team.hotpotato.domain.member.domain.Session;
 
 import java.time.LocalDateTime;
 
+@Service
 @RequiredArgsConstructor
 public class UserLoginUseCase implements UserLogin {
     private final UserRepository userRepository;
@@ -22,7 +25,7 @@ public class UserLoginUseCase implements UserLogin {
     private final SessionRepository sessionRepository;
     private final IdGenerator idGenerator;
     private final ReactiveTransactionRunner transactionRunner;
-    private final long refreshTokenActiveTimeSeconds;
+    private final TokenProperties tokenProperties;
 
     @Override
     public Mono<LoginResult> login(LoginCommand loginCommand) {
@@ -49,7 +52,7 @@ public class UserLoginUseCase implements UserLogin {
                             user.id(),
                             sessionId,
                             refreshToken,
-                            LocalDateTime.now().plusSeconds(refreshTokenActiveTimeSeconds)
+                            LocalDateTime.now().plusSeconds(tokenProperties.refreshTokenActiveTime())
                     );
 
                     return sessionRepository.invalidateByUserId(user.id())

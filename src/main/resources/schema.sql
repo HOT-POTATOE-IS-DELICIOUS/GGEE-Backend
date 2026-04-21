@@ -46,7 +46,6 @@ CREATE TABLE IF NOT EXISTS audits (
     protect_target VARCHAR(255) NOT NULL,
     protect_target_info VARCHAR(255) NOT NULL,
     text TEXT NOT NULL,
-    message_id VARCHAR(255) NOT NULL,
     reviews_json TEXT NOT NULL,
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -56,3 +55,35 @@ CREATE TABLE IF NOT EXISTS audits (
 
 CREATE INDEX IF NOT EXISTS idx_audits_user_id_created_at
     ON audits (user_id, "createdAt");
+
+CREATE TABLE IF NOT EXISTS strategy_chat_rooms (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    title VARCHAR(20) NOT NULL,
+    last_chatted_at TIMESTAMP NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_strategy_chat_rooms_user_id
+    ON strategy_chat_rooms (user_id, "createdAt" DESC);
+
+CREATE TABLE IF NOT EXISTS strategy_chat_messages (
+    id BIGINT PRIMARY KEY,
+    room_id BIGINT NOT NULL,
+    role VARCHAR(16) NOT NULL,
+    content TEXT NOT NULL,
+    intent VARCHAR(32) NULL,
+    refined_query VARCHAR(512) NULL,
+    meta_json JSON NULL,
+    ai_message_id VARCHAR(32) NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_strategy_chat_messages_room_id
+    ON strategy_chat_messages (room_id, "createdAt" ASC);

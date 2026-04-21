@@ -8,6 +8,7 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
     streams:
+      application-id: test-ggee-backend
       auto-startup: false
 
 server:
@@ -39,6 +40,9 @@ ggee:
     issue:
       base-url: http://localhost:18080
       timeout: 3s
+    reaction:
+      base-url: http://localhost:18082
+      timeout: 3s
   member:
     protect-target-indexing-dispatch-delay: 60000
   crawler:
@@ -46,3 +50,7 @@ ggee:
     dedup-store-name: ggee-crawler-dedup-store
     dedup-ttl: 10m
     cleanup-interval: 1m
+
+schema:
+  registry:
+    url: mock://test-schema-registry

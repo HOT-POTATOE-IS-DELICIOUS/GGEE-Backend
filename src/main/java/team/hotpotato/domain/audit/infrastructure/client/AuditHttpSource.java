@@ -15,7 +15,6 @@ import team.hotpotato.domain.audit.domain.AuditSuggestion;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 @Slf4j
@@ -35,22 +34,19 @@ public class AuditHttpSource implements AuditSource {
                 .bodyToMono(AuditHttpResponse.class)
                 .timeout(properties.timeout())
                 .map(response -> new AuditAnalysis(
-                        Optional.ofNullable(response.messageId())
-                                .filter(messageId -> !messageId.isBlank())
-                                .orElseGet(() -> UUID.randomUUID().toString()),
                         Optional.ofNullable(response.reviews()).orElse(List.of()).stream()
                                 .map(review -> new AuditReview(
                                         new AuditSentence(
                                                 review.sentence().sentenceText(),
-                                                review.sentence().startOffset(),
-                                                review.sentence().endOffset()
+                                                defaultToZero(review.sentence().startOffset()),
+                                                defaultToZero(review.sentence().endOffset())
                                         ),
                                         Optional.ofNullable(review.perspectiveIds()).orElse(List.of()),
                                         Optional.ofNullable(review.perspectiveLabels()).orElse(List.of()),
                                         Optional.ofNullable(review.suggestions()).orElse(List.of()).stream()
                                                 .map(suggestion -> new AuditSuggestion(
-                                                        suggestion.startIndex(),
-                                                        suggestion.endIndex(),
+                                                        defaultToZero(suggestion.startIndex()),
+                                                        defaultToZero(suggestion.endIndex()),
                                                         suggestion.before(),
                                                         suggestion.after(),
                                                         suggestion.reason()
@@ -63,5 +59,9 @@ public class AuditHttpSource implements AuditSource {
                 .doOnError(TimeoutException.class, throwable -> log.warn("Audit API call timed out"))
                 .onErrorMap(WebClientException.class, throwable -> AuditServiceUnavailableException.EXCEPTION)
                 .onErrorMap(TimeoutException.class, throwable -> AuditServiceUnavailableException.EXCEPTION);
+    }
+
+    private int defaultToZero(Integer value) {
+        return value == null ? 0 : value;
     }
 }

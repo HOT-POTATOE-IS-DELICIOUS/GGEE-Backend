@@ -1,4 +1,5 @@
-FROM eclipse-temurin:21-jdk AS builder
+ARG HARBOR_URL
+FROM ${HARBOR_URL}/library/eclipse-temurin:21-jdk AS builder
 WORKDIR /workspace
 
 COPY . .
@@ -6,7 +7,8 @@ COPY . .
 RUN chmod +x gradlew \
     && ./gradlew --no-daemon bootJar
 
-FROM eclipse-temurin:21-jre
+ARG HARBOR_URL
+FROM ${HARBOR_URL}/library/eclipse-temurin:21-jre
 WORKDIR /app
 
 COPY --from=builder /workspace/build/libs/*.jar /app/app.jar

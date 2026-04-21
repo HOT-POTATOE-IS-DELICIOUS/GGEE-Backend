@@ -208,8 +208,8 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("세션이 무효화된 refresh token으로 갱신 요청하면 400을 반환한다")
-    void refreshReturnsBadRequestWhenSessionIsInvalidated() {
+    @DisplayName("세션이 무효화된 refresh token으로 갱신 요청하면 401을 반환한다")
+    void refreshReturnsUnauthorizedWhenSessionIsInvalidated() {
         when(userTokenRefresh.refresh(any(RefreshCommand.class)))
                 .thenReturn(Mono.error(InvalidSessionException.EXCEPTION));
 
@@ -222,7 +222,7 @@ class AuthControllerTest {
                         }
                         """)
                 .exchange()
-                .expectStatus().isBadRequest()
+                .expectStatus().isUnauthorized()
                 .expectBody(String.class).isEqualTo("유효하지 않은 세션입니다.");
     }
 

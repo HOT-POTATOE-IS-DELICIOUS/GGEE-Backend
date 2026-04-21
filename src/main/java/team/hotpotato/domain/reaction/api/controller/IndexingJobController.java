@@ -1,5 +1,7 @@
 package team.hotpotato.domain.reaction.api.controller;
 
+import java.time.Duration;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -15,15 +17,26 @@ import team.hotpotato.domain.reaction.application.input.IndexingJobCompletionWai
 @RestController
 public class IndexingJobController {
 
+    private static final Duration HEARTBEAT_INTERVAL = Duration.ofSeconds(30);
+
     private final IndexingJobCompletionWaiter completionWaiter;
 
-    @GetMapping(value = "/{jobId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<String>> streamJobCompletion(@PathVariable String jobId) {
-        return completionWaiter.waitForCompletion(jobId)
+    @GetMapping(value = "/{job_id}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> streamJobCompletion(@PathVariable("job_id") String jobId) {
+        Flux<ServerSentEvent<String>> heartbeat = Flux.interval(HEARTBEAT_INTERVAL)
+                .map(i -> ServerSentEvent.<String>builder()
+                        .event("heartbeat")
+                        .data("ping")
+                        .build());
+
+        Flux<ServerSentEvent<String>> completion = completionWaiter.waitForCompletion(jobId)
                 .thenReturn(ServerSentEvent.<String>builder()
                         .event("completed")
                         .data("done")
                         .build())
                 .flux();
+
+        return Flux.merge(heartbeat, completion)
+                .takeUntil(event -> "completed".equals(event.event()));
     }
 }

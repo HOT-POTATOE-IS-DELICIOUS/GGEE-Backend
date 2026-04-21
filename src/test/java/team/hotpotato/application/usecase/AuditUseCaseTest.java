@@ -34,7 +34,6 @@ class AuditUseCaseTest {
             capturedArguments[1] = protectTargetInfo;
             capturedArguments[2] = text;
             return Mono.just(new AuditAnalysis(
-                    "550e8400-e29b-41d4-a716-446655440000",
                     List.of(new AuditReview(
                             new AuditSentence("여자는 원래 그런 거 아니야?", 13, 27),
                             List.of("gender"),
@@ -68,7 +67,6 @@ class AuditUseCaseTest {
                             "여자는 원래 그런 거 아니야?"
                     );
                     assertThat(result.auditId()).isEqualTo(9001L);
-                    assertThat(result.messageId()).isEqualTo("550e8400-e29b-41d4-a716-446655440000");
                     assertThat(result.reviews()).hasSize(1);
                     assertThat(result.reviews().getFirst().perspectiveIds()).containsExactly("gender");
                     assertThat(savedAudit[0]).isEqualTo(new Audit(
@@ -77,7 +75,6 @@ class AuditUseCaseTest {
                             "백종원",
                             "더본코리아",
                             "여자는 원래 그런 거 아니야?",
-                            "550e8400-e29b-41d4-a716-446655440000",
                             result.reviews()
                     ));
                 })
