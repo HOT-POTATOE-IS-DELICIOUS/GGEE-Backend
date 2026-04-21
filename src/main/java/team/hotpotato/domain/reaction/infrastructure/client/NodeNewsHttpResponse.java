@@ -4,6 +4,6 @@ import java.util.List;
 
 public record NodeNewsHttpResponse(
         String nodeId,
-        int count,
+        Integer count,
         List<NewsItemHttpResponse> news
 ) {}
