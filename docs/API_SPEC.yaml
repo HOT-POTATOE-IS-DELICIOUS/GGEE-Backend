@@ -405,17 +405,37 @@ paths:
       description: 로그인한 사용자의 전략 채팅방을 새로 생성합니다.
       security:
         - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoomRequest'
+            example:
+              message: "백종원 관련 최신 이슈를 분석해줘"
       responses:
         "200":
-          description: 채팅방 생성 성공
+          description: 채팅방 생성 성공 (SSE 스트림)
           content:
-            application/json:
+            text/event-stream:
               schema:
-                $ref: '#/components/schemas/StrategyRoomResponse'
-              example:
-                roomId: 107519243230003200
-                lastChattedAt: null
-                createdAt: "2024-03-15T10:00:00"
+                type: string
+              example: |
+                event: room_created
+                data: {"roomId": 107519243230003200}
+
+                event: content_chunk
+                data: {"delta": "안녕하세요"}
+
+                event: done
+                data: {"message_id": "abc123"}
+        "400":
+          description: 요청 본문 검증 실패
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "메시지를 입력해주세요."
         "401":
           description: 인증 실패 또는 세션 만료
           content:
@@ -788,6 +808,25 @@ components:
           minLength: 1
           example: "백종원 관련 최신 이슈를 분석해줘"
 
+    CreateStrategyRoomResponse:
+      type: object
+      properties:
+        roomId:
+          type: integer
+          format: int64
+          description: 생성된 채팅방 ID
+          example: 107519243230003200
+
+    CreateRoomRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          description: 첫 번째 채팅 메시지 (앞 12자가 방 제목으로 사용됨)
+          minLength: 1
+          example: "백종원 관련 최신 이슈를 분석해줘"
+
     StrategyRoomResponse:
       type: object
       properties:
@@ -796,6 +835,10 @@ components:
           format: int64
           description: 채팅방 ID
           example: 107519243230003200
+        title:
+          type: string
+          description: 채팅방 제목 (첫 메시지 앞 12자)
+          example: "백종원 관련 최신"
         lastChattedAt:
           type: string
           format: date-time
