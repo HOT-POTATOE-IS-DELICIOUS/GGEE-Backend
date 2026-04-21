@@ -5,19 +5,21 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
+  imagePullSecrets:
+    - name: harbor-pull-secret
   containers:
     - name: gradle
-      image: gradle:8.14.3-jdk21
+      image: ${HARBOR_URL}/library/gradle:8.14.3-jdk21
       command:
         - cat
       tty: true
     - name: git
-      image: alpine/git:2.47.2
+      image: ${HARBOR_URL}/library/alpine-git:2.47.2
       command:
         - cat
       tty: true
     - name: kaniko
-      image: gcr.io/kaniko-project/executor:debug
+      image: ${HARBOR_URL}/library/kaniko-executor:debug
       command:
         - cat
       tty: true
@@ -121,6 +123,7 @@ EOF
                                       --context="${WORKSPACE}" \
                                       --dockerfile="${WORKSPACE}/Dockerfile" \
                                       --destination="${IMAGE_REPOSITORY}:${IMAGE_TAG}" \
+                                      --build-arg "HARBOR_URL=${HARBOR_URL}" \
                                       --insecure \
                                       --insecure-pull \
                                       --skip-tls-verify \
@@ -134,6 +137,7 @@ EOF
                                   --context="${WORKSPACE}" \
                                   --dockerfile="${WORKSPACE}/Dockerfile" \
                                   --destination="${IMAGE_REPOSITORY}:${IMAGE_TAG}" \
+                                  --build-arg "HARBOR_URL=${HARBOR_URL}" \
                                   --no-push \
                                   --snapshot-mode=redo
                             '''
