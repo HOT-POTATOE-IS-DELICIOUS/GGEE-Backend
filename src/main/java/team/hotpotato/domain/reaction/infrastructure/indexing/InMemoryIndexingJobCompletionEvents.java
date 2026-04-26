@@ -1,5 +1,7 @@
 package team.hotpotato.domain.reaction.infrastructure.indexing;
 
+import java.time.Duration;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -10,9 +12,9 @@ import team.hotpotato.domain.reaction.application.output.IndexingJobCompletionEv
 @Component
 public class InMemoryIndexingJobCompletionEvents implements IndexingJobCompletionEvents {
 
-    private static final int BUFFER_SIZE = 256;
+    private static final Duration REPLAY_WINDOW = Duration.ofMinutes(2);
 
-    private final Sinks.Many<String> sink = Sinks.many().multicast().onBackpressureBuffer(BUFFER_SIZE);
+    private final Sinks.Many<String> sink = Sinks.many().replay().limit(REPLAY_WINDOW);
 
     public void complete(String jobId) {
         Sinks.EmitResult result = sink.tryEmitNext(jobId);
