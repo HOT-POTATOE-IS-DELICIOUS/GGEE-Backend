@@ -1,5 +1,6 @@
 package team.hotpotato.domain.strategy.infrastructure.client;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -18,10 +19,16 @@ public class StrategyAiClientAdapter implements StrategyAiClient {
 
     private final WebClient.Builder webClientBuilder;
     private final StrategyAiProperties properties;
+    private WebClient webClient;
+
+    @PostConstruct
+    public void init() {
+        this.webClient = webClientBuilder.baseUrl(properties.baseUrl()).build();
+    }
 
     @Override
     public Flux<ServerSentEvent<String>> stream(String message, String entityName, String entityInfo) {
-        return webClientBuilder.baseUrl(properties.baseUrl()).build()
+        return webClient
                 .post()
                 .uri("/strategy/stream")
                 .contentType(MediaType.APPLICATION_JSON)

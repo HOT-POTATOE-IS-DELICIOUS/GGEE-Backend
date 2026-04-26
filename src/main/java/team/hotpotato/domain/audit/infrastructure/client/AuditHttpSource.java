@@ -1,5 +1,6 @@
 package team.hotpotato.domain.audit.infrastructure.client;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -23,10 +24,16 @@ import java.util.concurrent.TimeoutException;
 public class AuditHttpSource implements AuditSource {
     private final WebClient.Builder webClientBuilder;
     private final AuditAiProperties properties;
+    private WebClient webClient;
+
+    @PostConstruct
+    public void init() {
+        this.webClient = webClientBuilder.baseUrl(properties.baseUrl()).build();
+    }
 
     @Override
     public Mono<AuditAnalysis> audit(String protectTarget, String protectTargetInfo, String text) {
-        return webClientBuilder.baseUrl(properties.baseUrl()).build()
+        return webClient
                 .post()
                 .uri("/audit")
                 .bodyValue(new AuditHttpRequest(protectTarget, protectTargetInfo, text))

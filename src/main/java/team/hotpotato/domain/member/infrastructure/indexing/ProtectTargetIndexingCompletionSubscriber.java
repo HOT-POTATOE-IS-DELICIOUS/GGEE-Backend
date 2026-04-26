@@ -1,9 +1,11 @@
 package team.hotpotato.domain.member.infrastructure.indexing;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxRepository;
 import team.hotpotato.domain.reaction.application.output.IndexingJobCompletionEvents;
@@ -15,10 +17,11 @@ public class ProtectTargetIndexingCompletionSubscriber {
 
     private final IndexingJobCompletionEvents completionEvents;
     private final ProtectTargetIndexingOutboxRepository outboxRepository;
+    private Disposable subscription;
 
     @PostConstruct
     public void subscribe() {
-        completionEvents.completions()
+        subscription = completionEvents.completions()
                 .flatMap(jobId -> {
                     try {
                         Long outboxId = Long.parseLong(jobId);
@@ -34,5 +37,13 @@ public class ProtectTargetIndexingCompletionSubscriber {
                     }
                 })
                 .subscribe();
+    }
+
+    @PreDestroy
+    public void cleanup() {
+        if (subscription != null && !subscription.isDisposed()) {
+            subscription.dispose();
+            log.info("인덱싱 완료 구독 해제 완료");
+        }
     }
 }

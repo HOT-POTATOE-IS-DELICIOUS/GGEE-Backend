@@ -1,5 +1,6 @@
 package team.hotpotato.domain.issue.infrastructure.client;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -22,10 +23,16 @@ import java.util.concurrent.TimeoutException;
 public class IssueGraphHttpSource implements IssueGraphSource {
     private final WebClient.Builder webClientBuilder;
     private final IssueAiProperties properties;
+    private WebClient webClient;
+
+    @PostConstruct
+    public void init() {
+        this.webClient = webClientBuilder.baseUrl(properties.baseUrl()).build();
+    }
 
     @Override
     public Mono<IssueGraph> read(String protectTarget, String protectTargetInfo) {
-        return webClientBuilder.baseUrl(properties.baseUrl()).build()
+        return webClient
                 .get()
                 .uri(uriBuilder -> {
                     var builder = uriBuilder.path("/issues")
