@@ -14,17 +14,11 @@ import team.hotpotato.infrastructure.r2dbc.common.BaseEntity;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserEntity extends BaseEntity {
     @Column("role")
-    String role;
+    private String role;
 
     @Column("email")
     private String email;
 
     @Column("password")
     private String password;
-
-    @Column("protect_target")
-    private String protectTarget;
-
-    @Column("protect_target_info")
-    private String protectTargetInfo;
 }

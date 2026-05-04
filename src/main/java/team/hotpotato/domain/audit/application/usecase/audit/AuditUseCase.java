@@ -8,25 +8,25 @@ import team.hotpotato.domain.audit.application.input.AuditStatement;
 import team.hotpotato.domain.audit.application.output.AuditRepository;
 import team.hotpotato.domain.audit.application.output.AuditSource;
 import team.hotpotato.domain.audit.domain.Audit;
-import team.hotpotato.domain.member.application.input.GetUser;
+import team.hotpotato.domain.protect.application.input.GetProtectByUserId;
 
 @Service
 @RequiredArgsConstructor
 public class AuditUseCase implements AuditStatement {
     private final AuditSource auditSource;
     private final AuditRepository auditRepository;
-    private final GetUser getUser;
+    private final GetProtectByUserId getProtectByUserId;
     private final IdGenerator idGenerator;
 
     @Override
     public Mono<AuditResult> audit(AuditCommand command) {
-        return getUser.get(command.userId())
-                .flatMap(user -> auditSource.audit(user.protectTarget(), user.protectTargetInfo(), command.text())
+        return getProtectByUserId.get(command.userId())
+                .flatMap(protect -> auditSource.audit(protect.target(), protect.info(), command.text())
                         .map(analysis -> new Audit(
                                 idGenerator.generateId(),
-                                user.id(),
-                                user.protectTarget(),
-                                user.protectTargetInfo(),
+                                protect.userId(),
+                                protect.target(),
+                                protect.info(),
                                 command.text(),
                                 analysis.reviews()
                         ))

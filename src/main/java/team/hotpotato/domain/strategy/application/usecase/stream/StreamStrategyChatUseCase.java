@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import team.hotpotato.common.identity.IdGenerator;
-import team.hotpotato.domain.member.application.input.GetUser;
+import team.hotpotato.domain.protect.application.input.GetProtectByUserId;
 import team.hotpotato.domain.strategy.application.input.StreamStrategyChat;
 import team.hotpotato.domain.strategy.application.output.StrategyAiClient;
 import team.hotpotato.domain.strategy.application.output.StrategyChatMessageRepository;
@@ -28,7 +28,7 @@ public class StreamStrategyChatUseCase implements StreamStrategyChat {
     private final StrategyChatRoomRepository roomRepository;
     private final StrategyChatMessageRepository messageRepository;
     private final StrategyAiClient aiClient;
-    private final GetUser getUser;
+    private final GetProtectByUserId getProtectByUserId;
     private final IdGenerator idGenerator;
     private final ObjectMapper objectMapper;
 
@@ -55,9 +55,9 @@ public class StreamStrategyChatUseCase implements StreamStrategyChat {
                 .then(roomRepository.updateLastChattedAt(room.id(), LocalDateTime.now()))
                 .thenReturn(room))
                 .flatMapMany(room ->
-                        getUser.get(command.userId())
-                                .flatMapMany(user ->
-                        aiClient.stream(command.message(), user.protectTarget(), user.protectTargetInfo())
+                        getProtectByUserId.get(command.userId())
+                                .flatMapMany(protect ->
+                        aiClient.stream(command.message(), protect.target(), protect.info())
                                 .doOnNext(event -> accumulate(event, contentBuffer, intentRef, refinedQueryRef, metaJsonRef))
                                 .concatMap(event -> {
                                     if ("done".equals(event.event())) {

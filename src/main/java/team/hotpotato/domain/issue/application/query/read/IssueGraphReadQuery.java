@@ -8,7 +8,7 @@ import team.hotpotato.domain.issue.application.output.IssueGraphSource;
 import team.hotpotato.domain.issue.domain.IssueConnection;
 import team.hotpotato.domain.issue.domain.IssueGraph;
 import team.hotpotato.domain.issue.domain.IssueNode;
-import team.hotpotato.domain.member.application.input.GetUser;
+import team.hotpotato.domain.protect.application.input.GetProtectByUserId;
 
 import java.util.Comparator;
 import java.util.List;
@@ -20,12 +20,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class IssueGraphReadQuery implements IssueGraphRead {
     private final IssueGraphSource issueGraphSource;
-    private final GetUser getUser;
+    private final GetProtectByUserId getProtectByUserId;
 
     @Override
     public Mono<IssueGraphReadResult> read(IssueGraphReadCommand command) {
-        return getUser.get(command.userId())
-                .flatMap(user -> issueGraphSource.read(user.protectTarget(), user.protectTargetInfo()))
+        return getProtectByUserId.get(command.userId())
+                .flatMap(protect -> issueGraphSource.read(protect.target(), protect.info()))
                 .map(this::normalize);
     }
 

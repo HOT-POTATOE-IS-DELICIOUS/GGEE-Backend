@@ -12,6 +12,7 @@ public enum ErrorCode {
     EMAIL_ALREADY_EXISTS("이미 존재하는 이메일입니다."),
     INVALID_EMAIL_FORMAT("올바르지 않은 이메일 형식입니다."),
     USER_NOT_FOUND("사용자를 찾을 수 없습니다."),
+    PROTECT_NOT_FOUND("보호 대상을 찾을 수 없습니다."),
     INVALID_EMAIL_OR_PASSWORD("이메일 또는 비밀번호가 올바르지 않습니다."),
     SESSION_EXPIRED("다른 기기에서 로그인되어 세션이 만료되었습니다."),
     INVALID_SESSION("유효하지 않은 세션입니다."),

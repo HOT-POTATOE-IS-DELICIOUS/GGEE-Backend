@@ -19,7 +19,7 @@ class GetUserQueryTest {
         UserRepository userRepository = new UserRepository() {
             @Override
             public Mono<User> findById(Long userId) {
-                return Mono.just(new User(7L, "user@test.com", "encoded-password", Role.USER, "백종원", "더본코리아"));
+                return Mono.just(new User(7L, "user@test.com", "encoded-password", Role.USER));
             }
 
             @Override
@@ -35,7 +35,7 @@ class GetUserQueryTest {
         GetUserQuery getUserQuery = new GetUserQuery(userRepository);
 
         StepVerifier.create(getUserQuery.get(7L))
-                .expectNext(new User(7L, "user@test.com", "encoded-password", Role.USER, "백종원", "더본코리아"))
+                .expectNext(new User(7L, "user@test.com", "encoded-password", Role.USER))
                 .verifyComplete();
     }
 

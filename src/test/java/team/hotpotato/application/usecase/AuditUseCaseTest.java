@@ -14,9 +14,8 @@ import team.hotpotato.domain.audit.domain.AuditAnalysis;
 import team.hotpotato.domain.audit.domain.AuditReview;
 import team.hotpotato.domain.audit.domain.AuditSentence;
 import team.hotpotato.domain.audit.domain.AuditSuggestion;
-import team.hotpotato.domain.member.application.input.GetUser;
-import team.hotpotato.domain.member.domain.Role;
-import team.hotpotato.domain.member.domain.User;
+import team.hotpotato.domain.protect.application.input.GetProtectByUserId;
+import team.hotpotato.domain.protect.domain.Protect;
 
 import java.util.List;
 
@@ -48,8 +47,8 @@ class AuditUseCaseTest {
                     ))
             ));
         };
-        GetUser getUser = userId -> Mono.just(
-                new User(7L, "user@test.com", "encoded-password", Role.USER, "백종원", "더본코리아")
+        GetProtectByUserId getProtectByUserId = userId -> Mono.just(
+                new Protect(42L, 7L, "백종원", "더본코리아")
         );
         IdGenerator idGenerator = () -> 9001L;
         Audit[] savedAudit = new Audit[1];
@@ -57,7 +56,7 @@ class AuditUseCaseTest {
             savedAudit[0] = audit;
             return Mono.just(audit);
         };
-        AuditUseCase useCase = new AuditUseCase(auditSource, auditRepository, getUser, idGenerator);
+        AuditUseCase useCase = new AuditUseCase(auditSource, auditRepository, getProtectByUserId, idGenerator);
 
         StepVerifier.create(useCase.audit(new AuditCommand(7L, "여자는 원래 그런 거 아니야?")))
                 .assertNext(result -> {

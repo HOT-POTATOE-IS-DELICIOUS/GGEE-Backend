@@ -14,19 +14,19 @@ import team.hotpotato.common.identity.IdGenerator;
 import team.hotpotato.common.transaction.ReactiveTransactionRunner;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.application.output.PasswordHasher;
-import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxRepository;
 import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.output.TokenGenerator;
 import team.hotpotato.domain.member.application.usecase.register.RegisterCommand;
 import team.hotpotato.domain.member.application.usecase.register.RegisterResult;
 import team.hotpotato.domain.member.application.output.UserRepository;
 import team.hotpotato.domain.member.application.usecase.register.UserRegisterUseCase;
-import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutbox;
-import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutboxStatus;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.Session;
 import team.hotpotato.domain.member.domain.User;
 import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
+import team.hotpotato.domain.protect.application.input.IndexProtect;
+import team.hotpotato.domain.protect.application.usecase.indexing.IndexProtectCommand;
+import team.hotpotato.domain.protect.application.usecase.indexing.IndexProtectResult;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,7 +40,7 @@ class UserRegisterUseCaseTest {
     private UserRepository userRepository;
 
     @Mock
-    private ProtectTargetIndexingOutboxRepository outboxRepository;
+    private IndexProtect indexProtect;
 
     @Mock
     private SessionRepository sessionRepository;
@@ -78,7 +78,7 @@ class UserRegisterUseCaseTest {
         };
         userRegisterUseCase = new UserRegisterUseCase(
                 userRepository,
-                outboxRepository,
+                indexProtect,
                 sessionRepository,
                 tokenGenerator,
                 idGenerator,
@@ -89,11 +89,12 @@ class UserRegisterUseCaseTest {
     }
 
     @Test
-    @DisplayName("회원가입 성공 시 사용자 저장과 outbox 적재가 함께 수행된다")
+    @DisplayName("회원가입 성공 시 사용자 저장과 protect 등록이 함께 수행된다")
     void registerCompletesAndStoresEncodedUser() {
-        when(idGenerator.generateId()).thenReturn(100L, 200L, 300L, 400L);
+        when(idGenerator.generateId()).thenReturn(100L, 300L, 400L);
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-        when(outboxRepository.save(any(ProtectTargetIndexingOutbox.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        when(indexProtect.index(any(IndexProtectCommand.class)))
+                .thenReturn(Mono.just(new IndexProtectResult(201L, 200L)));
         when(tokenGenerator.generateAccessToken(any(AuthPrincipal.class))).thenReturn("access-token");
         when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("refresh-token");
         when(sessionRepository.save(any(Session.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
@@ -105,27 +106,21 @@ class UserRegisterUseCaseTest {
                 .verifyComplete();
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        ArgumentCaptor<ProtectTargetIndexingOutbox> outboxCaptor = ArgumentCaptor.forClass(ProtectTargetIndexingOutbox.class);
-        verify(idGenerator, times(4)).generateId();
+        ArgumentCaptor<IndexProtectCommand> protectCaptor = ArgumentCaptor.forClass(IndexProtectCommand.class);
         verify(userRepository).save(userCaptor.capture());
-        verify(outboxRepository).save(outboxCaptor.capture());
-        verifyNoMoreInteractions(idGenerator, userRepository, outboxRepository);
+        verify(indexProtect).index(protectCaptor.capture());
 
         User savedUser = userCaptor.getValue();
         assertEquals(100L, savedUser.id());
         assertEquals("user@test.com", savedUser.email());
         assertEquals(Role.USER, savedUser.role());
-        assertEquals("brand", savedUser.protectTarget());
-        assertEquals("브랜드 공식몰", savedUser.protectTargetInfo());
         assertNotEquals("plainPassword", savedUser.password());
         assertTrue(passwordEncoder.matches("plainPassword", savedUser.password()));
 
-        ProtectTargetIndexingOutbox savedOutbox = outboxCaptor.getValue();
-        assertEquals(200L, savedOutbox.id());
-        assertEquals("brand", savedOutbox.protectTarget());
-        assertEquals("브랜드 공식몰", savedOutbox.protectTargetInfo());
-        assertEquals(ProtectTargetIndexingOutboxStatus.PENDING, savedOutbox.status());
-        assertNull(savedOutbox.publishedAt());
+        IndexProtectCommand protectCommand = protectCaptor.getValue();
+        assertEquals(100L, protectCommand.userId());
+        assertEquals("brand", protectCommand.target());
+        assertEquals("브랜드 공식몰", protectCommand.info());
     }
 
     @Test
@@ -143,28 +138,25 @@ class UserRegisterUseCaseTest {
 
         verify(idGenerator).generateId();
         verify(userRepository).save(any(User.class));
-        verifyNoInteractions(outboxRepository);
-        verifyNoMoreInteractions(idGenerator, userRepository);
+        verifyNoInteractions(indexProtect);
     }
 
     @Test
-    @DisplayName("outbox 저장이 실패하면 회원가입도 실패한다")
-    void registerFailsWhenOutboxSaveFails() {
-        RuntimeException expected = new RuntimeException("outbox failed");
-        when(idGenerator.generateId()).thenReturn(100L, 200L);
+    @DisplayName("protect 등록이 실패하면 회원가입도 실패한다")
+    void registerFailsWhenProtectRegistrationFails() {
+        RuntimeException expected = new RuntimeException("protect failed");
+        when(idGenerator.generateId()).thenReturn(100L);
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-        when(outboxRepository.save(any(ProtectTargetIndexingOutbox.class)))
+        when(indexProtect.index(any(IndexProtectCommand.class)))
                 .thenReturn(Mono.error(expected));
 
         StepVerifier.create(userRegisterUseCase.register(
-                        new RegisterCommand("user@test.com", "plainPassword", "brand", "브랜드 공식몰")
+                        new RegisterCommand("user@test.com", "plainPassword", "brand", "brand info")
                 ))
                 .expectErrorMatches(error -> error == expected)
                 .verify();
 
-        verify(idGenerator, times(2)).generateId();
         verify(userRepository).save(any(User.class));
-        verify(outboxRepository).save(any(ProtectTargetIndexingOutbox.class));
-        verifyNoMoreInteractions(idGenerator, userRepository, outboxRepository);
+        verify(indexProtect).index(any(IndexProtectCommand.class));
     }
 }

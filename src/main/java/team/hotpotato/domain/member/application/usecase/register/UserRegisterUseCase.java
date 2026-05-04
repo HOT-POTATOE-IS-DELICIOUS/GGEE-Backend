@@ -9,15 +9,14 @@ import team.hotpotato.common.transaction.ReactiveTransactionRunner;
 import team.hotpotato.domain.member.application.input.UserRegister;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.application.output.PasswordHasher;
-import team.hotpotato.domain.member.application.output.ProtectTargetIndexingOutboxRepository;
 import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.output.TokenGenerator;
 import team.hotpotato.domain.member.application.output.UserRepository;
-import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutbox;
-import team.hotpotato.domain.member.domain.ProtectTargetIndexingOutboxStatus;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.Session;
 import team.hotpotato.domain.member.domain.User;
+import team.hotpotato.domain.protect.application.input.IndexProtect;
+import team.hotpotato.domain.protect.application.usecase.indexing.IndexProtectCommand;
 
 import java.time.LocalDateTime;
 
@@ -25,7 +24,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class UserRegisterUseCase implements UserRegister {
     private final UserRepository userRepository;
-    private final ProtectTargetIndexingOutboxRepository outboxRepository;
+    private final IndexProtect indexProtect;
     private final SessionRepository sessionRepository;
     private final TokenGenerator tokenGenerator;
     private final IdGenerator idGenerator;
@@ -37,10 +36,16 @@ public class UserRegisterUseCase implements UserRegister {
     public Mono<RegisterResult> register(RegisterCommand registerCommand) {
         return createUser(registerCommand)
                 .flatMap(user -> userRepository.save(user)
-                        .flatMap(savedUser -> saveOutbox(savedUser)
-                                .flatMap(outbox -> createSession(savedUser)
+                        .flatMap(savedUser -> indexProtect.index(
+                                        new IndexProtectCommand(
+                                                savedUser.id(),
+                                                registerCommand.protectTarget(),
+                                                registerCommand.protectTargetInfo()
+                                        )
+                                )
+                                .flatMap(protectResult -> createSession(savedUser)
                                         .map(tokens -> new RegisterResult(
-                                                String.valueOf(outbox.id()),
+                                                String.valueOf(protectResult.indexingJobId()),
                                                 tokens[0],
                                                 tokens[1]
                                         ))
@@ -75,20 +80,7 @@ public class UserRegisterUseCase implements UserRegister {
                         idGenerator.generateId(),
                         registerCommand.email(),
                         hashedPassword,
-                        Role.USER,
-                        registerCommand.protectTarget(),
-                        registerCommand.protectTargetInfo()
+                        Role.USER
                 ));
     }
-
-    private Mono<ProtectTargetIndexingOutbox> saveOutbox(User savedUser) {
-        return outboxRepository.save(new ProtectTargetIndexingOutbox(
-                idGenerator.generateId(),
-                savedUser.protectTarget(),
-                savedUser.protectTargetInfo(),
-                ProtectTargetIndexingOutboxStatus.PENDING,
-                null
-        ));
-    }
-
 }

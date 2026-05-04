@@ -7,12 +7,11 @@ import reactor.test.StepVerifier;
 import team.hotpotato.domain.issue.application.output.IssueGraphSource;
 import team.hotpotato.domain.issue.application.query.read.IssueGraphReadCommand;
 import team.hotpotato.domain.issue.application.query.read.IssueGraphReadQuery;
-import team.hotpotato.domain.member.application.input.GetUser;
 import team.hotpotato.domain.issue.domain.IssueConnection;
 import team.hotpotato.domain.issue.domain.IssueGraph;
 import team.hotpotato.domain.issue.domain.IssueNode;
-import team.hotpotato.domain.member.domain.Role;
-import team.hotpotato.domain.member.domain.User;
+import team.hotpotato.domain.protect.application.input.GetProtectByUserId;
+import team.hotpotato.domain.protect.domain.Protect;
 
 import java.util.List;
 
@@ -24,8 +23,8 @@ class IssueGraphReadQueryTest {
     @Test
     @DisplayName("로그인한 사용자의 보호 대상 정보로 이슈 계통도를 조회하고 정규화한다")
     void readNormalizesIssueGraph() {
-        GetUser getUser = userId -> Mono.just(
-                new User(7L, "user@test.com", "encoded-password", Role.USER, "백종원", "더본코리아")
+        GetProtectByUserId getProtectByUserId = userId -> Mono.just(
+                new Protect(42L, 7L, "백종원", "더본코리아")
         );
         String[] capturedArguments = new String[2];
         IssueGraphSource source = (protectTarget, protectTargetInfo) -> {
@@ -40,7 +39,7 @@ class IssueGraphReadQueryTest {
                 List.of(new IssueConnection("older", "latest", 0.847))
             ));
         };
-        IssueGraphReadQuery query = new IssueGraphReadQuery(source, getUser);
+        IssueGraphReadQuery query = new IssueGraphReadQuery(source, getProtectByUserId);
 
         StepVerifier.create(query.read(new IssueGraphReadCommand(7L)))
                 .assertNext(result -> {

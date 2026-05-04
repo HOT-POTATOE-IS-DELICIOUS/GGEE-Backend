@@ -45,6 +45,8 @@ ggee:
       timeout: 3s
   member:
     protect-target-indexing-dispatch-delay: 60000
+    # "-": Spring @Scheduled disable token (Scheduled.CRON_DISABLED)
+    protect-target-refresh-cron: "-"
   crawler:
     crawl-job-outbox-dispatch-delay: 60000
     dedup-store-name: ggee-crawler-dedup-store
