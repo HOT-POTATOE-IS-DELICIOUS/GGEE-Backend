@@ -59,9 +59,9 @@ public class UserLoginUseCase implements UserLogin {
 
                     return sessionRepository.invalidateByUserId(user.id())
                             .then(sessionRepository.save(newSession))
+                            .as(transactionRunner::transactional)
                             .thenReturn(new LoginResult(accessToken, refreshToken));
-                })
-                .as(transactionRunner::transactional);
+                });
     }
 
     private Mono<Boolean> isPasswordMatched(String rawPassword, String encodedPassword) {

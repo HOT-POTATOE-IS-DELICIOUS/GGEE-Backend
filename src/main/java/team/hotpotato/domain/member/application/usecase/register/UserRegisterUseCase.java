@@ -37,7 +37,13 @@ public class UserRegisterUseCase implements UserRegister {
 
     @Override
     public Mono<RegisterResult> register(RegisterCommand registerCommand) {
-        return createUser(registerCommand)
+        return passwordHasher.hash(registerCommand.password())
+                .map(hashedPassword -> new User(
+                        idGenerator.generateId(),
+                        registerCommand.email(),
+                        hashedPassword,
+                        Role.USER
+                ))
                 .flatMap(user -> userRepository.save(user)
                         .flatMap(savedUser -> indexProtect.index(
                                         new IndexProtectCommand(
@@ -48,8 +54,8 @@ public class UserRegisterUseCase implements UserRegister {
                                 )
                                 .map(protectResult -> new PersistedRegistration(savedUser, protectResult))
                         )
+                        .as(transactionRunner::transactional)
                 )
-                .as(transactionRunner::transactional)
                 .flatMap(persisted -> createSession(persisted.user())
                         .map(tokens -> new RegisterResult(
                                 String.valueOf(persisted.protectResult().indexingJobId()),
@@ -81,13 +87,4 @@ public class UserRegisterUseCase implements UserRegister {
                 .thenReturn(new String[]{accessToken, refreshToken});
     }
 
-    private Mono<User> createUser(RegisterCommand registerCommand) {
-        return passwordHasher.hash(registerCommand.password())
-                .map(hashedPassword -> new User(
-                        idGenerator.generateId(),
-                        registerCommand.email(),
-                        hashedPassword,
-                        Role.USER
-                ));
-    }
 }
