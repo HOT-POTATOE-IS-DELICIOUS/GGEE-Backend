@@ -1,8 +1,8 @@
 package team.hotpotato.domain.strategy.infrastructure.client;
 
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -17,12 +17,19 @@ import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class StrategyAiClientAdapter implements StrategyAiClient {
 
     private final WebClient.Builder webClientBuilder;
     private final StrategyAiProperties properties;
     private WebClient webClient;
+
+    public StrategyAiClientAdapter(
+            @Qualifier("strategyAiWebClientBuilder") WebClient.Builder webClientBuilder,
+            StrategyAiProperties properties
+    ) {
+        this.webClientBuilder = webClientBuilder;
+        this.properties = properties;
+    }
 
     @PostConstruct
     public void init() {
