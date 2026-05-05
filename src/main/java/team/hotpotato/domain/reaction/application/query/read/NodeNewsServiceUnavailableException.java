@@ -1,9 +1,12 @@
 package team.hotpotato.domain.reaction.application.query.read;
 
-public class NodeNewsServiceUnavailableException extends RuntimeException {
-    public static final NodeNewsServiceUnavailableException EXCEPTION = new NodeNewsServiceUnavailableException();
+import team.hotpotato.common.exception.BusinessBaseException;
+import team.hotpotato.common.exception.ErrorCode;
+
+public class NodeNewsServiceUnavailableException extends BusinessBaseException {
+    public static final BusinessBaseException EXCEPTION = new NodeNewsServiceUnavailableException();
 
     private NodeNewsServiceUnavailableException() {
-        super("News service is unavailable");
+        super(ErrorCode.NEWS_SERVICE_UNAVAILABLE);
     }
 }
