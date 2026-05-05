@@ -105,6 +105,7 @@ public class ProtectTargetIndexingOutboxRepositoryAdapter implements ProtectTarg
         return template.update(
                 Query.query(
                         Criteria.where("status").is(ProtectTargetIndexingOutboxStatus.IN_PROGRESS.name())
+                                .and("claimed_at").isNotNull()
                                 .and("claimed_at").lessThan(cutoff)
                                 .and("deleted").is(false)
                 ),

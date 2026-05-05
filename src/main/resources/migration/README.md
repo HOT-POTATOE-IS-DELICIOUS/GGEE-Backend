@@ -65,3 +65,15 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f V20260507__outbox_claimed_at.sql
 ```
 
 `IF NOT EXISTS`로 idempotent.
+
+## V20260508__outbox_in_progress_partial_index.sql
+
+**배경**: `recoverStaleClaimed` 쿼리(`WHERE status='IN_PROGRESS' AND claimed_at < cutoff AND deleted=false`)가 기존 `(status, "createdAt")` 인덱스를 활용하지 못해, 장애 복구 시점(즉 outbox에 IN_PROGRESS가 누적된 그 순간)에 가장 느린 문제. IN_PROGRESS 상태만 들어가는 partial index를 추가.
+
+**적용 방법**:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f V20260508__outbox_in_progress_partial_index.sql
+```
+
+`IF NOT EXISTS`로 idempotent. 정상 트래픽에서 IN_PROGRESS는 단명 상태이므로 인덱스 유지비는 미미하다.

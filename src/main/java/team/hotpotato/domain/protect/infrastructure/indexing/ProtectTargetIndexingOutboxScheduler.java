@@ -19,20 +19,26 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class ProtectTargetIndexingOutboxScheduler {
 
-    private static final Duration STALE_CLAIM_THRESHOLD = Duration.ofMinutes(5);
-
     private final ProtectTargetIndexingOutboxDispatchUseCase dispatchUseCase;
     private final ProtectTargetIndexingOutboxRepository outboxRepository;
 
     @Value("${ggee.member.protect-target-indexing-dispatch-delay}")
     private long delayMillis;
 
+    /**
+     * 부팅 시 IN_PROGRESS 상태로 stuck된 outbox 행을 PENDING으로 회수하기 위한 임계값.
+     * 정상 dispatch(claim → publish → markPublished)가 이 시간 이상 걸릴 일은 거의 없어야 한다.
+     * Kafka send timeout과 정합되도록 운영 환경별 튜닝 가능.
+     */
+    @Value("${ggee.member.protect-target-indexing-stale-claim-threshold:5m}")
+    private Duration staleClaimThreshold;
+
     private Disposable subscription;
 
     // @PostConstruct는 Spring 라이프사이클 진입점이므로 subscribe() 호출이 허용된다.
     @PostConstruct
     public void start() {
-        Mono<Void> recoverStaleClaim = outboxRepository.recoverStaleClaimed(STALE_CLAIM_THRESHOLD)
+        Mono<Void> recoverStaleClaim = outboxRepository.recoverStaleClaimed(staleClaimThreshold)
                 .doOnNext(recovered -> {
                     if (recovered > 0) {
                         log.warn("부팅 시 stuck IN_PROGRESS outbox {}건을 PENDING으로 회수했습니다.", recovered);

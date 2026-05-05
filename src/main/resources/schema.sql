@@ -52,6 +52,10 @@ CREATE TABLE IF NOT EXISTS protect_target_indexing_outbox (
 CREATE INDEX IF NOT EXISTS idx_protect_target_indexing_outbox_status_created_at
     ON protect_target_indexing_outbox (status, "createdAt");
 
+CREATE INDEX IF NOT EXISTS idx_outbox_in_progress_claimed_at
+    ON protect_target_indexing_outbox (claimed_at)
+    WHERE status = 'IN_PROGRESS' AND deleted = false;
+
 CREATE TABLE IF NOT EXISTS audits (
     id BIGINT PRIMARY KEY,
     user_id BIGINT NOT NULL,
