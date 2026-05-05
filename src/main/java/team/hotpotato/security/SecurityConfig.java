@@ -14,6 +14,8 @@ import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
 import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
 
+import java.time.Clock;
+
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -22,10 +24,11 @@ public class SecurityConfig {
     private final SessionRepository sessionRepository;
     private final ErrorCodeHttpStatusMapper errorCodeHttpStatusMapper;
     private final TokenProperties tokenProperties;
+    private final Clock clock;
 
     @Bean
     public AuthFilter authFilter() {
-        return new AuthFilter(tokenResolver, sessionRepository, errorCodeHttpStatusMapper, tokenProperties);
+        return new AuthFilter(tokenResolver, sessionRepository, errorCodeHttpStatusMapper, tokenProperties, clock);
     }
 
     @Bean

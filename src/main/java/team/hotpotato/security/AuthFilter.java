@@ -19,6 +19,7 @@ import team.hotpotato.domain.member.application.usecase.login.SessionExpiredExce
 import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
 import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,6 +30,7 @@ public class AuthFilter implements WebFilter {
     private final SessionRepository sessionRepository;
     private final ErrorCodeHttpStatusMapper errorCodeHttpStatusMapper;
     private final TokenProperties tokenProperties;
+    private final Clock clock;
     private final ServerWebExchangeMatcher publicPathMatcher =
             ServerWebExchangeMatchers.pathMatchers(SecurityPaths.PUBLIC_PATHS);
 
@@ -69,7 +71,7 @@ public class AuthFilter implements WebFilter {
         return sessionRepository.findBySessionId(principal.sessionId())
                 .switchIfEmpty(Mono.error(InvalidSessionException.EXCEPTION))
                 .flatMap(session -> {
-                    if (session.expiresAt().isBefore(LocalDateTime.now())) {
+                    if (session.expiresAt().isBefore(LocalDateTime.now(clock))) {
                         return Mono.error(SessionExpiredException.EXCEPTION);
                     }
                     return Mono.empty();

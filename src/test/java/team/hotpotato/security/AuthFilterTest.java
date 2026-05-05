@@ -19,6 +19,7 @@ import team.hotpotato.domain.member.infrastructure.jwt.InvalidTokenException;
 import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
 import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -32,6 +33,8 @@ class AuthFilterTest {
     private static final TokenProperties TOKEN_PROPERTIES = new TokenProperties(
             3600L, 7200L, "Bearer ", "Authorization", "ignored"
     );
+
+    private static final Clock CLOCK = Clock.systemDefaultZone();
 
     private SessionRepository mockSessionRepositoryWithActiveSession(Long userId, String sessionId) {
         SessionRepository sessionRepository = mock(SessionRepository.class);
@@ -53,7 +56,8 @@ class AuthFilterTest {
                 tokenResolver,
                 sessionRepository,
                 new ErrorCodeHttpStatusMapper(),
-                TOKEN_PROPERTIES
+                TOKEN_PROPERTIES,
+                CLOCK
         );
 
         MockServerWebExchange exchange = MockServerWebExchange.from(
@@ -86,7 +90,8 @@ class AuthFilterTest {
                 tokenResolver,
                 sessionRepository,
                 new ErrorCodeHttpStatusMapper(),
-                TOKEN_PROPERTIES
+                TOKEN_PROPERTIES,
+                CLOCK
         );
 
         MockServerWebExchange exchange = MockServerWebExchange.from(
@@ -119,7 +124,8 @@ class AuthFilterTest {
                 tokenResolver,
                 sessionRepository,
                 new ErrorCodeHttpStatusMapper(),
-                TOKEN_PROPERTIES
+                TOKEN_PROPERTIES,
+                CLOCK
         );
 
         MockServerWebExchange exchange = MockServerWebExchange.from(
@@ -155,7 +161,8 @@ class AuthFilterTest {
                 tokenResolver,
                 sessionRepository,
                 new ErrorCodeHttpStatusMapper(),
-                customProps
+                customProps,
+                CLOCK
         );
 
         MockServerWebExchange ignoredExchange = MockServerWebExchange.from(
@@ -205,7 +212,8 @@ class AuthFilterTest {
                 tokenResolver,
                 sessionRepository,
                 new ErrorCodeHttpStatusMapper(),
-                TOKEN_PROPERTIES
+                TOKEN_PROPERTIES,
+                CLOCK
         );
 
         MockServerWebExchange exchange = MockServerWebExchange.from(
@@ -237,7 +245,8 @@ class AuthFilterTest {
                 tokenResolver,
                 sessionRepository,
                 new ErrorCodeHttpStatusMapper(),
-                TOKEN_PROPERTIES
+                TOKEN_PROPERTIES,
+                CLOCK
         );
 
         MockServerWebExchange exchange = MockServerWebExchange.from(
