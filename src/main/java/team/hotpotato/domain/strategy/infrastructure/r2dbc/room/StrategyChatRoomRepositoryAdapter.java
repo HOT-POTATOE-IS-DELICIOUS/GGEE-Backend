@@ -46,7 +46,8 @@ public class StrategyChatRoomRepositoryAdapter implements StrategyChatRoomReposi
     @Override
     public Mono<Void> updateLastChattedAt(Long roomId, java.time.LocalDateTime at) {
         return template.update(StrategyChatRoomEntity.class)
-                .matching(Query.query(Criteria.where("id").is(roomId)))
+                .matching(Query.query(Criteria.where("id").is(roomId)
+                        .and("deleted").is(false)))
                 .apply(Update.update("last_chatted_at", at))
                 .then();
     }

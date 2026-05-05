@@ -17,7 +17,8 @@ public class UserRepositoryAdapter implements UserRepository {
     @Override
     public Mono<User> findById(Long userId) {
         return template.selectOne(
-                        Query.query(Criteria.where("id").is(userId)),
+                        Query.query(Criteria.where("id").is(userId)
+                                .and("deleted").is(false)),
                         UserEntity.class
                 )
                 .map(UserEntityMapper::toDomain);
@@ -26,7 +27,8 @@ public class UserRepositoryAdapter implements UserRepository {
     @Override
     public Mono<User> findByEmail(String email) {
         return template.selectOne(
-                        Query.query(Criteria.where("email").is(email)),
+                        Query.query(Criteria.where("email").is(email)
+                                .and("deleted").is(false)),
                         UserEntity.class
                 )
                 .map(UserEntityMapper::toDomain);
