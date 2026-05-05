@@ -20,6 +20,7 @@ public enum ErrorCode {
     AUDIT_SERVICE_UNAVAILABLE("입장문 검수 서버와 통신할 수 없습니다."),
     STRATEGY_AI_SERVICE_UNAVAILABLE("전략 AI 서버와 통신할 수 없습니다."),
     STRATEGY_ROOM_NOT_FOUND("전략 채팅방을 찾을 수 없습니다."),
+    NEWS_SERVICE_UNAVAILABLE("뉴스 조회 서버와 통신할 수 없습니다."),
 
     METHOD_NOT_ALLOWED("잘못된 HTTP 메서드를 호출했습니다."),
     INTERNAL_SERVER_ERROR("서버 에러가 발생했습니다."),

@@ -170,8 +170,8 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("access token을 refresh 엔드포인트에 전달하면 400을 반환한다")
-    void refreshReturnsBadRequestWhenAccessTokenIsProvided() {
+    @DisplayName("access token을 refresh 엔드포인트에 전달하면 401을 반환한다")
+    void refreshReturnsUnauthorizedWhenAccessTokenIsProvided() {
         when(userTokenRefresh.refresh(any(RefreshCommand.class)))
                 .thenReturn(Mono.error(InvalidTokenTypeException.EXCEPTION));
 
@@ -184,13 +184,13 @@ class AuthControllerTest {
                         }
                         """)
                 .exchange()
-                .expectStatus().isBadRequest()
+                .expectStatus().isUnauthorized()
                 .expectBody(String.class).isEqualTo("올바르지 않은 JWT 토큰 타입입니다.");
     }
 
     @Test
-    @DisplayName("변조된 JWT로 갱신 요청하면 400을 반환한다")
-    void refreshReturnsBadRequestWhenJwtIsTampered() {
+    @DisplayName("변조된 JWT로 갱신 요청하면 401을 반환한다")
+    void refreshReturnsUnauthorizedWhenJwtIsTampered() {
         when(userTokenRefresh.refresh(any(RefreshCommand.class)))
                 .thenReturn(Mono.error(InvalidTokenException.EXCEPTION));
 
@@ -203,7 +203,7 @@ class AuthControllerTest {
                         }
                         """)
                 .exchange()
-                .expectStatus().isBadRequest()
+                .expectStatus().isUnauthorized()
                 .expectBody(String.class).isEqualTo("올바르지 않은 JWT 토큰입니다.");
     }
 

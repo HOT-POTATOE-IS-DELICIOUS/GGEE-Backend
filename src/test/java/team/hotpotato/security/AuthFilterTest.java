@@ -104,7 +104,7 @@ class AuthFilterTest {
                 .verifyComplete();
 
         assertThat(chainCalled).isFalse();
-        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
@@ -137,7 +137,7 @@ class AuthFilterTest {
                 .verifyComplete();
 
         assertThat(chainCalled).isFalse();
-        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
