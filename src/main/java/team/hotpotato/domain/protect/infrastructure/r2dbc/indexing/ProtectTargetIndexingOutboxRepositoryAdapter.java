@@ -41,9 +41,26 @@ public class ProtectTargetIndexingOutboxRepositoryAdapter implements ProtectTarg
     }
 
     @Override
+    public Mono<Long> claim(Long outboxId) {
+        return template.update(
+                Query.query(
+                        Criteria.where("id").is(outboxId)
+                                .and("status").is(ProtectTargetIndexingOutboxStatus.PENDING.name())
+                                .and("deleted").is(false)
+                ),
+                Update.update("status", ProtectTargetIndexingOutboxStatus.IN_PROGRESS.name()),
+                ProtectTargetIndexingOutboxEntity.class
+        );
+    }
+
+    @Override
     public Mono<Void> markPublished(Long outboxId) {
         return template.update(
-                        Query.query(Criteria.where("id").is(outboxId).and("deleted").is(false)),
+                        Query.query(
+                                Criteria.where("id").is(outboxId)
+                                        .and("status").is(ProtectTargetIndexingOutboxStatus.IN_PROGRESS.name())
+                                        .and("deleted").is(false)
+                        ),
                         Update.update("status", ProtectTargetIndexingOutboxStatus.PUBLISHED.name())
                                 .set("published_at", LocalDateTime.now()),
                         ProtectTargetIndexingOutboxEntity.class
@@ -54,8 +71,26 @@ public class ProtectTargetIndexingOutboxRepositoryAdapter implements ProtectTarg
     @Override
     public Mono<Void> markCompleted(Long outboxId) {
         return template.update(
-                        Query.query(Criteria.where("id").is(outboxId).and("deleted").is(false)),
+                        Query.query(
+                                Criteria.where("id").is(outboxId)
+                                        .and("status").is(ProtectTargetIndexingOutboxStatus.PUBLISHED.name())
+                                        .and("deleted").is(false)
+                        ),
                         Update.update("status", ProtectTargetIndexingOutboxStatus.COMPLETED.name()),
+                        ProtectTargetIndexingOutboxEntity.class
+                )
+                .then();
+    }
+
+    @Override
+    public Mono<Void> rollbackToPending(Long outboxId) {
+        return template.update(
+                        Query.query(
+                                Criteria.where("id").is(outboxId)
+                                        .and("status").is(ProtectTargetIndexingOutboxStatus.IN_PROGRESS.name())
+                                        .and("deleted").is(false)
+                        ),
+                        Update.update("status", ProtectTargetIndexingOutboxStatus.PENDING.name()),
                         ProtectTargetIndexingOutboxEntity.class
                 )
                 .then();
