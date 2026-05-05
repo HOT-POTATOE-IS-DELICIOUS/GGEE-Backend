@@ -192,7 +192,7 @@ class AuthFilterTest {
     }
 
     @Test
-    @DisplayName("findBySessionId 기반으로 세션 검증을 수행한다 — 만료된 세션이면 에러 응답을 반환한다")
+    @DisplayName("findBySessionId 기반으로 세션 검증을 수행한다 — 세션이 존재하지 않으면 에러 응답을 반환한다")
     void expiredSessionOnProtectedPathReturnsErrorResponse() {
         String sessionId = "expired-session-id";
         TokenResolver tokenResolver = mock(TokenResolver.class);
@@ -200,6 +200,38 @@ class AuthFilterTest {
 
         SessionRepository sessionRepository = mock(SessionRepository.class);
         when(sessionRepository.findBySessionId(sessionId)).thenReturn(Mono.empty());
+
+        AuthFilter authFilter = new AuthFilter(
+                tokenResolver,
+                sessionRepository,
+                new ErrorCodeHttpStatusMapper(),
+                TOKEN_PROPERTIES
+        );
+
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/members/me")
+                        .header("Authorization", "Bearer valid-token")
+                        .build()
+        );
+
+        StepVerifier.create(authFilter.filter(exchange, webExchange -> Mono.empty()))
+                .verifyComplete();
+
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("세션이 존재하나 expires_at이 지났으면 401을 반환한다")
+    void sessionPastExpiresAtReturnsUnauthorized() {
+        String sessionId = "past-expiry-session";
+        TokenResolver tokenResolver = mock(TokenResolver.class);
+        when(tokenResolver.resolve("Bearer valid-token"))
+                .thenReturn(Mono.just(new AuthPrincipal(7L, Role.USER, sessionId)));
+
+        SessionRepository sessionRepository = mock(SessionRepository.class);
+        when(sessionRepository.findBySessionId(sessionId)).thenReturn(Mono.just(
+                new Session(2L, 7L, sessionId, "hash-value", LocalDateTime.now().minusSeconds(1))
+        ));
 
         AuthFilter authFilter = new AuthFilter(
                 tokenResolver,

@@ -14,10 +14,12 @@ import team.hotpotato.common.exception.BusinessBaseException;
 import team.hotpotato.domain.member.application.input.TokenResolver;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.application.output.SessionRepository;
+import team.hotpotato.domain.member.application.usecase.login.InvalidSessionException;
 import team.hotpotato.domain.member.application.usecase.login.SessionExpiredException;
 import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
 import team.hotpotato.support.advice.ErrorCodeHttpStatusMapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -65,7 +67,13 @@ public class AuthFilter implements WebFilter {
 
     private Mono<Void> validateSession(AuthPrincipal principal) {
         return sessionRepository.findBySessionId(principal.sessionId())
-                .switchIfEmpty(Mono.error(SessionExpiredException.EXCEPTION))
+                .switchIfEmpty(Mono.error(InvalidSessionException.EXCEPTION))
+                .flatMap(session -> {
+                    if (session.expiresAt().isBefore(LocalDateTime.now())) {
+                        return Mono.error(SessionExpiredException.EXCEPTION);
+                    }
+                    return Mono.empty();
+                })
                 .then();
     }
 
