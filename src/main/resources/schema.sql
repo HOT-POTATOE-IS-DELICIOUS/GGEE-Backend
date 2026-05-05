@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS protect_target_indexing_outbox (
     protect_target VARCHAR(255) NOT NULL,
     protect_target_info VARCHAR(255) NOT NULL,
     status VARCHAR(32) NOT NULL,
+    claimed_at TIMESTAMP NULL,
     published_at TIMESTAMP NULL,
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted BOOLEAN NOT NULL DEFAULT FALSE,

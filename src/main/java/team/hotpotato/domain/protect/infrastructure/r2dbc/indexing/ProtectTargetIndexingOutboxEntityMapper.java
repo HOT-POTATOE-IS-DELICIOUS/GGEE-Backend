@@ -14,6 +14,7 @@ public final class ProtectTargetIndexingOutboxEntityMapper {
                 .protectTarget(outbox.protectTarget())
                 .protectTargetInfo(outbox.protectTargetInfo())
                 .status(outbox.status().name())
+                .claimedAt(null)
                 .publishedAt(outbox.publishedAt())
                 .build();
     }

@@ -24,6 +24,9 @@ public class ProtectTargetIndexingOutboxEntity extends BaseEntity {
     @Column("status")
     private String status;
 
+    @Column("claimed_at")
+    private LocalDateTime claimedAt;
+
     @Column("published_at")
     private LocalDateTime publishedAt;
 }

@@ -13,6 +13,7 @@ import team.hotpotato.domain.protect.application.output.ProtectTargetIndexingOut
 import team.hotpotato.domain.protect.domain.ProtectTargetIndexingOutbox;
 import team.hotpotato.domain.protect.domain.ProtectTargetIndexingOutboxStatus;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Repository
@@ -48,7 +49,8 @@ public class ProtectTargetIndexingOutboxRepositoryAdapter implements ProtectTarg
                                 .and("status").is(ProtectTargetIndexingOutboxStatus.PENDING.name())
                                 .and("deleted").is(false)
                 ),
-                Update.update("status", ProtectTargetIndexingOutboxStatus.IN_PROGRESS.name()),
+                Update.update("status", ProtectTargetIndexingOutboxStatus.IN_PROGRESS.name())
+                        .set("claimed_at", LocalDateTime.now()),
                 ProtectTargetIndexingOutboxEntity.class
         );
     }
@@ -90,9 +92,25 @@ public class ProtectTargetIndexingOutboxRepositoryAdapter implements ProtectTarg
                                         .and("status").is(ProtectTargetIndexingOutboxStatus.IN_PROGRESS.name())
                                         .and("deleted").is(false)
                         ),
-                        Update.update("status", ProtectTargetIndexingOutboxStatus.PENDING.name()),
+                        Update.update("status", ProtectTargetIndexingOutboxStatus.PENDING.name())
+                                .set("claimed_at", null),
                         ProtectTargetIndexingOutboxEntity.class
                 )
                 .then();
+    }
+
+    @Override
+    public Mono<Long> recoverStaleClaimed(Duration staleThreshold) {
+        LocalDateTime cutoff = LocalDateTime.now().minus(staleThreshold);
+        return template.update(
+                Query.query(
+                        Criteria.where("status").is(ProtectTargetIndexingOutboxStatus.IN_PROGRESS.name())
+                                .and("claimed_at").lessThan(cutoff)
+                                .and("deleted").is(false)
+                ),
+                Update.update("status", ProtectTargetIndexingOutboxStatus.PENDING.name())
+                        .set("claimed_at", null),
+                ProtectTargetIndexingOutboxEntity.class
+        );
     }
 }

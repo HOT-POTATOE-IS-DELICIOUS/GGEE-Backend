@@ -53,3 +53,15 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f V20260505__drop_updated_at.sql
 ```
 
 `IF EXISTS`를 사용하므로 idempotent — 재실행해도 안전합니다.
+
+## V20260507__outbox_claimed_at.sql
+
+**배경**: `protect_target_indexing_outbox`의 `IN_PROGRESS` 상태가 dispatcher 크래시/재시작으로 영구히 stuck 되는 문제. `claimed_at`을 추가해 부팅 시 일정 시간(기본 5분)이 지난 IN_PROGRESS 행을 PENDING으로 회수한다.
+
+**적용 방법**:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f V20260507__outbox_claimed_at.sql
+```
+
+`IF NOT EXISTS`로 idempotent.
