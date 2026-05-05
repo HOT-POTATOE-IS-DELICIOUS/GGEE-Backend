@@ -3,6 +3,8 @@ spring:
     import: "optional:file:.env[.properties]"
   application:
     name: GGEE-Backend
+  codec:
+    max-in-memory-size: 2MB
   r2dbc:
     url: ${SPRING_R2DBC_URL}
     username: ${SPRING_R2DBC_USERNAME}
@@ -68,6 +70,7 @@ ggee:
       timeout: ${GGEE_AI_REACTION_TIMEOUT}
     strategy:
       base-url: ${GGEE_AI_STRATEGY_BASE_URL}
+      timeout: ${GGEE_AI_STRATEGY_TIMEOUT}
   crawler:
     dedup-store-name: ggee-crawler-dedup-store
     dedup-ttl: ${GGEE_CRAWLER_DEDUP_TTL}
