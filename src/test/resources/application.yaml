@@ -1,6 +1,8 @@
 spring:
   application:
     name: test-ggee-backend
+  jackson:
+    property-naming-strategy: SNAKE_CASE
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/test
     username: test
@@ -43,6 +45,9 @@ ggee:
     reaction:
       base-url: http://localhost:18082
       timeout: 3s
+    strategy:
+      base-url: http://localhost:18083
+      timeout: 30s
   member:
     protect-target-indexing-dispatch-delay: 60000
     # "-": Spring @Scheduled disable token (Scheduled.CRON_DISABLED)

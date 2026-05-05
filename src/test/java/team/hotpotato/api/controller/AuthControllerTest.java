@@ -84,8 +84,8 @@ class AuthControllerTest {
                         {
                           "email": "user@test.com",
                           "password": "plainPassword",
-                          "protectTarget": "brand",
-                          "protectTargetInfo": "브랜드 공식몰"
+                          "protect_target": "brand",
+                          "protect_target_info": "브랜드 공식몰"
                         }
                         """)
                 .exchange()
@@ -117,8 +117,8 @@ class AuthControllerTest {
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
-                .jsonPath("$.accessToken").isEqualTo("access-token")
-                .jsonPath("$.refreshToken").isEqualTo("refresh-token");
+                .jsonPath("$.access_token").isEqualTo("access-token")
+                .jsonPath("$.refresh_token").isEqualTo("refresh-token");
 
         ArgumentCaptor<LoginCommand> commandCaptor = ArgumentCaptor.forClass(LoginCommand.class);
         verify(userLogin).login(commandCaptor.capture());
@@ -136,14 +136,14 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {
-                          "refreshToken": "valid-refresh-token"
+                          "refresh_token": "valid-refresh-token"
                         }
                         """)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.accessToken").isEqualTo("new-access-token")
-                .jsonPath("$.refreshToken").isEqualTo("new-refresh-token");
+                .jsonPath("$.access_token").isEqualTo("new-access-token")
+                .jsonPath("$.refresh_token").isEqualTo("new-refresh-token");
 
         ArgumentCaptor<RefreshCommand> commandCaptor = ArgumentCaptor.forClass(RefreshCommand.class);
         verify(userTokenRefresh).refresh(commandCaptor.capture());
@@ -161,7 +161,7 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {
-                          "refreshToken": "expired-refresh-token"
+                          "refresh_token": "expired-refresh-token"
                         }
                         """)
                 .exchange()
@@ -180,7 +180,7 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {
-                          "refreshToken": "access-token"
+                          "refresh_token": "access-token"
                         }
                         """)
                 .exchange()
@@ -199,7 +199,7 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {
-                          "refreshToken": "tampered.jwt.token"
+                          "refresh_token": "tampered.jwt.token"
                         }
                         """)
                 .exchange()
@@ -218,7 +218,7 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {
-                          "refreshToken": "invalidated-refresh-token"
+                          "refresh_token": "invalidated-refresh-token"
                         }
                         """)
                 .exchange()
@@ -268,8 +268,8 @@ class AuthControllerTest {
                         {
                           "email": "invalid-email",
                           "password": "short",
-                          "protectTarget": "",
-                          "protectTargetInfo": ""
+                          "protect_target": "",
+                          "protect_target_info": ""
                         }
                         """)
                 .exchange()
@@ -296,7 +296,7 @@ class AuthControllerTest {
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
-                .jsonPath("$.accessToken").isEqualTo("access-token")
-                .jsonPath("$.refreshToken").isEqualTo("refresh-token");
+                .jsonPath("$.access_token").isEqualTo("access-token")
+                .jsonPath("$.refresh_token").isEqualTo("refresh-token");
     }
 }

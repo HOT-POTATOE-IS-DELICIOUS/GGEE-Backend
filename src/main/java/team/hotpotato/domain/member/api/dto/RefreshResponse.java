@@ -1,3 +1,9 @@
 package team.hotpotato.domain.member.api.dto;
 
-public record RefreshResponse(String accessToken, String refreshToken) {}
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record RefreshResponse(
+        @JsonProperty("access_token") String accessToken,
+        @JsonProperty("refresh_token") String refreshToken
+) {
+}

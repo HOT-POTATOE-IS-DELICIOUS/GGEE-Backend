@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record RegisterResponse(
         @JsonProperty("indexing_job_id") String indexingJobId,
-        String accessToken,
-        String refreshToken
+        @JsonProperty("access_token") String accessToken,
+        @JsonProperty("refresh_token") String refreshToken
 ) {
 }
