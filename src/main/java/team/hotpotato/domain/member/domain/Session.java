@@ -6,7 +6,7 @@ public record Session(
         Long id,
         Long userId,
         String sessionId,
-        String refreshToken,
+        String refreshTokenHash,
         LocalDateTime expiresAt
 ) {
 }

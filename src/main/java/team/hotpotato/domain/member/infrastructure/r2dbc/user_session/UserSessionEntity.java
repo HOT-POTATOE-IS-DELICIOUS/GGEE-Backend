@@ -21,8 +21,8 @@ public class UserSessionEntity extends BaseEntity {
     @Column("session_id")
     private String sessionId;
 
-    @Column("refresh_token")
-    private String refreshToken;
+    @Column("refresh_token_hash")
+    private String refreshTokenHash;
 
     @Column("expires_at")
     private LocalDateTime expiresAt;

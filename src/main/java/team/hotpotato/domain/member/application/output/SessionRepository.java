@@ -12,5 +12,7 @@ public interface SessionRepository {
 
     Mono<Void> invalidateByUserId(Long userId);
 
-    Mono<Void> updateRefreshToken(String sessionId, String newRefreshToken, java.time.LocalDateTime newExpiresAt);
+    Mono<Long> updateRefreshTokenHash(String sessionId, String oldHash, String newHash, java.time.LocalDateTime newExpiresAt);
+
+    Mono<Long> invalidateBySessionId(String sessionId);
 }

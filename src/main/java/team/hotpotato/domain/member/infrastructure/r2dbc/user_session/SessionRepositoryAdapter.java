@@ -62,14 +62,25 @@ public class SessionRepositoryAdapter implements SessionRepository {
     }
 
     @Override
-    public Mono<Void> updateRefreshToken(String sessionId, String newRefreshToken, LocalDateTime newExpiresAt) {
+    public Mono<Long> updateRefreshTokenHash(String sessionId, String oldHash, String newHash, LocalDateTime newExpiresAt) {
         return template.update(
-                        Query.query(Criteria.where("session_id").is(sessionId)
-                                .and("deleted").is(false)),
-                        Update.update("refresh_token", newRefreshToken)
-                                .set("expires_at", newExpiresAt),
-                        UserSessionEntity.class
-                )
-                .then();
+                Query.query(Criteria.where("session_id").is(sessionId)
+                        .and("refresh_token_hash").is(oldHash)
+                        .and("deleted").is(false)),
+                Update.update("refresh_token_hash", newHash)
+                        .set("expires_at", newExpiresAt),
+                UserSessionEntity.class
+        );
+    }
+
+    @Override
+    public Mono<Long> invalidateBySessionId(String sessionId) {
+        return template.update(
+                Query.query(Criteria.where("session_id").is(sessionId)
+                        .and("deleted").is(false)),
+                Update.update("deleted", true)
+                        .set("deleted_at", LocalDateTime.now()),
+                UserSessionEntity.class
+        );
     }
 }

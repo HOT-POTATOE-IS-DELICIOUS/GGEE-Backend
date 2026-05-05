@@ -12,7 +12,7 @@ public final class UserSessionEntityMapper {
                 .id(session.id())
                 .userId(session.userId())
                 .sessionId(session.sessionId())
-                .refreshToken(session.refreshToken())
+                .refreshTokenHash(session.refreshTokenHash())
                 .expiresAt(session.expiresAt())
                 .build();
     }
@@ -22,7 +22,7 @@ public final class UserSessionEntityMapper {
                 entity.getId(),
                 entity.getUserId(),
                 entity.getSessionId(),
-                entity.getRefreshToken(),
+                entity.getRefreshTokenHash(),
                 entity.getExpiresAt()
         );
     }
