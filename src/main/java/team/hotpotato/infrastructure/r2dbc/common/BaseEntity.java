@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.relational.core.mapping.Column;
 
 import java.time.LocalDateTime;
@@ -19,10 +18,6 @@ public class BaseEntity {
     @Id
     @Column("id")
     private Long id;
-
-	@LastModifiedDate
-    @Column("updatedAt")
-    private LocalDateTime updatedAt;
 
 	@CreatedDate
     @Column("createdAt")
