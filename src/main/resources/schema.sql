@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     id BIGINT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     session_id VARCHAR(64) NOT NULL UNIQUE,
-    refresh_token TEXT NOT NULL,
+    refresh_token_hash CHAR(64) NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted BOOLEAN NOT NULL DEFAULT FALSE,
