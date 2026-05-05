@@ -2,78 +2,121 @@ package team.hotpotato.domain.protect.infrastructure.indexing;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName("Outbox 스케줄러 동시 실행 방지 검증")
+@DisplayName("ProtectTargetIndexingOutboxScheduler Flux.interval 라이프사이클 검증")
 class ProtectTargetIndexingOutboxSchedulerConcurrencyTest {
 
+    /**
+     * concatMap 직렬화 검증:
+     * tick이 여러 번 발화해도 이전 dispatchPending()이 완료되기 전까지
+     * 다음 실행이 시작되지 않음을 확인한다.
+     */
     @Test
-    @DisplayName("[수정 전] subscribe()는 즉시 반환하여 fixedDelay가 Mono 완료를 기다리지 않는다")
-    void before_subscribeReturnsImmediatelyIgnoringMonoCompletion() throws InterruptedException {
-        // Mono가 100ms 걸리는 작업을 시뮬레이션
-        AtomicInteger concurrentCount = new AtomicInteger(0);
+    @DisplayName("concatMap은 이전 dispatchPending() 완료 후 다음 tick을 처리한다")
+    void concatMap_serializesDispatchCalls() throws InterruptedException {
         AtomicInteger maxConcurrent = new AtomicInteger(0);
+        AtomicInteger concurrentCount = new AtomicInteger(0);
 
-        Runnable schedulerTask = () -> {
-            // subscribe() 방식 - 즉시 반환
-            Mono.fromRunnable(() -> {
-                        int current = concurrentCount.incrementAndGet();
-                        maxConcurrent.updateAndGet(m -> Math.max(m, current));
-                        try { Thread.sleep(50); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-                        concurrentCount.decrementAndGet();
-                    })
-                    .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
-                    .subscribe(); // 즉시 반환
-        };
+        // 50ms 걸리는 작업 — tick 간격(10ms)보다 느리다
+        var disposable = Flux.interval(Duration.ofMillis(10))
+                .onBackpressureDrop()
+                .concatMap(t -> Mono.fromCallable(() -> {
+                    int current = concurrentCount.incrementAndGet();
+                    maxConcurrent.updateAndGet(m -> Math.max(m, current));
+                    Thread.sleep(50);
+                    concurrentCount.decrementAndGet();
+                    return null;
+                }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                        .doOnError(e -> {})
+                        .onErrorResume(e -> Mono.empty()))
+                .subscribe();
 
-        // fixedDelay=10ms 시뮬레이션: subscribe() 후 10ms 대기 → 다시 실행
-        for (int i = 0; i < 5; i++) {
-            schedulerTask.run();
-            Thread.sleep(10); // fixedDelay
-        }
-        Thread.sleep(200); // Mono들 완료 대기
+        Thread.sleep(300);
+        disposable.dispose();
 
-        System.out.printf("[수정 전] subscribe() 방식 최대 동시 실행 수: %d%n", maxConcurrent.get());
-        // subscribe() 방식에서는 Mono 작업(50ms)이 fixedDelay(10ms)보다 길어서 동시 실행 발생
-        assertTrue(maxConcurrent.get() > 1,
-                "subscribe() 방식에서는 동시 실행이 발생한다. 최대 동시 실행 수: " + maxConcurrent.get());
+        assertThat(maxConcurrent.get())
+                .as("concatMap은 동시 실행을 허용하지 않는다")
+                .isEqualTo(1);
     }
 
+    /**
+     * @PreDestroy 안전 종료 검증:
+     * dispose() 호출 후 subscription이 disposed 상태로 전환되고
+     * 이미 disposed된 구독에 재호출해도 예외가 발생하지 않음을 확인한다.
+     */
     @Test
-    @DisplayName("[수정 후] block()은 Mono 완료까지 대기하여 동시 실행을 방지한다")
-    void after_blockWaitsForMonoCompletionPreventingConcurrentExecution() throws InterruptedException {
-        AtomicInteger concurrentCount = new AtomicInteger(0);
-        AtomicInteger maxConcurrent = new AtomicInteger(0);
+    @DisplayName("dispose() 호출 시 subscription이 안전하게 종료된다")
+    void dispose_safelyTerminatesSubscription() throws InterruptedException {
+        AtomicInteger callCount = new AtomicInteger(0);
 
-        Runnable schedulerTask = () -> {
-            // block() 방식 - Mono 완료까지 대기
-            Mono.fromRunnable(() -> {
-                        int current = concurrentCount.incrementAndGet();
-                        maxConcurrent.updateAndGet(m -> Math.max(m, current));
-                        try { Thread.sleep(50); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-                        concurrentCount.decrementAndGet();
-                    })
-                    .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
-                    .block(); // Mono 완료까지 블로킹
-        };
+        var disposable = Flux.interval(Duration.ofMillis(50))
+                .onBackpressureDrop()
+                .concatMap(t -> Mono.fromRunnable(callCount::incrementAndGet)
+                        .doOnError(e -> {})
+                        .onErrorResume(e -> Mono.empty()))
+                .subscribe();
 
-        // 단일 스레드에서 sequentially 실행 (Spring @Scheduled 방식)
-        Thread schedulerThread = new Thread(() -> {
-            for (int i = 0; i < 5; i++) {
-                schedulerTask.run(); // block()이므로 완료 후 다음 반복
-                try { Thread.sleep(10); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-            }
-        });
-        schedulerThread.start();
-        schedulerThread.join(2000);
+        Thread.sleep(120);
+        assertThat(disposable.isDisposed()).isFalse();
 
-        System.out.printf("[수정 후] block() 방식 최대 동시 실행 수: %d%n", maxConcurrent.get());
-        // block() 방식에서는 이전 실행 완료 후 다음 실행 → 최대 동시 실행 수 = 1
-        assertEquals(1, maxConcurrent.get(),
-                "block() 방식에서는 동시 실행이 발생하지 않는다");
+        // @PreDestroy 패턴 재현
+        if (!disposable.isDisposed()) {
+            disposable.dispose();
+        }
+
+        assertThat(disposable.isDisposed()).isTrue();
+
+        // 이미 disposed된 구독에 재호출해도 예외 없음
+        disposable.dispose();
+
+        // dispose 후 callCount가 증가하지 않음을 확인
+        int countAfterDispose = callCount.get();
+        Thread.sleep(100);
+        assertThat(callCount.get())
+                .as("dispose 이후 추가 실행이 발생하지 않는다")
+                .isEqualTo(countAfterDispose);
+    }
+
+    /**
+     * onErrorResume 격리 검증:
+     * dispatchPending()이 에러를 반환해도 Flux 스트림이 종료되지 않고 계속 실행된다.
+     */
+    @Test
+    @DisplayName("dispatchPending() 에러 발생 시 스트림이 종료되지 않고 계속 실행된다")
+    void onErrorResume_doesNotTerminateStream() throws InterruptedException {
+        AtomicInteger callCount = new AtomicInteger(0);
+        AtomicInteger successCount = new AtomicInteger(0);
+
+        var disposable = Flux.interval(Duration.ofMillis(30))
+                .onBackpressureDrop()
+                .concatMap(t -> {
+                    int n = callCount.incrementAndGet();
+                    // 짝수 tick에서 에러 발생
+                    if (n % 2 == 0) {
+                        return Mono.error(new RuntimeException("테스트 에러"))
+                                .doOnError(e -> {})
+                                .onErrorResume(e -> Mono.empty());
+                    }
+                    successCount.incrementAndGet();
+                    return Mono.<Void>empty();
+                })
+                .subscribe();
+
+        Thread.sleep(250);
+        disposable.dispose();
+
+        assertThat(callCount.get())
+                .as("에러 이후에도 스트림이 계속 실행된다")
+                .isGreaterThan(3);
+        assertThat(successCount.get())
+                .as("에러가 없는 tick은 정상 처리된다")
+                .isGreaterThan(0);
     }
 }
