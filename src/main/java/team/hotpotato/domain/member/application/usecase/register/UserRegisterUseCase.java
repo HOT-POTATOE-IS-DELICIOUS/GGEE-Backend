@@ -17,6 +17,7 @@ import team.hotpotato.domain.member.domain.Session;
 import team.hotpotato.domain.member.domain.User;
 import team.hotpotato.domain.protect.application.input.IndexProtect;
 import team.hotpotato.domain.protect.application.usecase.indexing.IndexProtectCommand;
+import team.hotpotato.domain.protect.application.usecase.indexing.IndexProtectResult;
 
 import java.time.LocalDateTime;
 
@@ -43,16 +44,20 @@ public class UserRegisterUseCase implements UserRegister {
                                                 registerCommand.protectTargetInfo()
                                         )
                                 )
-                                .flatMap(protectResult -> createSession(savedUser)
-                                        .map(tokens -> new RegisterResult(
-                                                String.valueOf(protectResult.indexingJobId()),
-                                                tokens[0],
-                                                tokens[1]
-                                        ))
-                                )
+                                .map(protectResult -> new PersistedRegistration(savedUser, protectResult))
                         )
                 )
-                .as(transactionRunner::transactional);
+                .as(transactionRunner::transactional)
+                .flatMap(persisted -> createSession(persisted.user())
+                        .map(tokens -> new RegisterResult(
+                                String.valueOf(persisted.protectResult().indexingJobId()),
+                                tokens[0],
+                                tokens[1]
+                        ))
+                );
+    }
+
+    private record PersistedRegistration(User user, IndexProtectResult protectResult) {
     }
 
     private Mono<String[]> createSession(User user) {

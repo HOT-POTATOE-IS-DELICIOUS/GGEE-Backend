@@ -142,7 +142,7 @@ class UserRegisterUseCaseTest {
     }
 
     @Test
-    @DisplayName("protect 등록이 실패하면 회원가입도 실패한다")
+    @DisplayName("protect 등록이 실패하면 회원가입도 실패하고 세션은 생성되지 않는다")
     void registerFailsWhenProtectRegistrationFails() {
         RuntimeException expected = new RuntimeException("protect failed");
         when(idGenerator.generateId()).thenReturn(100L);
@@ -158,5 +158,29 @@ class UserRegisterUseCaseTest {
 
         verify(userRepository).save(any(User.class));
         verify(indexProtect).index(any(IndexProtectCommand.class));
+        verifyNoInteractions(sessionRepository);
+    }
+
+    @Test
+    @DisplayName("세션 생성은 트랜잭션 밖에서 수행되어, 실패해도 user/protect 적재 후 호출된다")
+    void sessionCreationRunsAfterTransactionCommits() {
+        RuntimeException sessionFailure = new RuntimeException("session save failed");
+        when(idGenerator.generateId()).thenReturn(100L, 300L, 400L);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        when(indexProtect.index(any(IndexProtectCommand.class)))
+                .thenReturn(Mono.just(new IndexProtectResult(201L, 200L)));
+        when(tokenGenerator.generateAccessToken(any(AuthPrincipal.class))).thenReturn("access-token");
+        when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("refresh-token");
+        when(sessionRepository.save(any(Session.class))).thenReturn(Mono.error(sessionFailure));
+
+        StepVerifier.create(userRegisterUseCase.register(
+                        new RegisterCommand("user@test.com", "plainPassword", "brand", "brand info")
+                ))
+                .expectErrorMatches(error -> error == sessionFailure)
+                .verify();
+
+        verify(userRepository).save(any(User.class));
+        verify(indexProtect).index(any(IndexProtectCommand.class));
+        verify(sessionRepository).save(any(Session.class));
     }
 }
