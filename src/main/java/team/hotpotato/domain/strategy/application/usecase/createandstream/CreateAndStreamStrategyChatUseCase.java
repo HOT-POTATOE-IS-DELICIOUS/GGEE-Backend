@@ -8,6 +8,8 @@ import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import team.hotpotato.common.exception.BusinessBaseException;
+import team.hotpotato.common.exception.ErrorCode;
 import team.hotpotato.common.identity.IdGenerator;
 import team.hotpotato.domain.protect.application.input.GetProtectByUserId;
 import team.hotpotato.domain.strategy.application.input.CreateAndStreamStrategyChat;
@@ -19,6 +21,7 @@ import team.hotpotato.domain.strategy.domain.StrategyChatMessage;
 import team.hotpotato.domain.strategy.domain.StrategyChatRoom;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -59,6 +62,7 @@ public class CreateAndStreamStrategyChatUseCase implements CreateAndStreamStrate
                     AtomicReference<String> intentRef = new AtomicReference<>();
                     AtomicReference<String> refinedQueryRef = new AtomicReference<>();
                     AtomicReference<String> metaJsonRef = new AtomicReference<>();
+                    AtomicBoolean savedFlag = new AtomicBoolean(false);
 
                     return getProtectByUserId.get(userId)
                             .flatMapMany(protect ->
@@ -77,15 +81,54 @@ public class CreateAndStreamStrategyChatUseCase implements CreateAndStreamStrate
                                                                     extractMessageId(event),
                                                                     null
                                                             ))
+                                                            .doOnSuccess(ignored -> savedFlag.set(true))
                                                             .doOnError(e -> log.warn("AI 메시지 저장 실패. roomId={}", room.id(), e))
                                                             .onErrorComplete()
                                                             .thenReturn(event);
                                                 }
                                                 return Mono.just(event);
                                             })
+                                            .doFinally(signalType -> {
+                                                if (!savedFlag.get() && contentBuffer.length() > 0) {
+                                                    savePartial(room.id(), contentBuffer.toString(), intentRef.get(), refinedQueryRef.get(), metaJsonRef.get())
+                                                            .subscribe(
+                                                                    ignored -> {},
+                                                                    e -> log.warn("partial 메시지 저장 실패. roomId={}, signal={}", room.id(), signalType, e)
+                                                            );
+                                                }
+                                            })
+                                            .onErrorResume(e -> Flux.just(errorEvent(e)))
                             )
                             .startWith(roomCreatedEvent);
                 });
+    }
+
+    private Mono<StrategyChatMessage> savePartial(Long roomId, String content, String intent, String refinedQuery, String metaJson) {
+        return messageRepository.save(new StrategyChatMessage(
+                idGenerator.generateId(),
+                roomId,
+                MessageRole.ASSISTANT,
+                content,
+                intent,
+                refinedQuery,
+                metaJson,
+                null,
+                null
+        ));
+    }
+
+    private ServerSentEvent<String> errorEvent(Throwable e) {
+        String code;
+        if (e instanceof BusinessBaseException bex) {
+            code = bex.getErrorCode().name();
+        } else {
+            code = ErrorCode.INTERNAL_SERVER_ERROR.name();
+        }
+        log.warn("Strategy AI 스트림 오류: {}", e.getMessage(), e);
+        return ServerSentEvent.<String>builder()
+                .event("error")
+                .data("{\"code\":\"" + code + "\"}")
+                .build();
     }
 
     private void accumulate(ServerSentEvent<String> event, StringBuilder buffer,
