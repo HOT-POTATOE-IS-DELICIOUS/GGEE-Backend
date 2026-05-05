@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import io.r2dbc.spi.R2dbcDataIntegrityViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import reactor.core.publisher.Mono;
@@ -54,8 +55,10 @@ class UserRepositoryAdapterTest {
         UserRepositoryAdapter adapter = new UserRepositoryAdapter(template);
         User user = new User(1L, "user@test.com", "encoded", Role.USER);
 
+        R2dbcDataIntegrityViolationException r2dbcCause =
+                new R2dbcDataIntegrityViolationException("unique constraint violation", "23505");
         when(template.insert(UserEntity.class).using(any(UserEntity.class)))
-                .thenReturn(Mono.error(new DataIntegrityViolationException("Duplicate entry")));
+                .thenReturn(Mono.error(new DataIntegrityViolationException("unique_email", r2dbcCause)));
 
         StepVerifier.create(adapter.save(user))
                 .expectError(EmailAlreadyExistsException.class)
