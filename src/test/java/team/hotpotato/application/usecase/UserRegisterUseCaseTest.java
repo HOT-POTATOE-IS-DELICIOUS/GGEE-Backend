@@ -14,6 +14,7 @@ import team.hotpotato.common.identity.IdGenerator;
 import team.hotpotato.common.transaction.ReactiveTransactionRunner;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.application.output.PasswordHasher;
+import team.hotpotato.domain.member.application.output.RefreshTokenHasher;
 import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.output.TokenGenerator;
 import team.hotpotato.domain.member.application.usecase.register.RegisterCommand;
@@ -53,6 +54,7 @@ class UserRegisterUseCaseTest {
 
     private BCryptPasswordEncoder passwordEncoder;
     private PasswordHasher passwordHasher;
+    private RefreshTokenHasher refreshTokenHasher;
     private ReactiveTransactionRunner transactionRunner;
     private UserRegisterUseCase userRegisterUseCase;
 
@@ -70,6 +72,7 @@ class UserRegisterUseCaseTest {
                 return Mono.just(passwordEncoder.matches(rawPassword, hashedPassword));
             }
         };
+        refreshTokenHasher = rawRefreshToken -> "hashed-" + rawRefreshToken;
         transactionRunner = new ReactiveTransactionRunner() {
             @Override
             public <T> Mono<T> transactional(Mono<T> mono) {
@@ -84,7 +87,8 @@ class UserRegisterUseCaseTest {
                 idGenerator,
                 passwordHasher,
                 transactionRunner,
-                new TokenProperties(3600L, 1_209_600L, "Bearer", "Authorization", "dummyKey")
+                new TokenProperties(3600L, 1_209_600L, "Bearer", "Authorization", "dummyKey"),
+                refreshTokenHasher
         );
     }
 
@@ -121,6 +125,30 @@ class UserRegisterUseCaseTest {
         assertEquals(100L, protectCommand.userId());
         assertEquals("brand", protectCommand.target());
         assertEquals("브랜드 공식몰", protectCommand.info());
+    }
+
+    @Test
+    @DisplayName("세션 저장 시 refresh token은 해시로 저장되고 raw token은 응답에만 포함된다")
+    void registerStoresRefreshTokenHashNotRawToken() {
+        when(idGenerator.generateId()).thenReturn(100L, 300L, 400L);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        when(indexProtect.index(any(IndexProtectCommand.class)))
+                .thenReturn(Mono.just(new IndexProtectResult(201L, 200L)));
+        when(tokenGenerator.generateAccessToken(any(AuthPrincipal.class))).thenReturn("access-token");
+        when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("raw-refresh-token");
+
+        ArgumentCaptor<Session> sessionCaptor = ArgumentCaptor.forClass(Session.class);
+        when(sessionRepository.save(sessionCaptor.capture())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+
+        StepVerifier.create(userRegisterUseCase.register(
+                        new RegisterCommand("user@test.com", "plainPassword", "brand", "브랜드 공식몰")
+                ))
+                .assertNext(result -> assertEquals("raw-refresh-token", result.refreshToken()))
+                .verifyComplete();
+
+        Session savedSession = sessionCaptor.getValue();
+        assertNotEquals("raw-refresh-token", savedSession.refreshTokenHash());
+        assertEquals("hashed-raw-refresh-token", savedSession.refreshTokenHash());
     }
 
     @Test

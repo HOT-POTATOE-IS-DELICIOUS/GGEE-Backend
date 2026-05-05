@@ -164,12 +164,12 @@ class AuditControllerTest {
     private void mockAuthenticatedUser() {
         when(tokenResolver.resolve("Bearer valid-access-token"))
                 .thenReturn(Mono.just(new AuthPrincipal(7L, Role.USER, "audit-session-id")));
-        when(sessionRepository.findActiveByUserId(7L))
+        when(sessionRepository.findBySessionId("audit-session-id"))
                 .thenReturn(Mono.just(new Session(
                         1L,
                         7L,
                         "audit-session-id",
-                        "refresh-token",
+                        "hash-value",
                         LocalDateTime.now().plusHours(1)
                 )));
     }

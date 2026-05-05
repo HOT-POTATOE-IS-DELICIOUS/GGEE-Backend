@@ -9,6 +9,7 @@ import team.hotpotato.common.identity.IdGenerator;
 import team.hotpotato.domain.member.application.input.UserLogin;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.application.output.PasswordHasher;
+import team.hotpotato.domain.member.application.output.RefreshTokenHasher;
 import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.output.TokenGenerator;
 import team.hotpotato.domain.member.application.output.UserRepository;
@@ -26,6 +27,7 @@ public class UserLoginUseCase implements UserLogin {
     private final IdGenerator idGenerator;
     private final ReactiveTransactionRunner transactionRunner;
     private final TokenProperties tokenProperties;
+    private final RefreshTokenHasher refreshTokenHasher;
 
     @Override
     public Mono<LoginResult> login(LoginCommand loginCommand) {
@@ -51,7 +53,7 @@ public class UserLoginUseCase implements UserLogin {
                             idGenerator.generateId(),
                             user.id(),
                             sessionId,
-                            refreshToken,
+                            refreshTokenHasher.hash(refreshToken),
                             LocalDateTime.now().plusSeconds(tokenProperties.refreshTokenActiveTime())
                     );
 

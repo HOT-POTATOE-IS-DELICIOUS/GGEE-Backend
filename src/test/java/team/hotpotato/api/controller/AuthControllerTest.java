@@ -232,8 +232,8 @@ class AuthControllerTest {
         String sessionId = "logout-session-id";
         when(tokenResolver.resolve("Bearer valid-access-token"))
                 .thenReturn(Mono.just(new AuthPrincipal(7L, Role.USER, sessionId)));
-        when(sessionRepository.findActiveByUserId(7L))
-                .thenReturn(Mono.just(new Session(1L, 7L, sessionId, "refresh-token", LocalDateTime.now().plusHours(1))));
+        when(sessionRepository.findBySessionId(sessionId))
+                .thenReturn(Mono.just(new Session(1L, 7L, sessionId, "hash-value", LocalDateTime.now().plusHours(1))));
         when(userLogout.logout(any(LogoutCommand.class))).thenReturn(Mono.empty());
 
         webTestClient.post()

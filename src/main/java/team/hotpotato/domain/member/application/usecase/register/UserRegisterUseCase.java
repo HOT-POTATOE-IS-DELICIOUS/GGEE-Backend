@@ -9,6 +9,7 @@ import team.hotpotato.common.transaction.ReactiveTransactionRunner;
 import team.hotpotato.domain.member.application.input.UserRegister;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.application.output.PasswordHasher;
+import team.hotpotato.domain.member.application.output.RefreshTokenHasher;
 import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.output.TokenGenerator;
 import team.hotpotato.domain.member.application.output.UserRepository;
@@ -32,6 +33,7 @@ public class UserRegisterUseCase implements UserRegister {
     private final PasswordHasher passwordHasher;
     private final ReactiveTransactionRunner transactionRunner;
     private final TokenProperties tokenProperties;
+    private final RefreshTokenHasher refreshTokenHasher;
 
     @Override
     public Mono<RegisterResult> register(RegisterCommand registerCommand) {
@@ -71,7 +73,7 @@ public class UserRegisterUseCase implements UserRegister {
                 idGenerator.generateId(),
                 user.id(),
                 sessionId,
-                refreshToken,
+                refreshTokenHasher.hash(refreshToken),
                 LocalDateTime.now().plusSeconds(tokenProperties.refreshTokenActiveTime())
         );
 

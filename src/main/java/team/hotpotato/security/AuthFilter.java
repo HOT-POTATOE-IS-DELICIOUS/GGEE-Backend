@@ -64,14 +64,8 @@ public class AuthFilter implements WebFilter {
     }
 
     private Mono<Void> validateSession(AuthPrincipal principal) {
-        return sessionRepository.findActiveByUserId(principal.userId())
+        return sessionRepository.findBySessionId(principal.sessionId())
                 .switchIfEmpty(Mono.error(SessionExpiredException.EXCEPTION))
-                .flatMap(activeSession -> {
-                    if (!activeSession.sessionId().equals(principal.sessionId())) {
-                        return Mono.error(SessionExpiredException.EXCEPTION);
-                    }
-                    return Mono.empty();
-                })
                 .then();
     }
 

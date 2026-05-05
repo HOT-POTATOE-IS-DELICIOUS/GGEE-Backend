@@ -59,8 +59,8 @@ class IssueControllerTest {
     void getIssuesReturnsIssueGraph() {
         when(tokenResolver.resolve("Bearer valid-access-token"))
                 .thenReturn(Mono.just(new AuthPrincipal(7L, Role.USER, "issue-session-id")));
-        when(sessionRepository.findActiveByUserId(7L))
-                .thenReturn(Mono.just(new Session(1L, 7L, "issue-session-id", "refresh-token", LocalDateTime.now().plusHours(1))));
+        when(sessionRepository.findBySessionId("issue-session-id"))
+                .thenReturn(Mono.just(new Session(1L, 7L, "issue-session-id", "hash-value", LocalDateTime.now().plusHours(1))));
         when(issueGraphRead.read(any(IssueGraphReadCommand.class)))
                 .thenReturn(Mono.just(new IssueGraphReadResult(
                         "백종원",

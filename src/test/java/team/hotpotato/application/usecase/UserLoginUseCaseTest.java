@@ -14,6 +14,7 @@ import team.hotpotato.common.identity.IdGenerator;
 import team.hotpotato.common.transaction.ReactiveTransactionRunner;
 import team.hotpotato.domain.member.application.model.AuthPrincipal;
 import team.hotpotato.domain.member.application.output.PasswordHasher;
+import team.hotpotato.domain.member.application.output.RefreshTokenHasher;
 import team.hotpotato.domain.member.application.output.SessionRepository;
 import team.hotpotato.domain.member.application.output.TokenGenerator;
 import team.hotpotato.domain.member.application.usecase.login.LoginCommand;
@@ -25,7 +26,7 @@ import team.hotpotato.domain.member.domain.Session;
 import team.hotpotato.domain.member.domain.User;
 import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -47,6 +48,7 @@ class UserLoginUseCaseTest {
 
     private BCryptPasswordEncoder passwordEncoder;
     private PasswordHasher passwordHasher;
+    private RefreshTokenHasher refreshTokenHasher;
     private ReactiveTransactionRunner transactionRunner;
     private UserLoginUseCase userLoginUseCase;
 
@@ -64,6 +66,7 @@ class UserLoginUseCaseTest {
                 return Mono.just(passwordEncoder.matches(rawPassword, hashedPassword));
             }
         };
+        refreshTokenHasher = rawRefreshToken -> "hashed-" + rawRefreshToken;
         transactionRunner = new ReactiveTransactionRunner() {
             @Override
             public <T> Mono<T> transactional(Mono<T> mono) {
@@ -77,7 +80,8 @@ class UserLoginUseCaseTest {
                 sessionRepository,
                 idGenerator,
                 transactionRunner,
-                new TokenProperties(3600L, 1_209_600L, "Bearer", "Authorization", "dummyKey")
+                new TokenProperties(3600L, 1_209_600L, "Bearer", "Authorization", "dummyKey"),
+                refreshTokenHasher
         );
     }
 
@@ -89,9 +93,7 @@ class UserLoginUseCaseTest {
         when(tokenGenerator.generateAccessToken(any(AuthPrincipal.class))).thenReturn("access-7-USER");
         when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("refresh-7-USER");
         when(sessionRepository.invalidateByUserId(7L)).thenReturn(Mono.empty());
-        when(sessionRepository.save(any(Session.class))).thenReturn(Mono.just(
-                new Session(1L, 7L, "session-id", "refresh-7-USER", null)
-        ));
+        when(sessionRepository.save(any(Session.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
         StepVerifier.create(userLoginUseCase.login(new LoginCommand("login@test.com", "password123")))
                 .assertNext(result -> {
@@ -108,6 +110,27 @@ class UserLoginUseCaseTest {
     }
 
     @Test
+    @DisplayName("세션 저장 시 refresh token은 해시로 저장되고 raw token은 응답에만 포함된다")
+    void loginStoresRefreshTokenHashNotRawToken() {
+        User user = new User(7L, "login@test.com", passwordEncoder.encode("password123"), Role.USER);
+        ArgumentCaptor<Session> sessionCaptor = ArgumentCaptor.forClass(Session.class);
+
+        when(userRepository.findByEmail("login@test.com")).thenReturn(Mono.just(user));
+        when(tokenGenerator.generateAccessToken(any(AuthPrincipal.class))).thenReturn("access-7-USER");
+        when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("raw-refresh-token");
+        when(sessionRepository.invalidateByUserId(7L)).thenReturn(Mono.empty());
+        when(sessionRepository.save(sessionCaptor.capture())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+
+        StepVerifier.create(userLoginUseCase.login(new LoginCommand("login@test.com", "password123")))
+                .assertNext(result -> assertEquals("raw-refresh-token", result.refreshToken()))
+                .verifyComplete();
+
+        Session savedSession = sessionCaptor.getValue();
+        assertNotEquals("raw-refresh-token", savedSession.refreshTokenHash());
+        assertEquals("hashed-raw-refresh-token", savedSession.refreshTokenHash());
+    }
+
+    @Test
     @DisplayName("토큰 생성에는 도메인 Role이 전달된다")
     void loginBuildsAuthPrincipalWithDomainRole() {
         User user = new User(9L, "role@test.com", passwordEncoder.encode("password123"), Role.ADMIN);
@@ -117,9 +140,7 @@ class UserLoginUseCaseTest {
         when(tokenGenerator.generateAccessToken(principalCaptor.capture())).thenReturn("access");
         when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("refresh");
         when(sessionRepository.invalidateByUserId(9L)).thenReturn(Mono.empty());
-        when(sessionRepository.save(any(Session.class))).thenReturn(Mono.just(
-                new Session(1L, 9L, "session-id", "refresh", null)
-        ));
+        when(sessionRepository.save(any(Session.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
         StepVerifier.create(userLoginUseCase.login(new LoginCommand("role@test.com", "password123")))
                 .expectNextCount(1)
