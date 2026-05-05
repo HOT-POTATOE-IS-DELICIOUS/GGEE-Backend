@@ -1,5 +1,7 @@
 package team.hotpotato.application.usecase;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.time.Clock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -59,7 +61,9 @@ class UserTokenRefreshUseCaseTest {
                 sessionRepository,
                 tokenGenerator,
                 new TokenProperties(3600L, 1_209_600L, "Bearer", "Authorization", "dummyKey"),
-                refreshTokenHasher
+                refreshTokenHasher,
+                Clock.systemDefaultZone(),
+                new SimpleMeterRegistry()
         );
     }
 
