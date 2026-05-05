@@ -114,7 +114,7 @@ class CreateAndStreamStrategyChatUseCaseTest {
 
     @Test
     @DisplayName("클라이언트 cancel 시 누적된 content가 있으면 partial 메시지가 저장된다")
-    void savePartialMessageOnCancel() throws InterruptedException {
+    void savePartialMessageOnCancel() {
         stubRoomAndUserMessageSave();
         when(aiClient.stream(any(), any(), any()))
                 .thenReturn(Flux.just(
@@ -129,9 +129,8 @@ class CreateAndStreamStrategyChatUseCaseTest {
                 .thenCancel()
                 .verify();
 
-        // doFinally의 subscribe()는 fire-and-forget이므로 짧게 대기
-        Thread.sleep(100);
-
+        // Flux.usingWhen의 asyncCancel publisher는 cancel 시그널 전에 await되므로
+        // verify() 시점에 partial save도 이미 완료되어 있다.
         ArgumentCaptor<StrategyChatMessage> captor = ArgumentCaptor.forClass(StrategyChatMessage.class);
         verify(messageRepository, atLeastOnce()).save(captor.capture());
 
@@ -175,7 +174,7 @@ class CreateAndStreamStrategyChatUseCaseTest {
 
     @Test
     @DisplayName("AI 오류 발생 시 content가 없으면 partial 저장이 호출되지 않는다")
-    void noPartialSaveWhenContentIsEmptyOnError() throws InterruptedException {
+    void noPartialSaveWhenContentIsEmptyOnError() {
         stubRoomAndUserMessageSave();
         when(aiClient.stream(any(), any(), any())).thenReturn(Flux.error(new RuntimeException("immediate error")));
 
@@ -183,8 +182,6 @@ class CreateAndStreamStrategyChatUseCaseTest {
                 .expectNextMatches(e -> "room_created".equals(e.event()))
                 .expectNextMatches(e -> "error".equals(e.event()))
                 .verifyComplete();
-
-        Thread.sleep(100);
 
         ArgumentCaptor<StrategyChatMessage> captor = ArgumentCaptor.forClass(StrategyChatMessage.class);
         verify(messageRepository, atLeastOnce()).save(captor.capture());

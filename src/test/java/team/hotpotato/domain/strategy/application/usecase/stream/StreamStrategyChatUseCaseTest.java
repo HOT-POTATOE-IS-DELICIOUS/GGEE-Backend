@@ -116,7 +116,7 @@ class StreamStrategyChatUseCaseTest {
 
     @Test
     @DisplayName("클라이언트 cancel 시 누적된 content가 있으면 partial 메시지가 저장된다")
-    void savePartialMessageOnCancel() throws InterruptedException {
+    void savePartialMessageOnCancel() {
         stubRoomAndUserMessageSave();
         when(aiClient.stream(any(), any(), any()))
                 .thenReturn(Flux.just(
@@ -129,8 +129,7 @@ class StreamStrategyChatUseCaseTest {
                 .thenCancel()
                 .verify();
 
-        Thread.sleep(100);
-
+        // Flux.usingWhen의 asyncCancel은 cancel 전에 await되므로 verify() 시점에 partial save 완료.
         ArgumentCaptor<StrategyChatMessage> captor = ArgumentCaptor.forClass(StrategyChatMessage.class);
         verify(messageRepository, atLeastOnce()).save(captor.capture());
 
