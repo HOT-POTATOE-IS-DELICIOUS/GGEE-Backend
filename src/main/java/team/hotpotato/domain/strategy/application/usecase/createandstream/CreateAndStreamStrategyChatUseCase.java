@@ -20,6 +20,7 @@ import team.hotpotato.domain.strategy.domain.MessageRole;
 import team.hotpotato.domain.strategy.domain.StrategyChatMessage;
 import team.hotpotato.domain.strategy.domain.StrategyChatRoom;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -114,6 +115,7 @@ public class CreateAndStreamStrategyChatUseCase implements CreateAndStreamStrate
                             null,
                             null
                     ))
+                    .timeout(Duration.ofSeconds(5))
                     .doOnError(e -> log.warn("partial 메시지 저장 실패. roomId={}", roomId, e))
                     .onErrorComplete()
                     .then();
