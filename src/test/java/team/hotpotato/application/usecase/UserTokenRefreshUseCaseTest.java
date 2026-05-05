@@ -17,7 +17,6 @@ import team.hotpotato.domain.member.application.output.TokenGenerator;
 import team.hotpotato.domain.member.application.usecase.login.InvalidSessionException;
 import team.hotpotato.domain.member.application.usecase.login.SessionExpiredException;
 import team.hotpotato.domain.member.application.usecase.refresh.RefreshCommand;
-import team.hotpotato.domain.member.application.usecase.refresh.RefreshTokenReuseDetectedException;
 import team.hotpotato.domain.member.application.usecase.refresh.UserTokenRefreshUseCase;
 import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.Session;
@@ -144,8 +143,8 @@ class UserTokenRefreshUseCaseTest {
     }
 
     @Test
-    @DisplayName("refresh token 재사용 탐지 — updateRefreshTokenHash가 0을 반환하면 세션 무효화 후 RefreshTokenReuseDetectedException이 발생한다")
-    void refreshDetectsReuseWhenUpdateAffectsZeroRows() {
+    @DisplayName("CAS miss — updateRefreshTokenHash가 0을 반환하면 InvalidSessionException(401)이 발생하고 세션은 invalidate되지 않는다")
+    void refreshCasMissReturnsInvalidSessionWithoutInvalidate() {
         Session validSession = new Session(1L, 1L, SESSION_ID, REFRESH_TOKEN_HASH, LocalDateTime.now().plusDays(14));
 
         when(refreshTokenResolver.resolve(REFRESH_TOKEN)).thenReturn(Mono.just(PRINCIPAL));
@@ -156,21 +155,19 @@ class UserTokenRefreshUseCaseTest {
         when(refreshTokenHasher.hash("new-refresh")).thenReturn("hash-of-new-refresh");
         when(sessionRepository.updateRefreshTokenHash(eq(SESSION_ID), eq(REFRESH_TOKEN_HASH), eq("hash-of-new-refresh"), any(LocalDateTime.class)))
                 .thenReturn(Mono.just(0L));
-        when(sessionRepository.invalidateBySessionId(SESSION_ID)).thenReturn(Mono.just(1L));
 
         StepVerifier.create(useCase.refresh(new RefreshCommand(REFRESH_TOKEN)))
-                .expectError(RefreshTokenReuseDetectedException.class)
+                .expectError(InvalidSessionException.class)
                 .verify();
 
-        verify(sessionRepository).invalidateBySessionId(SESSION_ID);
+        verify(sessionRepository, never()).invalidateBySessionId(any());
     }
 
     @Test
-    @DisplayName("refresh token 재사용 탐지 — 동일 토큰으로 두 번 호출하면 두 번째에서 RefreshTokenReuseDetectedException이 발생한다")
-    void refreshSecondCallWithSameTokenDetectsReuse() {
+    @DisplayName("동시 refresh — 동일 토큰으로 두 번 호출 시 두 번째는 401이지만 세션은 살아있다")
+    void refreshSecondConcurrentCallReturns401WithoutKillingSession() {
         Session validSession = new Session(1L, 1L, SESSION_ID, REFRESH_TOKEN_HASH, LocalDateTime.now().plusDays(14));
 
-        // 첫 번째 호출 — 성공
         when(refreshTokenResolver.resolve(REFRESH_TOKEN)).thenReturn(Mono.just(PRINCIPAL));
         when(sessionRepository.findBySessionId(SESSION_ID)).thenReturn(Mono.just(validSession));
         when(tokenGenerator.generateAccessToken(PRINCIPAL)).thenReturn("new-access");
@@ -179,17 +176,16 @@ class UserTokenRefreshUseCaseTest {
         when(refreshTokenHasher.hash("new-refresh")).thenReturn("hash-of-new-refresh");
         when(sessionRepository.updateRefreshTokenHash(eq(SESSION_ID), eq(REFRESH_TOKEN_HASH), eq("hash-of-new-refresh"), any(LocalDateTime.class)))
                 .thenReturn(Mono.just(1L))    // 첫 번째 — 성공
-                .thenReturn(Mono.just(0L));   // 두 번째 — 재사용 탐지
-        when(sessionRepository.invalidateBySessionId(SESSION_ID)).thenReturn(Mono.just(1L));
+                .thenReturn(Mono.just(0L));   // 두 번째 — CAS miss
 
         StepVerifier.create(useCase.refresh(new RefreshCommand(REFRESH_TOKEN)))
                 .expectNextCount(1)
                 .verifyComplete();
 
         StepVerifier.create(useCase.refresh(new RefreshCommand(REFRESH_TOKEN)))
-                .expectError(RefreshTokenReuseDetectedException.class)
+                .expectError(InvalidSessionException.class)
                 .verify();
 
-        verify(sessionRepository).invalidateBySessionId(SESSION_ID);
+        verify(sessionRepository, never()).invalidateBySessionId(any());
     }
 }

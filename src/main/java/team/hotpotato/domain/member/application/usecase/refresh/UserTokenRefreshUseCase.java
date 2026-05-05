@@ -43,8 +43,7 @@ public class UserTokenRefreshUseCase implements UserTokenRefresh {
                                 return sessionRepository.updateRefreshTokenHash(principal.sessionId(), oldHash, newHash, newExpiresAt)
                                         .flatMap(affected -> {
                                             if (affected == 0) {
-                                                return sessionRepository.invalidateBySessionId(principal.sessionId())
-                                                        .then(Mono.error(RefreshTokenReuseDetectedException.EXCEPTION));
+                                                return Mono.error(InvalidSessionException.EXCEPTION);
                                             }
                                             return Mono.just(new RefreshResult(newAccessToken, newRefreshToken));
                                         });

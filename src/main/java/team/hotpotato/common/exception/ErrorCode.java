@@ -16,7 +16,6 @@ public enum ErrorCode {
     INVALID_EMAIL_OR_PASSWORD("이메일 또는 비밀번호가 올바르지 않습니다."),
     SESSION_EXPIRED("다른 기기에서 로그인되어 세션이 만료되었습니다."),
     INVALID_SESSION("유효하지 않은 세션입니다."),
-    REFRESH_TOKEN_REUSED("리프레시 토큰이 재사용되어 세션이 무효화되었습니다."),
     ISSUE_GRAPH_SERVICE_UNAVAILABLE("이슈 계통도 조회 서버와 통신할 수 없습니다."),
     AUDIT_SERVICE_UNAVAILABLE("입장문 검수 서버와 통신할 수 없습니다."),
     STRATEGY_AI_SERVICE_UNAVAILABLE("전략 AI 서버와 통신할 수 없습니다."),
