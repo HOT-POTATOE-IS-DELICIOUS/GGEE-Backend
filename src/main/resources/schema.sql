@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS protects (
 CREATE INDEX IF NOT EXISTS idx_protects_user_id ON protects (user_id);
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_protects_user_active
     ON protects (user_id) WHERE deleted = false;
+CREATE INDEX IF NOT EXISTS idx_protects_target_info_active
+    ON protects (target, info) WHERE deleted = false;
 
 CREATE TABLE IF NOT EXISTS protect_target_indexing_outbox (
     id BIGINT PRIMARY KEY,

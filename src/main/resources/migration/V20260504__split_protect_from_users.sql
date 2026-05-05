@@ -50,4 +50,9 @@ END $$;
 ALTER TABLE users DROP COLUMN IF EXISTS protect_target;
 ALTER TABLE users DROP COLUMN IF EXISTS protect_target_info;
 
+-- 4. 30분 refresh 스케줄러용 (target, info) DISTINCT 쿼리 인덱스
+--    schema.sql에도 동일 정의가 있으므로 신규 환경에서는 자동 생성됨
+CREATE INDEX IF NOT EXISTS idx_protects_target_info_active
+    ON protects (target, info) WHERE deleted = false;
+
 COMMIT;

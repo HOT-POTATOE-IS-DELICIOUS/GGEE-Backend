@@ -26,16 +26,15 @@ public class IndexProtectUseCase implements IndexProtect {
                 command.target(),
                 command.info()
         );
-        ProtectTargetIndexingOutbox outbox = new ProtectTargetIndexingOutbox(
-                idGenerator.generateId(),
-                command.target(),
-                command.info(),
-                ProtectTargetIndexingOutboxStatus.PENDING,
-                null
-        );
 
         return protectRepository.save(protect)
-                .flatMap(savedProtect -> outboxRepository.save(outbox)
+                .flatMap(savedProtect -> outboxRepository.save(new ProtectTargetIndexingOutbox(
+                                idGenerator.generateId(),
+                                savedProtect.target(),
+                                savedProtect.info(),
+                                ProtectTargetIndexingOutboxStatus.PENDING,
+                                null
+                        ))
                         .map(savedOutbox -> new IndexProtectResult(savedProtect.id(), savedOutbox.id()))
                 );
     }
