@@ -11,6 +11,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import reactor.core.publisher.Flux;
 import team.hotpotato.domain.strategy.application.output.StrategyAiClient;
+import team.hotpotato.domain.strategy.application.usecase.stream.StrategyAiServiceUnavailableException;
+
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @Component
@@ -35,6 +38,10 @@ public class StrategyAiClientAdapter implements StrategyAiClient {
                 .bodyValue(new StrategyAiRequest(message, entityName, entityInfo))
                 .retrieve()
                 .bodyToFlux(new ParameterizedTypeReference<ServerSentEvent<String>>() {})
-                .doOnError(WebClientException.class, e -> log.warn("전략 AI 스트림 연결 오류", e));
+                .timeout(properties.timeout())
+                .doOnError(WebClientException.class, e -> log.warn("전략 AI 스트림 연결 오류", e))
+                .doOnError(TimeoutException.class, e -> log.warn("전략 AI 스트림 타임아웃"))
+                .onErrorMap(WebClientException.class, throwable -> StrategyAiServiceUnavailableException.EXCEPTION)
+                .onErrorMap(TimeoutException.class, throwable -> StrategyAiServiceUnavailableException.EXCEPTION);
     }
 }
