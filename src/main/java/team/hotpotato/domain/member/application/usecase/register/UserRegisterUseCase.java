@@ -17,6 +17,7 @@ import team.hotpotato.domain.member.domain.Role;
 import team.hotpotato.domain.member.domain.Session;
 import team.hotpotato.domain.member.domain.User;
 import team.hotpotato.domain.protect.application.input.IndexProtect;
+import team.hotpotato.domain.protect.application.output.ProtectTargetIndexingDispatchTrigger;
 import team.hotpotato.domain.protect.application.usecase.indexing.IndexProtectCommand;
 import team.hotpotato.domain.protect.application.usecase.indexing.IndexProtectResult;
 
@@ -34,6 +35,7 @@ public class UserRegisterUseCase implements UserRegister {
     private final ReactiveTransactionRunner transactionRunner;
     private final TokenProperties tokenProperties;
     private final RefreshTokenHasher refreshTokenHasher;
+    private final ProtectTargetIndexingDispatchTrigger indexingDispatchTrigger;
 
     @Override
     public Mono<RegisterResult> register(RegisterCommand registerCommand) {
@@ -44,29 +46,31 @@ public class UserRegisterUseCase implements UserRegister {
                         hashedPassword,
                         Role.USER
                 ))
-                .flatMap(user -> userRepository.save(user)
-                        .flatMap(savedUser -> indexProtect.index(
-                                        new IndexProtectCommand(
-                                                savedUser.id(),
-                                                registerCommand.protectTarget(),
-                                                registerCommand.protectTargetInfo()
-                                        )
-                                )
-                                .map(protectResult -> new PersistedRegistration(savedUser, protectResult))
-                        )
-                        .as(transactionRunner::transactional)
-                )
-                .flatMap(persisted -> createSession(persisted.user())
-                        .map(tokens -> new RegisterResult(
-                                String.valueOf(persisted.protectResult().indexingJobId()),
-                                tokens[0],
-                                tokens[1]
-                        ))
-                );
-    }
+	                .flatMap(user -> userRepository.save(user)
+	                        .flatMap(savedUser -> indexProtect.index(
+	                                        new IndexProtectCommand(
+	                                                savedUser.id(),
+	                                                registerCommand.protectTarget(),
+	                                                registerCommand.protectTargetInfo()
+	                                        )
+	                                )
+	                                .flatMap(protectResult -> createSession(savedUser)
+	                                        .map(tokens -> new PersistedRegistration(savedUser, protectResult, tokens))
+	                                )
+	                        )
+	                        .as(transactionRunner::transactional)
+	                )
+	                .flatMap(persisted -> indexingDispatchTrigger.requestDispatch()
+	                        .thenReturn(new RegisterResult(
+	                                String.valueOf(persisted.protectResult().indexingJobId()),
+	                                persisted.tokens()[0],
+	                                persisted.tokens()[1]
+	                        ))
+	                );
+	    }
 
-    private record PersistedRegistration(User user, IndexProtectResult protectResult) {
-    }
+	    private record PersistedRegistration(User user, IndexProtectResult protectResult, String[] tokens) {
+	    }
 
     private Mono<String[]> createSession(User user) {
         String sessionId = String.valueOf(idGenerator.generateId());
@@ -80,7 +84,7 @@ public class UserRegisterUseCase implements UserRegister {
                 user.id(),
                 sessionId,
                 refreshTokenHasher.hash(refreshToken),
-                LocalDateTime.now().plusSeconds(tokenProperties.refreshTokenActiveTime())
+                LocalDateTime.now().plus(tokenProperties.refreshTokenActiveDuration())
         );
 
         return sessionRepository.save(session)

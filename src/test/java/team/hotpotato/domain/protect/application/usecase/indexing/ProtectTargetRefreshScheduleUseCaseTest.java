@@ -11,6 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import team.hotpotato.common.identity.IdGenerator;
+import team.hotpotato.domain.protect.application.output.ProtectTargetIndexingDispatchTrigger;
 import team.hotpotato.domain.protect.application.output.ProtectRepository;
 import team.hotpotato.domain.protect.application.output.ProtectTargetIndexingOutboxRepository;
 import team.hotpotato.domain.protect.domain.ProtectTargetIndexingOutbox;
@@ -40,11 +41,19 @@ class ProtectTargetRefreshScheduleUseCaseTest {
     @Mock
     private IdGenerator idGenerator;
 
+    @Mock
+    private ProtectTargetIndexingDispatchTrigger indexingDispatchTrigger;
+
     private ProtectTargetRefreshScheduleUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new ProtectTargetRefreshScheduleUseCase(protectRepository, outboxRepository, idGenerator);
+        useCase = new ProtectTargetRefreshScheduleUseCase(
+                protectRepository,
+                outboxRepository,
+                idGenerator,
+                indexingDispatchTrigger
+        );
     }
 
     @Test
@@ -59,6 +68,7 @@ class ProtectTargetRefreshScheduleUseCaseTest {
         when(idGenerator.generateId()).thenAnswer(invocation -> nextId.getAndIncrement());
         when(outboxRepository.save(any(ProtectTargetIndexingOutbox.class)))
                 .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        when(indexingDispatchTrigger.requestDispatch()).thenReturn(Mono.empty());
 
         StepVerifier.create(useCase.scheduleAll())
                 .expectNext(2L)
@@ -66,6 +76,7 @@ class ProtectTargetRefreshScheduleUseCaseTest {
 
         ArgumentCaptor<ProtectTargetIndexingOutbox> captor = ArgumentCaptor.forClass(ProtectTargetIndexingOutbox.class);
         verify(outboxRepository, times(2)).save(captor.capture());
+        verify(indexingDispatchTrigger, times(2)).requestDispatch();
 
         List<ProtectTargetIndexingOutbox> savedOutboxes = captor.getAllValues();
         assertThat(savedOutboxes).extracting(ProtectTargetIndexingOutbox::status)
@@ -91,6 +102,7 @@ class ProtectTargetRefreshScheduleUseCaseTest {
                 .verifyComplete();
 
         verify(outboxRepository, never()).save(any());
+        verify(indexingDispatchTrigger, never()).requestDispatch();
     }
 
     @Test
@@ -112,11 +124,13 @@ class ProtectTargetRefreshScheduleUseCaseTest {
                     }
                     return Mono.just(outbox);
                 });
+        when(indexingDispatchTrigger.requestDispatch()).thenReturn(Mono.empty());
 
         StepVerifier.create(useCase.scheduleAll())
                 .expectNext(2L)
                 .verifyComplete();
 
         verify(outboxRepository, times(3)).save(any(ProtectTargetIndexingOutbox.class));
+        verify(indexingDispatchTrigger, times(2)).requestDispatch();
     }
 }

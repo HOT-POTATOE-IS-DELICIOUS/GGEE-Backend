@@ -26,6 +26,7 @@ import team.hotpotato.domain.member.domain.Session;
 import team.hotpotato.domain.member.domain.User;
 import team.hotpotato.domain.member.infrastructure.jwt.TokenProperties;
 import team.hotpotato.domain.protect.application.input.IndexProtect;
+import team.hotpotato.domain.protect.application.output.ProtectTargetIndexingDispatchTrigger;
 import team.hotpotato.domain.protect.application.usecase.indexing.IndexProtectCommand;
 import team.hotpotato.domain.protect.application.usecase.indexing.IndexProtectResult;
 
@@ -51,6 +52,9 @@ class UserRegisterUseCaseTest {
 
     @Mock
     private IdGenerator idGenerator;
+
+    @Mock
+    private ProtectTargetIndexingDispatchTrigger indexingDispatchTrigger;
 
     private BCryptPasswordEncoder passwordEncoder;
     private PasswordHasher passwordHasher;
@@ -87,8 +91,9 @@ class UserRegisterUseCaseTest {
                 idGenerator,
                 passwordHasher,
                 transactionRunner,
-                new TokenProperties(3600L, 1_209_600L, "Bearer", "Authorization", "dummyKey"),
-                refreshTokenHasher
+                new TokenProperties(3_600_000L, 1_209_600_000L, "Bearer", "Authorization", "dummyKey"),
+                refreshTokenHasher,
+                indexingDispatchTrigger
         );
     }
 
@@ -101,6 +106,7 @@ class UserRegisterUseCaseTest {
                 .thenReturn(Mono.just(new IndexProtectResult(201L, 200L)));
         when(tokenGenerator.generateAccessToken(any(AuthPrincipal.class))).thenReturn("access-token");
         when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("refresh-token");
+        when(indexingDispatchTrigger.requestDispatch()).thenReturn(Mono.empty());
         when(sessionRepository.save(any(Session.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
         StepVerifier.create(userRegisterUseCase.register(
@@ -113,6 +119,7 @@ class UserRegisterUseCaseTest {
         ArgumentCaptor<IndexProtectCommand> protectCaptor = ArgumentCaptor.forClass(IndexProtectCommand.class);
         verify(userRepository).save(userCaptor.capture());
         verify(indexProtect).index(protectCaptor.capture());
+        verify(indexingDispatchTrigger).requestDispatch();
 
         User savedUser = userCaptor.getValue();
         assertEquals(100L, savedUser.id());
@@ -136,6 +143,7 @@ class UserRegisterUseCaseTest {
                 .thenReturn(Mono.just(new IndexProtectResult(201L, 200L)));
         when(tokenGenerator.generateAccessToken(any(AuthPrincipal.class))).thenReturn("access-token");
         when(tokenGenerator.generateRefreshToken(any(AuthPrincipal.class))).thenReturn("raw-refresh-token");
+        when(indexingDispatchTrigger.requestDispatch()).thenReturn(Mono.empty());
 
         ArgumentCaptor<Session> sessionCaptor = ArgumentCaptor.forClass(Session.class);
         when(sessionRepository.save(sessionCaptor.capture())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
@@ -190,8 +198,8 @@ class UserRegisterUseCaseTest {
     }
 
     @Test
-    @DisplayName("세션 생성은 트랜잭션 밖에서 수행되어, 실패해도 user/protect 적재 후 호출된다")
-    void sessionCreationRunsAfterTransactionCommits() {
+    @DisplayName("세션 저장이 실패하면 dispatch trigger는 호출되지 않고 에러가 전파된다")
+    void sessionCreationFailureSkipsDispatchTrigger() {
         RuntimeException sessionFailure = new RuntimeException("session save failed");
         when(idGenerator.generateId()).thenReturn(100L, 300L, 400L);
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
@@ -210,5 +218,6 @@ class UserRegisterUseCaseTest {
         verify(userRepository).save(any(User.class));
         verify(indexProtect).index(any(IndexProtectCommand.class));
         verify(sessionRepository).save(any(Session.class));
+        verifyNoInteractions(indexingDispatchTrigger);
     }
 }
