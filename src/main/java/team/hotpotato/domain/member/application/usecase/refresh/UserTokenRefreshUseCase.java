@@ -59,7 +59,7 @@ public class UserTokenRefreshUseCase implements UserTokenRefresh {
                     String newAccessToken = tokenGenerator.generateAccessToken(principal);
                     String newRefreshToken = tokenGenerator.generateRefreshToken(principal);
                     String newHash = refreshTokenHasher.hash(newRefreshToken);
-                    LocalDateTime newExpiresAt = LocalDateTime.now(clock).plusSeconds(tokenProperties.refreshTokenActiveTime());
+                    LocalDateTime newExpiresAt = LocalDateTime.now(clock).plus(tokenProperties.refreshTokenActiveDuration());
 
                     return sessionRepository.findBySessionId(principal.sessionId())
                             .switchIfEmpty(Mono.error(InvalidSessionException.EXCEPTION))

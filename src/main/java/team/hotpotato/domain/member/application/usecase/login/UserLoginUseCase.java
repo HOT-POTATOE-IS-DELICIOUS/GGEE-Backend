@@ -54,7 +54,7 @@ public class UserLoginUseCase implements UserLogin {
                             user.id(),
                             sessionId,
                             refreshTokenHasher.hash(refreshToken),
-                            LocalDateTime.now().plusSeconds(tokenProperties.refreshTokenActiveTime())
+                            LocalDateTime.now().plus(tokenProperties.refreshTokenActiveDuration())
                     );
 
                     return sessionRepository.invalidateByUserId(user.id())

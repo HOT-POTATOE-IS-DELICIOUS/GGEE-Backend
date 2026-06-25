@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS user_sessions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions (user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_user_sessions_user_active
+    ON user_sessions (user_id) WHERE deleted = false;
 
 CREATE TABLE IF NOT EXISTS protects (
     id BIGINT PRIMARY KEY,

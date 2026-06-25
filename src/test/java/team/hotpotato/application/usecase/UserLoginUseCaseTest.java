@@ -80,7 +80,7 @@ class UserLoginUseCaseTest {
                 sessionRepository,
                 idGenerator,
                 transactionRunner,
-                new TokenProperties(3600L, 1_209_600L, "Bearer", "Authorization", "dummyKey"),
+                new TokenProperties(3_600_000L, 1_209_600_000L, "Bearer", "Authorization", "dummyKey"),
                 refreshTokenHasher
         );
     }

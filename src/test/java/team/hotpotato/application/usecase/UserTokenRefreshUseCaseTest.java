@@ -2,6 +2,7 @@ package team.hotpotato.application.usecase;
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
+import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -60,7 +61,7 @@ class UserTokenRefreshUseCaseTest {
                 refreshTokenResolver,
                 sessionRepository,
                 tokenGenerator,
-                new TokenProperties(3600L, 1_209_600L, "Bearer", "Authorization", "dummyKey"),
+                new TokenProperties(3_600_000L, 1_209_600_000L, "Bearer", "Authorization", "dummyKey"),
                 refreshTokenHasher,
                 Clock.systemDefaultZone(),
                 new SimpleMeterRegistry()
@@ -110,7 +111,7 @@ class UserTokenRefreshUseCaseTest {
                 .verifyComplete();
 
         LocalDateTime captured = expiresAtCaptor.getValue();
-        LocalDateTime expected = LocalDateTime.now().plusSeconds(1209600L);
+        LocalDateTime expected = LocalDateTime.now().plus(Duration.ofMillis(1_209_600_000L));
         assertEquals(expected.getDayOfYear(), captured.getDayOfYear());
     }
 
