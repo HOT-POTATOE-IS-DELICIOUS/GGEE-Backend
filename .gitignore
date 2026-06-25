@@ -38,3 +38,7 @@ out/
 /k8s
 !**/.env
 *.env.env.local
+
+### Claude Code ###
+.claude/agent-memory/
+.claude/worktrees/
