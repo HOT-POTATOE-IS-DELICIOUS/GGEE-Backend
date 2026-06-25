@@ -72,6 +72,21 @@ class CommentDedupStreamConfigurationTest {
         }
     }
 
+    @Test
+    void invalidTimestampDoesNotTerminateDedupProcessor() {
+        try (TopologyTestDriver driver = createDriver()) {
+            TestInputTopic<String, CrawlResultMessage> inputTopic = inputTopic(driver);
+            TestOutputTopic<String, DeduplicatedPostMessage> postOutputTopic = postOutputTopic(driver);
+            TestOutputTopic<String, DeduplicatedCommentMessage> commentOutputTopic = commentOutputTopic(driver);
+
+            String url = "https://community.example/posts/3";
+            inputTopic.pipeInput("job-1", crawlResult("job-1", url, 3003, "not-a-timestamp"), Instant.parse("2026-03-23T00:00:00Z"));
+
+            assertThat(postOutputTopic.readValuesToList()).hasSize(1);
+            assertThat(commentOutputTopic.readValuesToList()).hasSize(1);
+        }
+    }
+
     private static final JsonSerdeFactory SERDE_FACTORY = new JsonSerdeFactory(
             new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     );

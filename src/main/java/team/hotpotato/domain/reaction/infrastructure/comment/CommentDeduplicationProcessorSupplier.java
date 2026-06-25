@@ -3,6 +3,7 @@ package team.hotpotato.domain.reaction.infrastructure.comment;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,7 +64,8 @@ public class CommentDeduplicationProcessorSupplier implements ProcessorSupplier<
             CrawlResultMessage crawlResult = record.value();
             if (crawlResult == null || crawlResult.results() == null) return;
 
-            long eventTimestampMs = parseTimestamp(crawlResult.timestamp());
+            long eventTimestampMs = parseTimestamp(crawlResult.timestamp(), record.timestamp());
+            OffsetDateTime crawledAt = parseCrawledAt(crawlResult.timestamp(), eventTimestampMs);
 
             for (CrawlPostMessage post : crawlResult.results()) {
                 if (post == null || isBlank(post.url()) || post.comments() == null || post.comments().isEmpty()) {
@@ -81,7 +83,7 @@ public class CommentDeduplicationProcessorSupplier implements ProcessorSupplier<
                                     postId,
                                     crawlResult.site(),
                                     crawlResult.keyword(),
-                                    OffsetDateTime.parse(crawlResult.timestamp()),
+                                    crawledAt,
                                     eventTimestampMs,
                                     postUrl,
                                     post.title(),
@@ -136,13 +138,24 @@ public class CommentDeduplicationProcessorSupplier implements ProcessorSupplier<
             }
         }
 
-        private static long parseTimestamp(String timestamp) {
-            if (timestamp == null || timestamp.isBlank()) return System.currentTimeMillis();
+        private static long parseTimestamp(String timestamp, long fallbackTimestampMs) {
+            if (timestamp == null || timestamp.isBlank()) return fallbackTimestampMs;
             try {
                 return Instant.parse(timestamp.trim()).toEpochMilli();
             } catch (Exception ignored) {
-                return System.currentTimeMillis();
+                return fallbackTimestampMs;
             }
+        }
+
+        private static OffsetDateTime parseCrawledAt(String timestamp, long fallbackTimestampMs) {
+            if (timestamp != null && !timestamp.isBlank()) {
+                try {
+                    return OffsetDateTime.parse(timestamp.trim());
+                } catch (Exception ignored) {
+                    // fall through to event timestamp fallback
+                }
+            }
+            return OffsetDateTime.ofInstant(Instant.ofEpochMilli(fallbackTimestampMs), ZoneOffset.UTC);
         }
 
         private static boolean isBlank(String value) {
